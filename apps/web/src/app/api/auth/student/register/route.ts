@@ -17,10 +17,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate NISN format (10 digits)
-    if (!/^\d{10}$/.test(nisn)) {
+    // Validate NISN format (hanya angka, minimal 1 digit)
+    if (!/^\d+$/.test(nisn)) {
       return NextResponse.json(
-        { error: { code: 'VALIDATION_ERROR', message: 'NISN harus 10 digit angka' } },
+        { error: { code: 'VALIDATION_ERROR', message: 'NISN harus berupa angka' } },
         { status: 400 }
       )
     }

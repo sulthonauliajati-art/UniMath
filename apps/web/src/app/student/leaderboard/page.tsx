@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import { StarryBackground } from '@/components/ui/StarryBackground'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { useAuth } from '@/lib/auth/context'
+import { LoadingScreen } from '@/components/ui/LoadingScreen'
 
 interface LeaderboardEntry {
   id: string
@@ -47,11 +48,7 @@ export default function StudentLeaderboardPage() {
   }, [user])
 
   if (isLoading || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-uni-bg">
-        <div className="text-white">Loading...</div>
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   const getRankEmoji = (rank: number) => {
@@ -81,7 +78,7 @@ export default function StudentLeaderboardPage() {
         </div>
 
         {loading ? (
-          <div className="text-center text-text-secondary py-8 text-sm">Loading...</div>
+          <LoadingScreen fullScreen={false} />
         ) : leaderboard.length === 0 ? (
           <GlassCard className="p-6 sm:p-8 text-center">
             <p className="text-text-secondary text-sm">Belum ada data leaderboard</p>

@@ -424,9 +424,13 @@ export default function StudentLoginPage() {
             </AnimatePresence>
           </GlassCard>
 
-          {/* Back to landing */}
+          {/* Back to landing - P0 Fix: Larger click area, proper button styling */}
           <div className="text-center mt-4 sm:mt-6">
-            <a href="/" className="text-text-secondary hover:text-white text-xs sm:text-sm transition-colors">
+            <a 
+              href="/" 
+              className="inline-flex items-center justify-center px-4 py-3 text-text-secondary hover:text-white text-sm sm:text-base transition-colors cursor-pointer z-20 relative"
+              style={{ pointerEvents: 'auto' }}
+            >
               ← Kembali ke halaman utama
             </a>
           </div>

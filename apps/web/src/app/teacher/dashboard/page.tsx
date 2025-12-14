@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import { StarryBackground } from '@/components/ui/StarryBackground'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { useAuth } from '@/lib/auth/context'
+import { LoadingScreen } from '@/components/ui/LoadingScreen'
 
 interface Stats {
   totalStudents: number
@@ -53,11 +54,7 @@ export default function TeacherDashboard() {
   }, [token])
 
   if (isLoading || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-uni-bg">
-        <div className="text-white">Loading...</div>
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   const menuItems = [

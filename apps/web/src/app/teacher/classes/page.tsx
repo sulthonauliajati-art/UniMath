@@ -9,6 +9,7 @@ import { GlassCard } from '@/components/ui/GlassCard'
 import { NeonButton } from '@/components/ui/NeonButton'
 import { Input } from '@/components/ui/Input'
 import { useAuth } from '@/lib/auth/context'
+import { LoadingScreen } from '@/components/ui/LoadingScreen'
 import { Class } from '@/lib/types'
 
 interface School {
@@ -110,11 +111,7 @@ export default function TeacherClassesPage() {
   }
 
   if (isLoading || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-uni-bg">
-        <div className="text-white">Loading...</div>
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   return (
@@ -202,7 +199,7 @@ export default function TeacherClassesPage() {
 
         {/* Classes List */}
         {loading ? (
-          <div className="text-center text-text-secondary py-8">Loading...</div>
+          <LoadingScreen fullScreen={false} />
         ) : classes.length === 0 ? (
           <GlassCard className="p-8 text-center">
             <p className="text-text-secondary mb-4">Belum ada kelas</p>
@@ -211,6 +208,7 @@ export default function TeacherClassesPage() {
             </NeonButton>
           </GlassCard>
         ) : (
+          /* P0 Fix: Single click navigation with clear CTA */
           <div className="grid md:grid-cols-2 gap-4">
             {classes.map((cls, index) => (
               <motion.div
@@ -219,26 +217,38 @@ export default function TeacherClassesPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
               >
-                <Link href={`/teacher/classes/${cls.id}`}>
-                  <GlassCard hover className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="text-lg font-semibold text-white mb-1">
-                          {cls.name}
-                        </h3>
-                        <p className="text-sm text-text-secondary">
-                          Tingkat {cls.grade}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-uni-primary">
-                          {cls.studentCount}
-                        </div>
-                        <div className="text-xs text-text-secondary">Siswa</div>
-                      </div>
+                <GlassCard 
+                  hover 
+                  className="p-6 cursor-pointer" 
+                  onClick={() => router.push(`/teacher/classes/${cls.id}`)}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-white mb-1">
+                        {cls.name}
+                      </h3>
+                      <p className="text-sm text-text-secondary">
+                        Tingkat {cls.grade}
+                      </p>
                     </div>
-                  </GlassCard>
-                </Link>
+                    <div className="text-right mr-4">
+                      <div className="text-2xl font-bold text-uni-primary">
+                        {cls.studentCount}
+                      </div>
+                      <div className="text-xs text-text-secondary">Siswa</div>
+                    </div>
+                    {/* Clear CTA button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        router.push(`/teacher/classes/${cls.id}`)
+                      }}
+                      className="px-3 py-1.5 text-sm bg-uni-primary/20 text-uni-primary hover:bg-uni-primary/30 rounded-lg transition-colors"
+                    >
+                      Lihat Detail →
+                    </button>
+                  </div>
+                </GlassCard>
               </motion.div>
             ))}
           </div>

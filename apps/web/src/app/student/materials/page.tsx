@@ -9,6 +9,7 @@ import { GlassCard } from '@/components/ui/GlassCard'
 import { NeonButton } from '@/components/ui/NeonButton'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { useAuth } from '@/lib/auth/context'
+import { LoadingScreen } from '@/components/ui/LoadingScreen'
 import { Material } from '@/lib/types'
 
 export default function MaterialsPage() {
@@ -41,11 +42,7 @@ export default function MaterialsPage() {
   }, [user])
 
   if (isLoading || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-uni-bg">
-        <div className="text-white">Loading...</div>
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   return (
@@ -63,7 +60,7 @@ export default function MaterialsPage() {
 
         {/* Materials List */}
         {loading ? (
-          <div className="text-center text-text-secondary py-8 text-sm">Loading...</div>
+          <LoadingScreen fullScreen={false} />
         ) : (
           <div className="space-y-3 sm:space-y-4">
             {materials.map((material, index) => (

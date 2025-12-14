@@ -8,6 +8,7 @@ import { StarryBackground } from '@/components/ui/StarryBackground'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { useAuth } from '@/lib/auth/context'
+import { LoadingScreen } from '@/components/ui/LoadingScreen'
 
 interface Stats {
   totalFloors: number
@@ -97,11 +98,7 @@ export default function StudentProfile() {
   }
 
   if (isLoading || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-uni-bg">
-        <div className="text-white">Loading...</div>
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   return (
@@ -138,20 +135,31 @@ export default function StudentProfile() {
                 )}
                 <p className="text-text-secondary text-sm sm:text-base">NISN: {user.nisn}</p>
               </div>
+              {/* P0 Fix: Functional edit button with clear feedback */}
               <div className="flex gap-2 flex-shrink-0">
-                <button
-                  onClick={handleEditProfile}
-                  disabled={saving}
-                  className="text-uni-primary hover:text-uni-accent transition-colors p-1"
-                >
-                  {saving ? '...' : editing ? '✓' : '✏️'}
-                </button>
-                {editing && (
+                {editing ? (
+                  <>
+                    <button
+                      onClick={handleEditProfile}
+                      disabled={saving || !editName.trim()}
+                      className="px-3 py-1.5 text-xs bg-uni-success/20 text-uni-success hover:bg-uni-success/30 rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      {saving ? 'Menyimpan...' : 'Simpan'}
+                    </button>
+                    <button
+                      onClick={() => setEditing(false)}
+                      className="px-3 py-1.5 text-xs bg-white/10 text-text-secondary hover:text-white rounded-lg transition-colors"
+                    >
+                      Batal
+                    </button>
+                  </>
+                ) : (
                   <button
-                    onClick={() => setEditing(false)}
-                    className="text-text-secondary hover:text-white p-1"
+                    onClick={handleEditProfile}
+                    className="px-3 py-1.5 text-xs bg-uni-primary/20 text-uni-primary hover:bg-uni-primary/30 rounded-lg transition-colors flex items-center gap-1"
                   >
-                    ✕
+                    <span>✏️</span>
+                    <span>Edit</span>
                   </button>
                 )}
               </div>
@@ -193,6 +201,10 @@ export default function StudentProfile() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
           <GlassCard className="p-4 sm:p-6">
             <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Progress per Materi</h3>
+            {/* P1 Fix: Clear progress definition */}
+            <p className="text-xs text-text-muted mb-3">
+              Progress = persentase soal yang dijawab benar dari total soal yang dikerjakan per materi
+            </p>
             {loadingStats ? (
               <div className="text-center text-text-secondary py-4 text-sm">Memuat...</div>
             ) : materialProgress.length > 0 ? (
@@ -201,14 +213,14 @@ export default function StudentProfile() {
                   <div key={material.id}>
                     <div className="flex justify-between mb-1">
                       <span className="text-xs sm:text-sm text-text-secondary truncate mr-2">{material.name}</span>
-                      <span className="text-xs sm:text-sm text-uni-primary flex-shrink-0">{material.progress}%</span>
+                      <span className="text-xs sm:text-sm text-uni-primary flex-shrink-0">{material.progress}% akurasi</span>
                     </div>
                     <ProgressBar value={material.progress} size="sm" />
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center text-text-secondary py-4 text-sm">Belum ada progress materi</div>
+              <div className="text-center text-text-secondary py-4 text-sm">Belum ada progress materi. Mulai latihan untuk melihat progress!</div>
             )}
           </GlassCard>
         </motion.div>

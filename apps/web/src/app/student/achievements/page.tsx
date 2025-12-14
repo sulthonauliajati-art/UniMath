@@ -8,6 +8,7 @@ import { StarryBackground } from '@/components/ui/StarryBackground'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { useAuth } from '@/lib/auth/context'
+import { LoadingScreen } from '@/components/ui/LoadingScreen'
 
 interface Achievement {
   id: string
@@ -55,11 +56,7 @@ export default function StudentAchievementsPage() {
   }, [user, token])
 
   if (isLoading || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-uni-bg">
-        <div className="text-white">Loading...</div>
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   const earnedCount = achievements.filter((a) => a.earned).length
@@ -96,10 +93,23 @@ export default function StudentAchievementsPage() {
         </GlassCard>
 
         {loading ? (
-          <div className="text-center text-text-secondary py-8 text-sm">Loading...</div>
+          <LoadingScreen fullScreen={false} />
         ) : achievements.length === 0 ? (
+          /* P1 Fix: Show default achievements info when none available */
           <GlassCard className="p-6 sm:p-8 text-center">
-            <p className="text-text-secondary text-sm">Belum ada achievement tersedia</p>
+            <div className="w-16 h-16 mx-auto mb-4 bg-uni-warning/20 rounded-full flex items-center justify-center">
+              <span className="text-3xl">🎖️</span>
+            </div>
+            <h3 className="text-lg font-semibold text-white mb-2">Achievement Segera Hadir!</h3>
+            <p className="text-text-secondary text-sm mb-4">
+              Kumpulkan badge dengan cara:
+            </p>
+            <div className="text-left space-y-2 text-sm text-text-secondary">
+              <p>🌟 Selesaikan latihan pertama</p>
+              <p>🏠 Naik 10 lantai</p>
+              <p>🎯 Capai akurasi 70%</p>
+              <p>📚 Selesaikan 10 sesi latihan</p>
+            </div>
           </GlassCard>
         ) : (
           <div className="grid gap-3 sm:gap-4">

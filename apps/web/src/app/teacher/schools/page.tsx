@@ -9,6 +9,8 @@ import { GlassCard } from '@/components/ui/GlassCard'
 import { NeonButton } from '@/components/ui/NeonButton'
 import { Input } from '@/components/ui/Input'
 import { useAuth } from '@/lib/auth/context'
+import { useToast } from '@/components/ui/Toast'
+import { LoadingScreen } from '@/components/ui/LoadingScreen'
 
 interface School {
   id: string
@@ -16,16 +18,22 @@ interface School {
   ownerTeacherId: string
   createdAt: string
   isOwner: boolean
+  classCount?: number
 }
 
 export default function TeacherSchoolsPage() {
   const router = useRouter()
   const { user, token, isLoading } = useAuth()
+  const { showToast } = useToast()
   const [schools, setSchools] = useState<School[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [newSchoolName, setNewSchoolName] = useState('')
   const [error, setError] = useState('')
+  // P1 Fix: Edit school state
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editName, setEditName] = useState('')
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'TEACHER')) {
@@ -73,8 +81,10 @@ export default function TeacherSchoolsPage() {
         setSchools([...schools, data.school])
         setShowForm(false)
         setNewSchoolName('')
+        showToast('Sekolah berhasil dibuat!', 'success')
       } else {
         setError(data.error?.message || 'Gagal membuat sekolah')
+        showToast(data.error?.message || 'Gagal membuat sekolah', 'error')
       }
     } catch (error) {
       console.error('Failed to create school:', error)
@@ -82,12 +92,41 @@ export default function TeacherSchoolsPage() {
     }
   }
 
+  // P1 Fix: Edit school name
+  const handleEditSchool = async (schoolId: string) => {
+    if (!token || !editName.trim()) return
+    setSaving(true)
+    
+    try {
+      const res = await fetch(`/api/teacher/schools/${schoolId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: editName }),
+      })
+      const data = await res.json()
+      
+      if (data.success) {
+        setSchools(schools.map(s => s.id === schoolId ? { ...s, name: editName } : s))
+        setEditingId(null)
+        setEditName('')
+        showToast('Nama sekolah berhasil diubah!', 'success')
+      } else {
+        setError(data.error?.message || 'Gagal mengubah nama sekolah')
+        showToast(data.error?.message || 'Gagal mengubah nama sekolah', 'error')
+      }
+    } catch (err) {
+      console.error('Failed to edit school:', err)
+      setError('Terjadi kesalahan')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   if (isLoading || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-uni-bg">
-        <div className="text-white">Loading...</div>
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   return (
@@ -146,6 +185,7 @@ export default function TeacherSchoolsPage() {
             <NeonButton onClick={() => setShowForm(true)}>Buat Sekolah Pertama</NeonButton>
           </GlassCard>
         ) : (
+          /* P1 Fix: Schools list with edit functionality */
           <div className="space-y-4">
             {schools.map((school, index) => (
               <motion.div
@@ -155,19 +195,55 @@ export default function TeacherSchoolsPage() {
                 transition={{ delay: index * 0.1 }}
               >
                 <GlassCard className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-lg font-semibold text-white">{school.name}</h3>
-                        {school.isOwner && (
-                          <span className="px-2 py-0.5 text-xs bg-uni-primary/20 text-uni-primary rounded">
-                            Pemilik
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-sm text-text-secondary">
-                        Dibuat: {new Date(school.createdAt).toLocaleDateString('id-ID')}
-                      </p>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      {editingId === school.id ? (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            className="flex-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-uni-primary"
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => handleEditSchool(school.id)}
+                            disabled={saving || !editName.trim()}
+                            className="px-3 py-2 text-sm bg-uni-success/20 text-uni-success hover:bg-uni-success/30 rounded-lg transition-colors disabled:opacity-50"
+                          >
+                            {saving ? '...' : 'Simpan'}
+                          </button>
+                          <button
+                            onClick={() => { setEditingId(null); setEditName('') }}
+                            className="px-3 py-2 text-sm bg-white/10 text-text-secondary hover:text-white rounded-lg transition-colors"
+                          >
+                            Batal
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="text-lg font-semibold text-white truncate">{school.name}</h3>
+                            {school.isOwner && (
+                              <span className="px-2 py-0.5 text-xs bg-uni-primary/20 text-uni-primary rounded flex-shrink-0">
+                                Pemilik
+                              </span>
+                            )}
+                            {school.isOwner && (
+                              <button
+                                onClick={() => { setEditingId(school.id); setEditName(school.name) }}
+                                className="p-1 text-text-secondary hover:text-uni-primary transition-colors"
+                                title="Edit nama sekolah"
+                              >
+                                ✏️
+                              </button>
+                            )}
+                          </div>
+                          <p className="text-sm text-text-secondary">
+                            Dibuat: {new Date(school.createdAt).toLocaleDateString('id-ID')}
+                          </p>
+                        </>
+                      )}
                     </div>
                     <Link href="/teacher/classes">
                       <NeonButton variant="ghost" size="sm">

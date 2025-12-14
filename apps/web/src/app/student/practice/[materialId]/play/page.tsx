@@ -205,7 +205,12 @@ export default function GamePlayPage() {
     } catch (error) {
       console.error('Failed to end session:', error)
     }
-    sessionStorage.setItem('practiceStats', JSON.stringify(gameState.stats))
+    // P1 Fix: Include materialId and materialTitle for better feedback on complete page
+    sessionStorage.setItem('practiceStats', JSON.stringify({
+      ...gameState.stats,
+      materialId: gameState.materialId,
+      materialTitle: gameState.materialName,
+    }))
     sessionStorage.removeItem('practiceSession')
     router.push('/student/practice/complete')
   }

@@ -9,6 +9,7 @@ import { GlassCard } from '@/components/ui/GlassCard'
 import { NeonButton } from '@/components/ui/NeonButton'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { useAuth } from '@/lib/auth/context'
+import { LoadingScreen } from '@/components/ui/LoadingScreen'
 
 interface Summary {
   totalFloors: number
@@ -28,6 +29,8 @@ export default function TeacherReportsPage() {
   const [summary, setSummary] = useState<Summary | null>(null)
   const [topStudents, setTopStudents] = useState<TopStudent[]>([])
   const [loadingData, setLoadingData] = useState(true)
+  const [exporting, setExporting] = useState(false)
+  const [exportError, setExportError] = useState('')
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'TEACHER')) {
@@ -60,12 +63,41 @@ export default function TeacherReportsPage() {
     }
   }, [user, token])
 
+  // P0 Fix: Export CSV using fetch + blob instead of window.open
+  const handleExportCSV = async () => {
+    if (!token) return
+    setExporting(true)
+    setExportError('')
+    
+    try {
+      const res = await fetch('/api/teacher/export?format=csv', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error?.message || 'Gagal mengunduh laporan')
+      }
+      
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `laporan_siswa_${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (error) {
+      console.error('Export failed:', error)
+      setExportError(error instanceof Error ? error.message : 'Gagal mengunduh laporan')
+    } finally {
+      setExporting(false)
+    }
+  }
+
   if (isLoading || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-uni-bg">
-        <div className="text-white">Loading...</div>
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   return (
@@ -81,18 +113,22 @@ export default function TeacherReportsPage() {
             </Link>
             <h1 className="text-2xl font-bold text-white">Rekap & Laporan</h1>
           </div>
-          <NeonButton
-            variant="secondary"
-            onClick={() => {
-              window.open(`/api/teacher/export?format=csv`, '_blank')
-            }}
-          >
-            📥 Export CSV
-          </NeonButton>
+          <div className="flex items-center gap-3">
+            {exportError && (
+              <span className="text-uni-error text-sm">{exportError}</span>
+            )}
+            <NeonButton
+              variant="secondary"
+              onClick={handleExportCSV}
+              disabled={exporting}
+            >
+              {exporting ? '⏳ Mengunduh...' : '📥 Export CSV'}
+            </NeonButton>
+          </div>
         </div>
 
         {loadingData ? (
-          <div className="text-center text-text-secondary py-8">Memuat data...</div>
+          <LoadingScreen fullScreen={false} />
         ) : (
           <>
             {/* Summary Stats */}

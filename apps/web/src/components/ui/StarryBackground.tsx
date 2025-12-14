@@ -75,6 +75,9 @@ export function StarryBackground({
     <div className="fixed inset-0 overflow-hidden">
       <canvas ref={canvasRef} className="absolute inset-0" />
       
+      {/* P1 Fix: Dark overlay for better text contrast and accessibility */}
+      <div className="absolute inset-0 bg-black/30" />
+      
       {/* Gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-uni-bg/50" />
       

@@ -7,7 +7,10 @@ import { StarryBackground } from '@/components/ui/StarryBackground'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { NeonButton } from '@/components/ui/NeonButton'
 import { ProgressBar } from '@/components/ui/ProgressBar'
+import { ConfirmModal } from '@/components/ui/Modal'
 import { useAuth } from '@/lib/auth/context'
+import { useToast } from '@/components/ui/Toast'
+import { LoadingScreen } from '@/components/ui/LoadingScreen'
 
 interface StudentData {
   id: string
@@ -31,10 +34,13 @@ export default function StudentDetailPage() {
   const id = params.id as string
   const router = useRouter()
   const { user, token, isLoading } = useAuth()
+  const { showToast } = useToast()
   const [student, setStudent] = useState<StudentData | null>(null)
   const [loading, setLoading] = useState(true)
   const [resetting, setResetting] = useState(false)
   const [message, setMessage] = useState('')
+  // P1 Fix: Modal state for reset password confirmation
+  const [showResetModal, setShowResetModal] = useState(false)
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'TEACHER')) {
@@ -64,11 +70,9 @@ export default function StudentDetailPage() {
     }
   }, [user, token, id])
 
+  // P1 Fix: Use modal instead of browser confirm
   const handleResetPassword = async () => {
     if (!token || !id) return
-    if (!confirm('Yakin ingin reset password siswa ini? Siswa harus membuat password baru saat login.')) {
-      return
-    }
     
     setResetting(true)
     setMessage('')
@@ -80,26 +84,25 @@ export default function StudentDetailPage() {
       const data = await res.json()
       if (data.success) {
         setMessage('Password berhasil direset. Siswa harus membuat password baru saat login.')
+        showToast('Password berhasil direset!', 'success')
         if (student) {
           setStudent({ ...student, passwordStatus: 'UNSET' })
         }
       } else {
         setMessage(data.error?.message || 'Gagal reset password')
+        showToast(data.error?.message || 'Gagal reset password', 'error')
       }
     } catch (error) {
       console.error('Failed to reset password:', error)
       setMessage('Terjadi kesalahan')
     } finally {
       setResetting(false)
+      setShowResetModal(false)
     }
   }
 
   if (isLoading || !user || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-uni-bg">
-        <div className="text-white">Loading...</div>
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   if (!student) {
@@ -116,6 +119,19 @@ export default function StudentDetailPage() {
   return (
     <main className="relative min-h-screen overflow-hidden">
       <StarryBackground />
+      
+      {/* P1 Fix: Modal confirmation for reset password */}
+      <ConfirmModal
+        isOpen={showResetModal}
+        onClose={() => setShowResetModal(false)}
+        onConfirm={handleResetPassword}
+        title="Reset Password Siswa"
+        message={`Yakin ingin reset password ${student?.name || 'siswa ini'}? Siswa harus membuat password baru saat login berikutnya.`}
+        confirmText="Reset Password"
+        cancelText="Batal"
+        variant="warning"
+        loading={resetting}
+      />
       
       <div className="relative z-10 p-6">
         {/* Header */}
@@ -177,7 +193,7 @@ export default function StudentDetailPage() {
                 <NeonButton
                   variant="secondary"
                   size="sm"
-                  onClick={handleResetPassword}
+                  onClick={() => setShowResetModal(true)}
                   disabled={resetting || student.passwordStatus === 'UNSET'}
                 >
                   {resetting ? 'Mereset...' : 'Reset Password'}
