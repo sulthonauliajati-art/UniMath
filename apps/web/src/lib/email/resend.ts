@@ -1,8 +1,19 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Make Resend optional - only initialize if API key exists
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
 
 export async function sendOtpEmail(to: string, otp: string, name: string) {
+  // If Resend is not configured, log OTP to console (for development/demo)
+  if (!resend) {
+    console.log('=== EMAIL NOT CONFIGURED ===')
+    console.log(`To: ${to}`)
+    console.log(`OTP: ${otp}`)
+    console.log(`Name: ${name}`)
+    console.log('============================')
+    return { success: true, data: { id: 'mock-email-id' } }
+  }
+
   try {
     const { data, error } = await resend.emails.send({
       from: 'UniMath <noreply@unimath.haisa.com>',
