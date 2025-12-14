@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Auto-Run Safe Tasks",
+  "description": "Automatically approves safe commands (pnpm install/dev/lint/test/build, npm install/run dev/lint/test/build, wrangler dev/types/deploy --dry-run, prisma generate). Blocks risky commands (rm, del, rmdir, format, shutdown, reboot, sudo, chmod 777, curl | sh, etc.) and requests requiring access to sensitive files (.env, API keys, credentials) with risk summary. For unknown commands, shows purpose, working directory, and affected files before confirmation.",
+  "version": "1",
+  "when": {
+    "type": "userPrompt"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "When Kiro requests confirmation to run a command, analyze it using these rules:\n\n**WHITELIST (Auto-approve immediately):**\n- pnpm install, pnpm dev, pnpm lint, pnpm test, pnpm build\n- npm install, npm run dev, npm run lint, npm run test, npm run build\n- wrangler dev, wrangler types, wrangler deploy --dry-run\n- prisma generate\n\nIf the command matches whitelist exactly, respond: \"Auto-approved safe command: <command>\" and proceed with execution.\n\n**BLACKLIST (Block and request confirmation with risk summary):**\n- Destructive: rm, del, rmdir, format, shutdown, reboot, diskpart\n- Privilege escalation: sudo, chmod 777, chown, reg\n- Remote code execution: curl | sh, wget piped to execution, powershell -EncodedCommand, Invoke-WebRequest, iwr\n- Sensitive files: .env, API keys, database credentials, secrets\n\nIf command contains blacklist keywords, DO NOT auto-run. Display:\n- ⚠️ Risk Summary: [explain the risk]\n- Command: [the command]\n- Request explicit user confirmation before proceeding.\n\n**UNKNOWN COMMANDS (Not in whitelist or blacklist):**\nRequest confirmation but display:\n- 📋 Command Purpose: [what it does]\n- 📁 Working Directory: [current folder]\n- 📄 Files that may change: [list affected files]\nThen ask user for confirmation."
+  }
+}

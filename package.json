@@ -1,0 +1,17 @@
+{
+  "name": "unimath",
+  "version": "1.0.0",
+  "private": true,
+  "description": "UniMath - Platform Latihan Numerasi Gamified",
+  "scripts": {
+    "dev": "pnpm --filter @unimath/web dev",
+    "web:dev": "pnpm --filter @unimath/web dev",
+    "build": "pnpm --filter @unimath/web build",
+    "lint": "pnpm --filter @unimath/web lint",
+    "start": "pnpm --filter @unimath/web start"
+  },
+  "keywords": ["education", "gamification", "numeracy", "nextjs"],
+  "author": "UniMath Team",
+  "license": "MIT",
+  "packageManager": "pnpm@8.15.0"
+}
