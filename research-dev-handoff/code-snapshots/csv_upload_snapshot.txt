@@ -1,0 +1,53 @@
+// --- SNAPSHOT RINGKASAN: PARSER CSV ADMIN (api/admin/questions/upload/route.ts) ---
+
+export async function POST(request: NextRequest) {
+    // 1. Membaca CSV
+    const text = await file.text()
+    const rows = parseCSV(text)
+    const dataRows = rows.slice(1).filter((row) => row.length >= 7 && row[0]) // Skip header
+
+    const questionsToInsert: any[] = []
+    const errors: string[] = []
+
+    // 2. Validasi per baris (15 Kolom)
+    dataRows.forEach((row, index) => {
+      const rowNum = index + 2
+      const [
+        modeRaw, indicatorRaw, difficultyRaw, questionTypeRaw, question,
+        optA, optB, optC, optD, correctRaw,
+        hint1, hint2, hint3, explanation, remedialMaterialId,
+      ] = row
+
+      const mode = modeRaw?.toUpperCase() || 'ALL'
+      if (!['PRACTICE', 'PRETEST', 'POSTTEST', 'ALL'].includes(mode)) {
+        errors.push(`Baris ${rowNum}: Mode "${mode}" tidak valid. Harus PRACTICE/PRETEST/POSTTEST/ALL.`)
+      }
+
+      const indicator = indicatorRaw?.toUpperCase() || 'I1'
+      if (!['I1', 'I2', 'I3', 'I4'].includes(indicator)) {
+        errors.push(`Baris ${rowNum}: Indikator "${indicator}" tidak valid. Harus I1/I2/I3/I4.`)
+      }
+
+      const questionType = questionTypeRaw?.toUpperCase() || 'PG'
+      if (!['PG', 'URAIAN'].includes(questionType)) {
+        errors.push(`Baris ${rowNum}: Tipe soal "${questionType}" tidak valid. Harus PG/URAIAN.`)
+      }
+
+      let correct = correctRaw?.toUpperCase() || 'A'
+      if (questionType === 'PG' && !['A', 'B', 'C', 'D'].includes(correct)) {
+        errors.push(`Baris ${rowNum}: Kunci jawaban PG harus A/B/C/D.`)
+      }
+
+      if (errors.length === 0) {
+        questionsToInsert.push({ /* mapping kolom ke object DB */ })
+      }
+    })
+
+    // 3. Menolak insert jika ada 1 error saja
+    if (errors.length > 0) {
+      return NextResponse.json({ error: { message: 'Validasi CSV gagal:\n' + errors.join('\n') } }, { status: 400 })
+    }
+
+    // 4. Insert Batch
+    // ... insert data to DB ...
+}

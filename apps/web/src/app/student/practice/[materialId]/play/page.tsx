@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import confetti from 'canvas-confetti'
-import { useAuth } from '@/lib/auth/context'
+import { StarryBackground, TowerBackground, RobotMascot } from '@/components/ui'
 import { Question } from '@/lib/types'
 
 interface QuestionWithHints extends Question {
@@ -43,25 +43,52 @@ export default function GamePlayPage() {
       return
     }
 
-    const sessionData = sessionStorage.getItem('practiceSession')
-    if (sessionData) {
-      const data = JSON.parse(sessionData)
-      setGameState({
-        sessionId: data.sessionId,
-        floor: data.floor || 1,
-        wrongCount: 0,
-        question: data.question,
-        materialId: data.materialId || materialId,
-        materialName: data.materialName || 'Matematika',
-        selectedAnswer: null,
-        showCorrectModal: false,
-        showWrongModal: false,
-        isSubmitting: false,
-        stats: { floorsClimbed: 0, correctAnswers: 0, totalAttempts: 0 },
-      })
-    } else {
-      router.push(`/student/practice/${materialId}/start`)
+    const initSession = async () => {
+      const sessionData = sessionStorage.getItem('practiceSession')
+      if (sessionData) {
+        const data = JSON.parse(sessionData)
+        setGameState({
+          sessionId: data.sessionId,
+          floor: data.floor || 1,
+          wrongCount: data.wrongCount || 0,
+          question: data.question,
+          materialId: data.materialId || materialId,
+          materialName: data.materialName || 'Matematika',
+          selectedAnswer: null,
+          showCorrectModal: false,
+          showWrongModal: false,
+          isSubmitting: false,
+          stats: data.stats || { floorsClimbed: 0, correctAnswers: 0, totalAttempts: 0 },
+        })
+      } else {
+        try {
+          const res = await fetch('/api/practice/current')
+          if (res.ok) {
+            const data = await res.json()
+            sessionStorage.setItem('practiceSession', JSON.stringify(data))
+            setGameState({
+              sessionId: data.sessionId,
+              floor: data.floor,
+              wrongCount: data.wrongCount,
+              question: data.question,
+              materialId: data.materialId,
+              materialName: data.materialName,
+              selectedAnswer: null,
+              showCorrectModal: false,
+              showWrongModal: false,
+              isSubmitting: false,
+              stats: data.stats,
+            })
+          } else {
+            router.push(`/student/practice/${materialId}/start`)
+          }
+        } catch (error) {
+          router.push(`/student/practice/${materialId}/start`)
+        }
+      }
     }
+    
+    initSession()
   }, [user, isLoading, router, materialId])
 
 
@@ -232,7 +259,7 @@ export default function GamePlayPage() {
 
 
   return (
-    <main className="relative w-full h-[100dvh] overflow-hidden bg-[#0a0e1a]">
+    <main className="relative w-full h-[100dvh] overflow-hidden bg-uni-bg pb-24">
       {/* Wrong Answer Shake Effect */}
       <AnimatePresence>
         {showWrongFeedback && (
@@ -246,159 +273,33 @@ export default function GamePlayPage() {
         )}
       </AnimatePresence>
 
-      {/* Stars Background - Reduced for mobile performance */}
-      <div className="absolute inset-0">
-        {[...Array(60)].map((_, i) => (
-          <div
-            key={`star-${i}`}
-            className="absolute rounded-full bg-white"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              width: `${Math.random() * 2 + 1}px`,
-              height: `${Math.random() * 2 + 1}px`,
-              opacity: Math.random() * 0.7 + 0.3,
-              animation: `twinkle ${2 + Math.random() * 3}s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 2}s`,
-            }}
-          />
-        ))}
-      </div>
+      <StarryBackground density="high" />
+      <TowerBackground variant="practice" />
 
-      {/* Meteors - Hidden on mobile for performance */}
-      <div className="hidden sm:block">
-        {[...Array(4)].map((_, i) => (
-          <motion.div
-            key={`meteor-${i}`}
-            className="absolute w-[2px] h-24 bg-gradient-to-b from-cyan-400/80 to-transparent"
-            style={{
-              left: `${10 + i * 20}%`,
-              top: '-100px',
-              transform: 'rotate(-45deg)',
-            }}
-            animate={{ y: [0, 600], x: [0, 300], opacity: [0.9, 0] }}
-            transition={{
-              duration: 2.5 + i * 0.3,
-              repeat: Infinity,
-              delay: i * 2,
-              ease: 'linear',
-            }}
-          />
-        ))}
-      </div>
+      {/* Top Header */}
+      <div className="absolute top-0 left-0 w-full p-4 sm:p-6 z-30 flex justify-between items-center pointer-events-none">
+        {/* Left: Logo */}
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-md bg-gradient-to-br from-uni-primary to-uni-accent flex items-center justify-center shadow-[0_0_10px_rgba(0,229,255,0.3)]">
+            <span className="text-white font-bold text-lg leading-none">U</span>
+          </div>
+          <span className="text-white font-bold text-xl tracking-wide hidden sm:block">Unimath</span>
+        </div>
 
-      {/* Logo - Smaller on mobile */}
-      <div className="absolute top-3 left-3 sm:top-6 sm:left-6 z-30">
-        <h1 className="text-lg sm:text-2xl font-black text-white tracking-wider">
-          UN<span className="text-cyan-400">i</span>MATH
-        </h1>
-      </div>
-
-      {/* Floor Badge - Top right on mobile */}
-      <div className="absolute top-3 right-3 sm:top-6 sm:right-6 z-30">
+        {/* Right: Floor Badge */}
         <motion.div
           key={gameState.floor}
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-cyan-500/20 border border-cyan-400/50"
+          className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-uni-bg-secondary/80 border border-uni-primary/50 shadow-[0_0_15px_rgba(0,229,255,0.3)] backdrop-blur-md"
         >
-          <span className="text-cyan-400 font-bold text-sm sm:text-base">🏢 Lantai {gameState.floor}</span>
+          <span className="text-uni-primary font-bold text-sm sm:text-base tracking-wide">🏢 Lantai {gameState.floor}</span>
         </motion.div>
       </div>
 
-      {/* Tower Building - Simplified for mobile, full on desktop */}
-      <div className="absolute inset-0 flex items-end justify-center pb-32 sm:pb-40 pointer-events-none">
-        <div className="relative w-full max-w-md h-[40%] sm:h-[50%]">
-          {/* Center Glow */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 sm:w-72 sm:h-72 bg-cyan-500/10 rounded-full blur-3xl" />
+      {/* Stars Background - Reduced for mobile performance */}
+      <div className="absolute inset-0">
 
-          {/* Simplified Tower - Mobile optimized */}
-          <div className="relative w-full h-full flex items-center justify-center" style={{ perspective: '800px' }}>
-            {/* Left Panel */}
-            <div
-              className="absolute left-[10%] sm:left-[5%] top-0 w-[25%] h-full opacity-60 sm:opacity-100"
-              style={{
-                background: 'linear-gradient(to right, rgba(6,182,212,0.02), rgba(6,182,212,0.08))',
-                transform: 'rotateY(25deg)',
-                transformOrigin: 'right center',
-                borderRight: '2px solid rgba(6,182,212,0.5)',
-              }}
-            />
-
-            {/* Right Panel */}
-            <div
-              className="absolute right-[10%] sm:right-[5%] top-0 w-[25%] h-full opacity-60 sm:opacity-100"
-              style={{
-                background: 'linear-gradient(to left, rgba(6,182,212,0.02), rgba(6,182,212,0.08))',
-                transform: 'rotateY(-25deg)',
-                transformOrigin: 'left center',
-                borderLeft: '2px solid rgba(6,182,212,0.5)',
-              }}
-            />
-
-            {/* Center Stairs */}
-            <motion.div
-              className="absolute left-[35%] right-[35%] top-0 bottom-0"
-              animate={{ y: robotState === 'climbing' ? 30 : 0 }}
-              transition={{ duration: 0.8, ease: 'easeInOut' }}
-            >
-              <svg viewBox="0 0 100 200" className="w-full h-full" preserveAspectRatio="xMidYMax slice">
-                <defs>
-                  <linearGradient id="stairGlow" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#06B6D4" stopOpacity="1" />
-                    <stop offset="50%" stopColor="#22D3EE" stopOpacity="0.8" />
-                    <stop offset="100%" stopColor="#06B6D4" stopOpacity="1" />
-                  </linearGradient>
-                </defs>
-                {[...Array(8)].map((_, i) => {
-                  const y = 190 - i * 22
-                  const isLeft = i % 2 === 0
-                  return (
-                    <g key={i}>
-                      <line
-                        x1={isLeft ? 10 : 50}
-                        y1={y}
-                        x2={isLeft ? 50 : 90}
-                        y2={y}
-                        stroke="url(#stairGlow)"
-                        strokeWidth="3"
-                        filter="drop-shadow(0 0 4px rgba(6,182,212,0.8))"
-                      />
-                      {i < 7 && (
-                        <line
-                          x1={50}
-                          y1={y}
-                          x2={isLeft ? 90 : 10}
-                          y2={y - 22}
-                          stroke="url(#stairGlow)"
-                          strokeWidth="2"
-                          opacity="0.6"
-                        />
-                      )}
-                    </g>
-                  )
-                })}
-              </svg>
-            </motion.div>
-
-            {/* Vertical Neon Lines */}
-            <div
-              className="absolute left-[35%] top-0 bottom-0 w-[2px] sm:w-[3px]"
-              style={{
-                background: 'linear-gradient(to bottom, #06B6D4, rgba(6,182,212,0.3), #06B6D4)',
-                boxShadow: '0 0 10px rgba(6,182,212,0.6)',
-              }}
-            />
-            <div
-              className="absolute right-[35%] top-0 bottom-0 w-[2px] sm:w-[3px]"
-              style={{
-                background: 'linear-gradient(to bottom, #06B6D4, rgba(6,182,212,0.3), #06B6D4)',
-                boxShadow: '0 0 10px rgba(6,182,212,0.6)',
-              }}
-            />
-          </div>
-        </div>
-      </div>
 
 
       {/* Question Card - Mobile First Design */}
@@ -510,103 +411,9 @@ export default function GamePlayPage() {
       </div>
 
 
-      {/* Floor Platform & Robot Area - Mobile optimized */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 sm:h-40 z-10">
-        {/* Horizontal Neon Lines (Floor) */}
-        <div className="absolute inset-x-0 top-0">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-4 sm:h-5 flex items-center">
-              <div
-                className="w-full h-[2px] sm:h-[3px]"
-                style={{
-                  background: 'linear-gradient(to right, transparent 5%, #06B6D4 20%, #22D3EE 50%, #06B6D4 80%, transparent 95%)',
-                  boxShadow: '0 0 10px rgba(6,182,212,0.5)',
-                }}
-              />
-            </div>
-          ))}
-        </div>
-
-        {/* Robot Character - Smaller on mobile */}
-        <motion.div
-          className="absolute bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2"
-          animate={{
-            y: robotState === 'climbing' ? -50 : robotState === 'celebrating' ? [-6, 6, -6] : 0,
-          }}
-          transition={{
-            y:
-              robotState === 'celebrating'
-                ? { duration: 0.25, repeat: 3 }
-                : { duration: 0.7, ease: 'easeOut' },
-          }}
-        >
-          {/* Robot Glow */}
-          <div className="absolute -inset-4 bg-cyan-400/20 rounded-full blur-xl" />
-
-          {/* Robot Body - Scaled for mobile */}
-          <div className="relative w-14 h-18 sm:w-18 sm:h-22 flex flex-col items-center scale-75 sm:scale-100">
-            {/* Head */}
-            <motion.div
-              className="relative w-12 h-10 bg-gradient-to-b from-slate-400 to-slate-600 rounded-t-full border-2 border-cyan-400/70"
-              animate={robotState === 'celebrating' ? { rotate: [-8, 8, -8, 8, 0] } : {}}
-              transition={{ duration: 0.4 }}
-            >
-              {/* Visor/Eyes */}
-              <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-8 h-3 bg-slate-800 rounded-full overflow-hidden">
-                <motion.div 
-                  className="absolute top-0.5 left-1.5 w-1.5 h-1.5 bg-cyan-400 rounded-full shadow-[0_0_8px_#06B6D4]"
-                  animate={robotState === 'celebrating' ? { scale: [1, 1.3, 1] } : {}}
-                  transition={{ duration: 0.3, repeat: robotState === 'celebrating' ? 3 : 0 }}
-                />
-                <motion.div 
-                  className="absolute top-0.5 right-1.5 w-1.5 h-1.5 bg-cyan-400 rounded-full shadow-[0_0_8px_#06B6D4]"
-                  animate={robotState === 'celebrating' ? { scale: [1, 1.3, 1] } : {}}
-                  transition={{ duration: 0.3, repeat: robotState === 'celebrating' ? 3 : 0 }}
-                />
-              </div>
-              {/* Antenna */}
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-0.5 h-3 bg-slate-500">
-                <motion.div
-                  className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-cyan-400 rounded-full"
-                  animate={{ 
-                    opacity: [1, 0.4, 1], 
-                    scale: robotState === 'celebrating' ? [1, 1.5, 1] : 1,
-                    boxShadow: ['0 0 8px #06B6D4', '0 0 16px #06B6D4', '0 0 8px #06B6D4'] 
-                  }}
-                  transition={{ duration: robotState === 'celebrating' ? 0.3 : 1.5, repeat: Infinity }}
-                />
-              </div>
-            </motion.div>
-
-            {/* Body */}
-            <div className="relative w-10 h-6 bg-gradient-to-b from-slate-400 to-slate-600 rounded-lg border-2 border-cyan-400/70 mt-0.5">
-              <motion.div
-                className="absolute top-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-cyan-400 rounded-sm"
-                animate={{
-                  boxShadow:
-                    robotState === 'celebrating'
-                      ? ['0 0 8px #06B6D4', '0 0 20px #06B6D4', '0 0 8px #06B6D4']
-                      : '0 0 8px #06B6D4',
-                }}
-                transition={{ duration: 0.2, repeat: robotState === 'celebrating' ? Infinity : 0 }}
-              />
-            </div>
-
-            {/* Wheels/Tracks */}
-            <div className="flex gap-1.5 mt-0.5">
-              <motion.div
-                className="w-4 h-2 bg-slate-700 rounded-full border border-cyan-400/50"
-                animate={robotState === 'climbing' ? { rotate: 720 } : {}}
-                transition={{ duration: 0.7, ease: 'linear' }}
-              />
-              <motion.div
-                className="w-4 h-2 bg-slate-700 rounded-full border border-cyan-400/50"
-                animate={robotState === 'climbing' ? { rotate: 720 } : {}}
-                transition={{ duration: 0.7, ease: 'linear' }}
-              />
-            </div>
-          </div>
-        </motion.div>
+      {/* Robot Mascot Area */}
+      <div className="absolute bottom-6 sm:bottom-10 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
+        <RobotMascot state={robotState} size="xl" />
       </div>
 
 

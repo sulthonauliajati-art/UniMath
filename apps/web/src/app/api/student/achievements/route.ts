@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db/client'
-import { achievements, studentAchievements, practiceSessions, attempts } from '@/lib/db/schema'
+import { achievements, studentAchievements, practiceSessions, practiceAttempts } from '@/lib/db/schema'
 import { eq, sql } from 'drizzle-orm'
 import { validateToken } from '@/lib/auth/utils'
 
@@ -45,8 +45,8 @@ export async function GET(request: NextRequest) {
         totalAttempts: sql<number>`count(*)`,
         correctAttempts: sql<number>`sum(case when is_correct = 1 then 1 else 0 end)`,
       })
-      .from(attempts)
-      .innerJoin(practiceSessions, eq(attempts.sessionId, practiceSessions.id))
+      .from(practiceAttempts)
+      .innerJoin(practiceSessions, eq(practiceAttempts.sessionId, practiceSessions.id))
       .where(eq(practiceSessions.studentUserId, studentId))
 
     const totalFloors = sessionStats?.totalFloors || 0

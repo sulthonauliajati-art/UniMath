@@ -67,26 +67,77 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const questionsToInsert = dataRows.map((row, index) => {
-      const [difficulty, question, optA, optB, optC, optD, correct, hint1, hint2, hint3, explanation] =
-        row
+    const questionsToInsert: any[] = []
+    const errors: string[] = []
 
-      return {
-        id: `Q${Date.now().toString(36)}${index.toString(36).toUpperCase()}`,
-        materialId,
-        difficulty: parseInt(difficulty) || 1,
-        question: question || '',
-        optA: optA || '',
-        optB: optB || '',
-        optC: optC || '',
-        optD: optD || '',
-        correct: (correct?.toUpperCase() as 'A' | 'B' | 'C' | 'D') || 'A',
-        hint1: hint1 || null,
-        hint2: hint2 || null,
-        hint3: hint3 || null,
-        explanation: explanation || null,
+    dataRows.forEach((row, index) => {
+      const rowNum = index + 2
+      if (row.length < 10) {
+        errors.push(`Baris ${rowNum}: Jumlah kolom tidak mencukupi.`)
+        return
+      }
+
+      const [
+        modeRaw, indicatorRaw, difficultyRaw, questionTypeRaw, question,
+        optA, optB, optC, optD, correctRaw,
+        hint1, hint2, hint3, explanation, remedialMaterialId,
+      ] = row
+
+      const mode = modeRaw?.toUpperCase() || 'ALL'
+      if (!['PRACTICE', 'PRETEST', 'POSTTEST', 'ALL'].includes(mode)) {
+        errors.push(`Baris ${rowNum}: Mode "${mode}" tidak valid. Harus PRACTICE/PRETEST/POSTTEST/ALL.`)
+      }
+
+      const indicator = indicatorRaw?.toUpperCase() || 'I1'
+      if (!['I1', 'I2', 'I3', 'I4'].includes(indicator)) {
+        errors.push(`Baris ${rowNum}: Indikator "${indicator}" tidak valid. Harus I1/I2/I3/I4.`)
+      }
+
+      const difficulty = parseInt(difficultyRaw) || 1
+      if (difficulty < 1 || difficulty > 3) {
+        errors.push(`Baris ${rowNum}: Difficulty harus 1, 2, atau 3.`)
+      }
+
+      const questionType = questionTypeRaw?.toUpperCase() || 'PG'
+      if (!['PG', 'URAIAN'].includes(questionType)) {
+        errors.push(`Baris ${rowNum}: Tipe soal "${questionType}" tidak valid. Harus PG/URAIAN.`)
+      }
+
+      let correct = correctRaw?.toUpperCase() || 'A'
+      if (questionType === 'PG' && !['A', 'B', 'C', 'D'].includes(correct)) {
+        errors.push(`Baris ${rowNum}: Kunci jawaban PG harus A/B/C/D.`)
+      }
+
+      if (!question || question.trim() === '') {
+        errors.push(`Baris ${rowNum}: Soal tidak boleh kosong.`)
+      }
+
+      if (errors.length === 0) {
+        questionsToInsert.push({
+          id: `Q${Date.now().toString(36)}${index.toString(36).toUpperCase()}`,
+          materialId,
+          mode,
+          indicator,
+          difficulty,
+          questionType,
+          question: question || '',
+          optA: optA || '',
+          optB: optB || '',
+          optC: optC || '',
+          optD: optD || '',
+          correct: correct as 'A' | 'B' | 'C' | 'D',
+          hint1: hint1 || null,
+          hint2: hint2 || null,
+          hint3: hint3 || null,
+          explanation: explanation || null,
+          remedialMaterialId: remedialMaterialId || null,
+        })
       }
     })
+
+    if (errors.length > 0) {
+      return NextResponse.json({ error: { message: 'Validasi CSV gagal:\n' + errors.join('\n') } }, { status: 400 })
+    }
 
     // Insert in batches
     const batchSize = 50

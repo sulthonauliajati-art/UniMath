@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db/client'
-import { practiceSessions, attempts, classStudents, classes, schools, teacherProfiles } from '@/lib/db/schema'
+import { practiceSessions, practiceAttempts, classStudents, classes, schools, teacherProfiles } from '@/lib/db/schema'
 import { eq, sql } from 'drizzle-orm'
 
 // Helper function to award points to teacher
@@ -62,8 +62,8 @@ export async function POST(request: NextRequest) {
         totalAttempts: sql<number>`count(*)`,
         correctAnswers: sql<number>`sum(case when is_correct = 1 then 1 else 0 end)`,
       })
-      .from(attempts)
-      .where(eq(attempts.sessionId, sessionId))
+      .from(practiceAttempts)
+      .where(eq(practiceAttempts.sessionId, sessionId))
 
     // Update session status
     await db

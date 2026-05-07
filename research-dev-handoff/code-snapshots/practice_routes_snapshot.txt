@@ -1,0 +1,41 @@
+// --- SNAPSHOT RINGKASAN: RUTE PRACTICE (ADAPTIVE DIFFICULTY) ---
+
+// /api/practice/answer
+export async function POST(request: NextRequest) {
+    // ... insert attempt ke database ...
+
+    if (isCorrect) {
+      // JAWABAN BENAR
+      const newFloor = session.floor + 1
+      await db.update(practiceSessions).set({ floor: newFloor, wrongCount: 0 })
+      
+      // Jika soal sebelumnya medium(2), berikutnya sulit(3). Kalau sudah sulit(3), tetap sulit(3).
+      const nextDifficulty = currentDifficulty >= 2 ? 3 : 2
+      const nextQ = await getNewQuestion(session.materialId, nextDifficulty, usedQuestionIds)
+
+      return NextResponse.json({ isCorrect: true, floor: newFloor, nextQuestion: nextQ })
+    } else {
+      // JAWABAN SALAH
+      const newWrongCount = session.wrongCount + 1
+
+      if (newWrongCount >= 3) {
+        // SALAH 3 KALI BERUNTUN -> TRIGGER REMEDIAL
+        await db.update(practiceSessions).set({ status: 'REMEDIAL_REQUIRED', wrongCount: newWrongCount })
+        return NextResponse.json({
+          isCorrect: false,
+          mustStudy: true,
+          message: 'Kamu perlu memahami materi lagi sebelum melanjutkan',
+        })
+      }
+
+      await db.update(practiceSessions).set({ wrongCount: newWrongCount })
+
+      // SALAH 1X / 2X -> TETAP DI SOAL SAMA, TAPI BERI HINT
+      return NextResponse.json({
+        isCorrect: false,
+        sameQuestion: true,
+        hint: newWrongCount === 1 ? question.hint1 : 
+              newWrongCount === 2 ? question.hint2 : null,
+      })
+    }
+}

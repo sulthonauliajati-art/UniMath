@@ -65,6 +65,7 @@ export async function GET(request: NextRequest) {
           id: material.id,
           title: material.title,
           description: material.description,
+          shortDescription: material.shortDescription,
           grade: material.grade,
           order: material.order,
           thumbnailUrl: material.thumbnailUrl,

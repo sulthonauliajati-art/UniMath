@@ -5,7 +5,7 @@ import {
   classes,
   classStudents,
   practiceSessions,
-  attempts,
+  practiceAttempts,
   schools,
   teacherSchools,
 } from '@/lib/db/schema'
@@ -95,8 +95,8 @@ export async function GET(request: NextRequest) {
             totalAttempts: sql<number>`count(*)`,
             correctAttempts: sql<number>`sum(case when is_correct = 1 then 1 else 0 end)`,
           })
-          .from(attempts)
-          .innerJoin(practiceSessions, eq(attempts.sessionId, practiceSessions.id))
+          .from(practiceAttempts)
+          .innerJoin(practiceSessions, eq(practiceAttempts.sessionId, practiceSessions.id))
           .where(eq(practiceSessions.studentUserId, student.id))
 
         const totalAttempts = attemptStats?.totalAttempts || 0

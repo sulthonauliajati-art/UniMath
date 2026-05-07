@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { db } from '@/lib/db/client'
-import { questions, materials, practiceSessions, attempts } from '@/lib/db/schema'
+import { questions, materials, practiceSessions, practiceAttempts } from '@/lib/db/schema'
 import { eq, sql } from 'drizzle-orm'
 
 const DIFFICULTY_LABELS: Record<number, string> = {

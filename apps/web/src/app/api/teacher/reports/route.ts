@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db/client'
-import { schools, classes, classStudents, users, practiceSessions, attempts, teacherSchools } from '@/lib/db/schema'
+import { schools, classes, classStudents, users, practiceSessions, practiceAttempts, teacherSchools } from '@/lib/db/schema'
 import { eq, sql, inArray } from 'drizzle-orm'
 import { validateToken } from '@/lib/auth/utils'
 
@@ -98,8 +98,8 @@ export async function GET(request: NextRequest) {
         totalAttempts: sql<number>`count(*)`,
         correctAttempts: sql<number>`COALESCE(sum(case when is_correct = 1 then 1 else 0 end), 0)`,
       })
-      .from(attempts)
-      .innerJoin(practiceSessions, eq(attempts.sessionId, practiceSessions.id))
+      .from(practiceAttempts)
+      .innerJoin(practiceSessions, eq(practiceAttempts.sessionId, practiceSessions.id))
       .where(inArray(practiceSessions.studentUserId, studentIds))
 
     const totalAttempts = accuracyStats?.totalAttempts || 0
@@ -127,8 +127,8 @@ export async function GET(request: NextRequest) {
             totalAttempts: sql<number>`count(*)`,
             correctAttempts: sql<number>`COALESCE(sum(case when is_correct = 1 then 1 else 0 end), 0)`,
           })
-          .from(attempts)
-          .innerJoin(practiceSessions, eq(attempts.sessionId, practiceSessions.id))
+          .from(practiceAttempts)
+          .innerJoin(practiceSessions, eq(practiceAttempts.sessionId, practiceSessions.id))
           .where(eq(practiceSessions.studentUserId, studentId))
 
         const studentAccuracy =

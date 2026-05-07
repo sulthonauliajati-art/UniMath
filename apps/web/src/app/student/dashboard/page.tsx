@@ -4,10 +4,9 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { StarryBackground } from '@/components/ui/StarryBackground'
-import { GlassCard } from '@/components/ui/GlassCard'
-import { NeonButton } from '@/components/ui/NeonButton'
+import { StarryBackground, TowerBackground, RobotMascot, GlassCard, NeonButton } from '@/components/ui'
 import { Modal } from '@/components/ui/Modal'
+import { ProgressBar } from '@/components/ui/ProgressBar'
 import { useAuth } from '@/lib/auth/context'
 import { LoadingScreen } from '@/components/ui/LoadingScreen'
 
@@ -92,9 +91,44 @@ export default function StudentDashboard() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden">
-      <StarryBackground />
+    <main className="relative min-h-[100dvh] bg-uni-bg overflow-hidden flex flex-col pb-24">
+      <StarryBackground density="high" />
+      <TowerBackground variant="landing" />
       
+      {/* Top Header */}
+      <div className="absolute top-0 left-0 w-full p-4 sm:p-6 z-30 flex justify-between items-center">
+        {/* Left: Logo */}
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-md bg-gradient-to-br from-uni-primary to-uni-accent flex items-center justify-center shadow-[0_0_10px_rgba(0,229,255,0.3)]">
+            <span className="text-white font-bold text-lg leading-none">U</span>
+          </div>
+          <span className="text-white font-bold text-xl tracking-wide hidden sm:block">Unimath</span>
+        </div>
+
+        {/* Right: Student Profile & Logout */}
+        <div className="flex items-center gap-3">
+          <div className="text-right hidden sm:block">
+             <div className="text-white font-semibold text-sm">{user.name}</div>
+             <div className="text-uni-primary text-xs">Siswa Aktif</div>
+          </div>
+          <div className="w-10 h-10 rounded-full border border-uni-primary bg-gradient-to-br from-[#1E293B] to-[#0F172A] flex items-center justify-center shadow-[0_0_10px_rgba(0,229,255,0.2)] overflow-hidden">
+             <span className="text-xl">🤖</span>
+          </div>
+          <button
+            onClick={() => {
+               logout()
+               router.push('/student/login')
+            }}
+            className="ml-2 text-text-muted hover:text-white transition-colors"
+            title="Logout"
+          >
+             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+             </svg>
+          </button>
+        </div>
+      </div>
+
       {/* P1 Fix: Onboarding Modal */}
       <Modal isOpen={showOnboarding} onClose={handleCloseOnboarding} title="Cara Bermain 🎮">
         <div className="text-center">
@@ -113,7 +147,7 @@ export default function StudentDashboard() {
             {onboardingSteps.map((_, i) => (
               <div
                 key={i}
-                className={`w-2 h-2 rounded-full transition-colors ${i === onboardingStep ? 'bg-uni-primary' : 'bg-white/20'}`}
+                className={`w-2 h-2 rounded-full transition-colors ${i === onboardingStep ? 'bg-uni-primary shadow-[0_0_5px_var(--primary-glow)]' : 'bg-white/20'}`}
               />
             ))}
           </div>
@@ -130,14 +164,14 @@ export default function StudentDashboard() {
             {onboardingStep < onboardingSteps.length - 1 ? (
               <button
                 onClick={() => setOnboardingStep(onboardingStep + 1)}
-                className="px-4 py-2 text-sm bg-uni-primary/20 text-uni-primary hover:bg-uni-primary/30 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm bg-uni-primary/20 text-uni-primary hover:bg-uni-primary/30 border border-uni-primary/30 rounded-lg transition-colors shadow-[0_0_10px_rgba(0,229,255,0.2)]"
               >
                 Selanjutnya →
               </button>
             ) : (
               <button
                 onClick={handleCloseOnboarding}
-                className="px-4 py-2 text-sm bg-uni-success/20 text-uni-success hover:bg-uni-success/30 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm bg-gradient-to-r from-uni-primary to-uni-accent text-white font-bold rounded-lg transition-colors shadow-[0_0_15px_rgba(0,229,255,0.4)]"
               >
                 Mulai Bermain! 🚀
               </button>
@@ -146,120 +180,97 @@ export default function StudentDashboard() {
         </div>
       </Modal>
       
-      <div className="relative z-10 p-4 sm:p-6 max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="flex justify-between items-start gap-2 mb-4 sm:mb-6">
-          <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-bold text-white truncate">
-              Halo, {user.name}! 👋
-            </h1>
-            <p className="text-text-secondary text-sm sm:text-base">Siap belajar hari ini?</p>
-          </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            {/* P1 Fix: Help button to show onboarding again */}
-            <button
-              onClick={() => { setOnboardingStep(0); setShowOnboarding(true) }}
-              className="text-text-secondary hover:text-white transition-colors text-sm px-2 py-1"
-              title="Cara bermain"
-            >
-              ❓
-            </button>
-            <button
-              onClick={() => {
-                logout()
-                router.push('/student/login')
-              }}
-              className="text-text-secondary hover:text-white transition-colors text-sm px-2 py-1"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-
-        {/* P1 Fix: Compact layout with CTA at top */}
+      <div className="relative z-20 flex-grow flex flex-col items-center justify-center px-4 pt-24 pb-8 max-w-lg mx-auto w-full">
+        
+        {/* Main Status Card */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-4 sm:mb-6"
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          className="w-full mb-8 relative"
         >
-          <GlassCard className="p-4 sm:p-5">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-uni-primary/20 to-uni-accent/20 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-2xl sm:text-3xl">🤖</span>
+           {/* Top Hexagon Badge */}
+           <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-30">
+             <div className="w-12 h-12 bg-uni-bg-secondary rounded-xl border border-uni-accent shadow-[0_0_15px_rgba(0,119,255,0.5)] rotate-45 flex items-center justify-center">
+               <span className="-rotate-45 text-uni-accent font-bold text-xl">{stats.totalFloors}</span>
+             </div>
+           </div>
+
+          <GlassCard className="p-6 pt-10 text-center glass-strong border-uni-primary/40 relative overflow-hidden group">
+            {/* Ambient inner glow */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1/2 bg-uni-primary/10 blur-[30px] rounded-full pointer-events-none"></div>
+
+            <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">
+              Lanjut Berlatih, {user.name.split(' ')[0]}!
+            </h2>
+            <p className="text-uni-primary text-sm font-medium mb-6">
+              Lantai Saat Ini: {loadingStats ? '...' : stats.totalFloors}
+            </p>
+
+            {/* Stats Row */}
+            <div className="grid grid-cols-3 gap-2 mb-8 bg-black/20 rounded-xl p-3 border border-white/5">
+              <div className="text-center">
+                 <div className="text-xl mb-1">🎯</div>
+                 <div className="text-lg font-bold text-white">{loadingStats ? '...' : `${stats.accuracy}%`}</div>
+                 <div className="text-[10px] text-text-secondary uppercase tracking-wider">Akurasi</div>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-3 mb-1">
-                  <span className="text-lg sm:text-xl font-bold text-uni-primary">
-                    {loadingStats ? '...' : stats.totalFloors}
-                  </span>
-                  <span className="text-text-secondary text-sm">Lantai</span>
-                  <span className="text-lg sm:text-xl font-bold text-uni-accent">
-                    {loadingStats ? '...' : `${stats.accuracy}%`}
-                  </span>
-                  <span className="text-text-secondary text-sm">Akurasi</span>
-                </div>
-                <p className="text-xs sm:text-sm text-text-secondary">
-                  {stats.totalSessions === 0 
-                    ? 'Belum ada latihan. Mulai sekarang!' 
-                    : `${stats.totalSessions} sesi latihan selesai`}
-                </p>
+              <div className="text-center border-l border-r border-white/10">
+                 <div className="text-xl mb-1">⭐</div>
+                 <div className="text-lg font-bold text-uni-warning">{stats.totalFloors * 10}</div>
+                 <div className="text-[10px] text-text-secondary uppercase tracking-wider">Poin</div>
               </div>
-              <Link href="/student/practice" className="flex-shrink-0">
-                <NeonButton variant="primary" size="md">
-                  Latihan
-                </NeonButton>
-              </Link>
+              <div className="text-center">
+                 <div className="text-xl mb-1">🏆</div>
+                 <div className="text-lg font-bold text-uni-success">12</div>
+                 <div className="text-[10px] text-text-secondary uppercase tracking-wider">Ranking</div>
+              </div>
             </div>
+
+            <Link href="/student/practice" className="block w-full">
+              <button className="w-full py-4 bg-gradient-to-r from-uni-primary to-uni-accent hover:from-uni-primary-dark hover:to-uni-primary rounded-xl text-white font-bold text-lg shadow-[0_0_20px_rgba(0,229,255,0.4)] flex items-center justify-center gap-3 transition-transform hover:scale-105">
+                {stats.totalSessions === 0 ? 'Mulai Misi Pertama' : 'Lanjut Perjalanan'}
+                <span className="text-xl leading-none">›</span>
+              </button>
+            </Link>
           </GlassCard>
         </motion.div>
 
-        {/* P1 Fix: Grid layout for desktop */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid grid-cols-2 gap-3 sm:gap-4"
+        {/* Secondary Navigation Options */}
+        <div className="grid grid-cols-2 gap-4 w-full relative z-20">
+           <Link href="/student/materials">
+              <GlassCard hover className="p-4 flex flex-col items-center justify-center text-center h-full glass-strong">
+                 <div className="w-12 h-12 bg-uni-bg/50 rounded-full border border-uni-primary/30 flex items-center justify-center mb-3 text-2xl shadow-[inset_0_0_10px_rgba(0,229,255,0.2)]">
+                    📚
+                 </div>
+                 <h3 className="text-sm font-bold text-white mb-1">Daftar Materi</h3>
+                 <p className="text-[10px] text-text-secondary">Pilih materi spesifik</p>
+              </GlassCard>
+           </Link>
+
+           <Link href="/student/leaderboard">
+              <GlassCard hover className="p-4 flex flex-col items-center justify-center text-center h-full glass-strong">
+                 <div className="w-12 h-12 bg-uni-bg/50 rounded-full border border-uni-warning/30 flex items-center justify-center mb-3 text-2xl shadow-[inset_0_0_10px_rgba(245,158,11,0.2)]">
+                    🏆
+                 </div>
+                 <h3 className="text-sm font-bold text-white mb-1">Leaderboard</h3>
+                 <p className="text-[10px] text-text-secondary">Peringkat global</p>
+              </GlassCard>
+           </Link>
+        </div>
+
+        {/* Help Button Floating Bottom Left */}
+        <button
+           onClick={() => { setOnboardingStep(0); setShowOnboarding(true) }}
+           className="absolute bottom-6 left-6 w-10 h-10 bg-uni-bg-secondary border border-uni-primary/30 text-uni-primary rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(0,229,255,0.2)] hover:bg-uni-primary/20 transition-all z-40"
+           title="Cara Bermain"
         >
-          <Link href="/student/materials">
-            <GlassCard hover className="p-4 h-full">
-              <div className="w-10 h-10 bg-uni-primary/20 rounded-xl flex items-center justify-center mb-2">
-                <span className="text-xl">📚</span>
-              </div>
-              <h3 className="text-sm sm:text-base font-semibold text-white">Daftar Materi</h3>
-              <p className="text-xs text-text-secondary">Pilih materi latihan</p>
-            </GlassCard>
-          </Link>
+           ❓
+        </button>
 
-          <Link href="/student/leaderboard">
-            <GlassCard hover className="p-4 h-full">
-              <div className="w-10 h-10 bg-uni-warning/20 rounded-xl flex items-center justify-center mb-2">
-                <span className="text-xl">🏆</span>
-              </div>
-              <h3 className="text-sm sm:text-base font-semibold text-white">Leaderboard</h3>
-              <p className="text-xs text-text-secondary">Lihat peringkat</p>
-            </GlassCard>
-          </Link>
+        {/* Robot Mascot Bottom Right */}
+        <div className="absolute bottom-4 right-4 z-40">
+           <RobotMascot state={stats.totalSessions === 0 ? 'waving' : 'happy'} size="sm" />
+        </div>
 
-          <Link href="/student/achievements">
-            <GlassCard hover className="p-4 h-full">
-              <div className="w-10 h-10 bg-uni-success/20 rounded-xl flex items-center justify-center mb-2">
-                <span className="text-xl">🎖️</span>
-              </div>
-              <h3 className="text-sm sm:text-base font-semibold text-white">Achievements</h3>
-              <p className="text-xs text-text-secondary">Kumpulkan badge</p>
-            </GlassCard>
-          </Link>
-
-          <Link href="/student/profile">
-            <GlassCard hover className="p-4 h-full">
-              <div className="w-10 h-10 bg-uni-accent/20 rounded-xl flex items-center justify-center mb-2">
-                <span className="text-xl">👤</span>
-              </div>
-              <h3 className="text-sm sm:text-base font-semibold text-white">Profil Saya</h3>
-              <p className="text-xs text-text-secondary">Lihat statistik</p>
-            </GlassCard>
-          </Link>
-        </motion.div>
       </div>
     </main>
   )

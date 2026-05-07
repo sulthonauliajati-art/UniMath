@@ -1,0 +1,74 @@
+// --- SNAPSHOT BAGIAN TERPENTING DARI: apps/web/src/lib/db/schema.ts ---
+
+// Tabel Soal (Questions) - Perhatikan 15 field murni untuk mendukung Test dan Practice
+export const questions = sqliteTable('questions', {
+  id: text('id').primaryKey(),
+  materialId: text('material_id').notNull(),
+  mode: text('mode', { enum: ['PRACTICE', 'PRETEST', 'POSTTEST', 'ALL'] }).notNull().default('ALL'),
+  indicator: text('indicator', { enum: ['I1', 'I2', 'I3', 'I4'] }).notNull().default('I1'),
+  difficulty: integer('difficulty').notNull().default(1),
+  questionType: text('question_type', { enum: ['PG', 'URAIAN'] }).notNull().default('PG'),
+  question: text('question').notNull(),
+  optA: text('opt_a').notNull(),
+  optB: text('opt_b').notNull(),
+  optC: text('opt_c').notNull(),
+  optD: text('opt_d').notNull(),
+  correct: text('correct', { enum: ['A', 'B', 'C', 'D'] }).notNull(),
+  hint1: text('hint1'),
+  hint2: text('hint2'),
+  hint3: text('hint3'),
+  explanation: text('explanation'),
+  remedialMaterialId: text('remedial_material_id'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+})
+
+// Sesi Tes (Strict Mode) - Hanya ada startedAt & completedAt, tidak ada lantai/poin
+export const testSessions = sqliteTable('test_sessions', {
+  id: text('id').primaryKey(),
+  studentUserId: text('student_user_id').notNull(),
+  materialId: text('material_id').notNull(),
+  testType: text('test_type', { enum: ['PRETEST', 'POSTTEST'] }).notNull(),
+  startedAt: text('started_at').notNull(),
+  completedAt: text('completed_at'),
+})
+
+// Jawaban Tes - Perhatikan "answer" berupa Text Bebas (untuk Uraian), isCorrect Nullable (bisa dinilai manual)
+export const testAttempts = sqliteTable('test_attempts', {
+  id: text('id').primaryKey(),
+  sessionId: text('session_id').notNull(),
+  questionId: text('question_id').notNull(),
+  answer: text('answer').notNull(),
+  isCorrect: integer('is_correct', { mode: 'boolean' }),
+  responseMs: integer('response_ms').notNull(),
+  createdAt: text('created_at').notNull(),
+})
+
+// Sesi Latihan - Ada Poin, Streak, dan Lantai. Ada status REMEDIAL_REQUIRED.
+export const practiceSessions = sqliteTable('practice_sessions', {
+  id: text('id').primaryKey(),
+  studentUserId: text('student_user_id').notNull(),
+  materialId: text('material_id').notNull(),
+  floor: integer('floor').notNull().default(1),
+  wrongCount: integer('wrong_count').notNull().default(0),
+  currentStreak: integer('current_streak').notNull().default(0),
+  startedAt: text('started_at').notNull(),
+  endedAt: text('ended_at'),
+  status: text('status', { enum: ['ACTIVE', 'COMPLETED', 'ABANDONED', 'REMEDIAL_REQUIRED'] })
+    .notNull()
+    .default('ACTIVE'),
+})
+
+// Jawaban Latihan - Merekam hint level (seberapa sering dia klik hint / salah sblm benar)
+export const practiceAttempts = sqliteTable('practice_attempts', {
+  id: text('id').primaryKey(),
+  sessionId: text('session_id').notNull(),
+  floor: integer('floor').notNull(),
+  questionId: text('question_id').notNull(),
+  answer: text('answer', { enum: ['A', 'B', 'C', 'D'] }).notNull(),
+  isCorrect: integer('is_correct', { mode: 'boolean' }).notNull(),
+  usedHintLevel: integer('used_hint_level').notNull().default(0),
+  isRemedialSession: integer('is_remedial_session', { mode: 'boolean' }).notNull().default(false),
+  responseMs: integer('response_ms').notNull(),
+  createdAt: text('created_at').notNull(),
+})

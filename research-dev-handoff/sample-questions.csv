@@ -1,0 +1,7 @@
+mode,indicator,difficulty,question_type,question,opt_a,opt_b,opt_c,opt_d,correct,hint1,hint2,hint3,explanation,remedial_material_id
+PRACTICE,I1,1,PG,1 + 1 = ?,1,2,3,4,B,Gunakan jari tanganmu untuk menghitung.,Coba kumpulkan 1 apel dan 1 jeruk.,,Satu ditambah satu sama dengan dua.,
+PRACTICE,I2,2,PG,Ibu membeli 5 kg telur. 1 kg harganya Rp 20.000. Berapa total belanjaan ibu?,Rp 50.000,Rp 100.000,Rp 150.000,Rp 200.000,B,Kalikan berat telur dengan harga per kilogramnya.,5 dikali 20.000 sama dengan...,,5 kg x Rp 20.000/kg = Rp 100.000,
+PRETEST,I3,2,PG,Seorang pedagang membeli baju seharga Rp 50.000 lalu menjualnya seharga Rp 60.000. Berapa persentase keuntungannya?,10%,15%,20%,25%,C,,,,,,
+POSTTEST,I3,3,PG,Harga beli 2 lusin buku adalah Rp 48.000. Jika dijual kembali Rp 2.500 per buku. Tentukan persentase keuntungannya!,20%,25%,30%,35%,B,,,,,,
+PRETEST,I4,3,URAIAN,"Andi menabung di bank sebesar Rp 1.000.000 dengan bunga 10% per tahun. Setelah 6 bulan, Andi mengambil semua uangnya. Jelaskan langkah-langkah untuk menghitung total uang yang diterima Andi!",,,,,,,,,,
+POSTTEST,I4,3,URAIAN,"Sebuah toko memberikan diskon 20% untuk semua barang. Jika harga sebuah tas adalah Rp 250.000, hitunglah harga yang harus dibayar setelah diskon beserta rumus perhitungannya!",,,,,,,,,,

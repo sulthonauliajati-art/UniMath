@@ -61,7 +61,10 @@ export interface Material {
 export interface Question {
   id: string
   materialId: string
+  mode: 'PRACTICE' | 'PRETEST' | 'POSTTEST' | 'ALL'
+  indicator: 'I1' | 'I2' | 'I3' | 'I4'
   difficulty: number
+  questionType?: string
   question: string
   optA: string
   optB: string
@@ -72,6 +75,7 @@ export interface Question {
   hint2?: string
   hint3?: string
   explanation?: string
+  remedialMaterialId?: string
 }
 
 // Practice Types
@@ -81,19 +85,41 @@ export interface PracticeSession {
   materialId: string
   floor: number
   wrongCount: number
+  currentStreak: number
   startedAt: string
   endedAt?: string
-  status: 'ACTIVE' | 'COMPLETED' | 'ABANDONED'
+  status: 'ACTIVE' | 'COMPLETED' | 'ABANDONED' | 'REMEDIAL_REQUIRED'
 }
 
-export interface Attempt {
+export interface PracticeAttempt {
   id: string
   sessionId: string
   floor: number
   questionId: string
   answer: 'A' | 'B' | 'C' | 'D'
   isCorrect: boolean
+  usedHintLevel: number
+  isRemedialSession: boolean
   responseMs: number
+  createdAt: string
+}
+
+export interface TestSession {
+  id: string
+  studentUserId: string
+  materialId: string
+  testType: 'PRETEST' | 'POSTTEST'
+  startedAt: string
+  completedAt?: string
+}
+
+export interface TestAttempt {
+  id: string
+  sessionId: string
+  questionId: string
+  answer: string
+  isCorrect: boolean | null
+  responseMs?: number
   createdAt: string
 }
 

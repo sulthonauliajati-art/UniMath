@@ -46,7 +46,7 @@ export function StarryBackground({
     // Animation loop
     let animationId: number
     const animate = () => {
-      ctx.fillStyle = '#0a0e27'
+      ctx.fillStyle = '#040914'
       ctx.fillRect(0, 0, canvas.width, canvas.height)
 
       // Draw stars

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { db } from '@/lib/db/client'
-import { materials, practiceSessions, attempts } from '@/lib/db/schema'
+import { materials, practiceSessions, practiceAttempts } from '@/lib/db/schema'
 import { eq, sql } from 'drizzle-orm'
 
 export async function GET() {
@@ -23,14 +23,14 @@ export async function GET() {
     .from(practiceSessions)
     .where(eq(practiceSessions.studentUserId, user.id))
 
-  // Get accuracy from attempts
+  // Get accuracy from practiceAttempts
   const [attemptStats] = await db
     .select({
       totalAttempts: sql<number>`count(*)`,
       correctAttempts: sql<number>`sum(case when is_correct = 1 then 1 else 0 end)`,
     })
-    .from(attempts)
-    .innerJoin(practiceSessions, eq(attempts.sessionId, practiceSessions.id))
+    .from(practiceAttempts)
+    .innerJoin(practiceSessions, eq(practiceAttempts.sessionId, practiceSessions.id))
     .where(eq(practiceSessions.studentUserId, user.id))
 
   const totalFloors = sessionStats?.totalFloors || 0

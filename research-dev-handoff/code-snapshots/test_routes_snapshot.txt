@@ -1,0 +1,50 @@
+// --- SNAPSHOT RINGKASAN: RUTE TES PENELITIAN (STRICT MODE) ---
+
+// 1. /api/test/start
+export async function POST(request: NextRequest) {
+    // Validasi otentikasi...
+    
+    // Cek apakah tes sudah pernah dilakukan dan komplit
+    if (session.completedAt) {
+      return NextResponse.json({ error: { message: 'TEST_ALREADY_COMPLETED' } }, { status: 403 })
+    }
+
+    // Mengambil soal yang difilter HANYA yang mode = PRETEST/POSTTEST/ALL
+    // Menghapus atribut correct, hint, explanation dari data yang dikirim ke Frontend!
+    const testQuestions = allQuestions.map(q => {
+      const { correct, hint1, hint2, hint3, explanation, remedialMaterialId, ...safeQuestion } = q
+      return safeQuestion
+    })
+
+    return NextResponse.json({
+       sessionId: session.id,
+       startedAt: session.startedAt, // Untuk timer anti-refresh
+       questions: testQuestions,
+    })
+}
+
+// 2. /api/test/answer
+export async function POST(request: NextRequest) {
+    // Dipanggil setiap detik (Uraian-debounce) atau setiap klik PG
+    // Mengecek apakah PG atau URAIAN
+    let isCorrect = null
+    if (question.questionType === 'PG') {
+      isCorrect = answer === question.correct
+    }
+    // Jika URAIAN, isCorrect dibiarkan null untuk diperiksa guru nanti.
+
+    // UPSERT (Update or Insert) jawaban ke tabel test_attempts secara silent (diam)
+    // Tanpa mengembalikan status isCorrect ke Frontend (agar layar siswa tetap buta)
+    return NextResponse.json({ success: true })
+}
+
+// 3. /api/test/finish
+export async function POST(request: NextRequest) {
+    // Dipanggil saat waktu habis, atau siswa klik Selesai
+    await db
+      .update(testSessions)
+      .set({ completedAt: new Date().toISOString() })
+      .where(eq(testSessions.id, sessionId))
+      
+    return NextResponse.json({ success: true })
+}

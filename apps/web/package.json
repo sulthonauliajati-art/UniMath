@@ -11,7 +11,9 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:seed": "npx tsx src/lib/db/seed.ts",
-    "db:seed-achievements": "npx tsx src/lib/db/seed-achievements.ts"
+    "db:seed-achievements": "npx tsx src/lib/db/seed-achievements.ts",
+    "db:import": "npx tsx src/lib/db/import-practice.ts",
+    "db:seed-content": "npx tsx src/lib/db/seed-materials-content.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.15.15",

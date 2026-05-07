@@ -1,0 +1,75 @@
+// --- SNAPSHOT RINGKASAN: STRICT TEST CLIENT UI ---
+
+export default function StrictTestClient({ materialId, materialTitle, testType }) {
+  // ... state inisialisasi ...
+  const [startedAt, setStartedAt] = useState<string | null>(null)
+  const [timeLeft, setTimeLeft] = useState<number>(60 * 60)
+  
+  // 1. Inisialisasi Tes (Panggil Server)
+  useEffect(() => {
+    // POST /api/test/start
+    // setStartedAt(data.startedAt) -> Menentukan waktu pasti
+  }, [])
+
+  // 2. Timer Anti-Refresh
+  useEffect(() => {
+    if (!startedAt) return
+    const timer = setInterval(() => {
+      const startTime = new Date(startedAt).getTime()
+      const passedSeconds = Math.floor((Date.now() - startTime) / 1000)
+      const remaining = 60 * 60 - passedSeconds
+
+      setTimeLeft((prev) => {
+        if (remaining <= 0) {
+          clearInterval(timer)
+          handleAutoFinish()
+        }
+        return remaining
+      })
+    }, 1000)
+  }, [startedAt])
+
+  // 3. Perlindungan Tutup Tab / Refresh saat Autosave jalan
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (answerTimeoutRef.current) {
+        e.preventDefault()
+        e.returnValue = '' // Memaksa browser menampilkan popup konfirmasi leave
+      }
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+  }, [])
+
+  // 4. Logika Autosave Uraian (Debounce 1 Detik)
+  const handleAnswerChange = (qId: string, value: string) => {
+    setAnswers((prev) => ({ ...prev, [qId]: value }))
+    if (q.questionType === 'URAIAN') {
+      setSaveStatus('saving')
+      if (answerTimeoutRef.current) clearTimeout(answerTimeoutRef.current)
+      answerTimeoutRef.current = setTimeout(() => { saveAnswer(qId, value) }, 1000)
+    } else {
+      saveAnswer(qId, value) // PG langsung simpan
+    }
+  }
+
+  // 5. Logika Flush saat Navigasi
+  const handleNavigate = (newIndex: number) => {
+    if (answerTimeoutRef.current) {
+      clearTimeout(answerTimeoutRef.current)
+      saveAnswer(currentQ.id, currentAns) // Paksa simpan uraian terakhir jika belum tersimpan
+    }
+    setCurrentIndex(newIndex)
+  }
+
+  // 6. UI Murni (Render PG vs Uraian)
+  return (
+      {/* Jika Uraian -> Render Textarea */}
+      {currentQuestion.questionType === 'URAIAN' ? (
+        <textarea
+            onChange={(e) => handleAnswerChange(currentQuestion.id, e.target.value)}
+        />
+      ) : (
+      {/* Jika PG -> Render 4 Tombol */}
+      )}
+  )
+}

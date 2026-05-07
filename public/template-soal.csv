@@ -1,0 +1,5 @@
+mode,indicator,difficulty,question_type,question,opt_a,opt_b,opt_c,opt_d,correct,hint1,hint2,hint3,explanation,remedial_material_id
+ALL,I1,1,PG,1 + 1 = ...,1,2,3,4,B,Awalannya B,Dua,Hint 3,1+1=2,
+PRETEST,I2,2,PG,Soal Pretest,,,,,A,,,,,
+POSTTEST,I3,3,URAIAN,Jelaskan maksud soal ini!,,,,,,,,,
+PRACTICE,I4,1,PG,Soal Latihan,A,B,C,D,C,H1,H2,H3,Penjelasan C,mat_123

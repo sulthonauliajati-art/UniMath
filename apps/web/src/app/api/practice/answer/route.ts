@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db/client'
-import { questions, materials, practiceSessions, attempts } from '@/lib/db/schema'
+import { questions, materials, practiceSessions, practiceAttempts } from '@/lib/db/schema'
 import { eq, and, notInArray } from 'drizzle-orm'
 
 const DIFFICULTY_LABELS: Record<number, string> = {
@@ -114,21 +114,23 @@ export async function POST(request: NextRequest) {
 
     // Get used question IDs from attempts
     const usedAttempts = await db
-      .select({ questionId: attempts.questionId })
-      .from(attempts)
-      .where(eq(attempts.sessionId, sessionId))
+      .select({ questionId: practiceAttempts.questionId })
+      .from(practiceAttempts)
+      .where(eq(practiceAttempts.sessionId, sessionId))
 
     const usedQuestionIds = usedAttempts.map((a) => a.questionId)
     usedQuestionIds.push(questionId)
 
     // Save attempt
-    await db.insert(attempts).values({
+    await db.insert(practiceAttempts).values({
       id: `attempt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       sessionId,
       floor: session.floor,
       questionId,
       answer: answer as 'A' | 'B' | 'C' | 'D',
       isCorrect,
+      usedHintLevel: Math.max(0, session.wrongCount), // 0 initially, 1 after 1 wrong, 2 after 2 wrongs
+      isRemedialSession: session.status === 'REMEDIAL_REQUIRED',
       responseMs: responseMs || 0,
       createdAt: new Date().toISOString(),
     })
@@ -163,19 +165,14 @@ export async function POST(request: NextRequest) {
         nextQuestion: nextQ ? formatQuestionForClient(nextQ) : null,
       })
     } else {
-      // Wrong answer - student stays on SAME question until correct or 4 wrong
+      // Wrong answer - student stays on SAME question until correct or 3 wrong
       const newWrongCount = session.wrongCount + 1
 
-      await db
-        .update(practiceSessions)
-        .set({ wrongCount: newWrongCount })
-        .where(eq(practiceSessions.id, sessionId))
-
-      if (newWrongCount >= 4) {
-        // Wrong 4 times on same question - must go to materials
+      if (newWrongCount >= 3) {
+        // Wrong 3 times on same question - must go to materials
         await db
           .update(practiceSessions)
-          .set({ status: 'ABANDONED', endedAt: new Date().toISOString() })
+          .set({ status: 'REMEDIAL_REQUIRED', wrongCount: newWrongCount })
           .where(eq(practiceSessions.id, sessionId))
 
         return NextResponse.json({
@@ -186,21 +183,24 @@ export async function POST(request: NextRequest) {
           materialId: session.materialId,
           materialName: material?.title || 'Materi',
           explanation: question.explanation,
-          message: 'Kamu perlu belajar materi dulu sebelum melanjutkan',
+          message: 'Kamu perlu memahami materi lagi sebelum melanjutkan',
         })
       }
 
+      await db
+        .update(practiceSessions)
+        .set({ wrongCount: newWrongCount })
+        .where(eq(practiceSessions.id, sessionId))
+
       // Return SAME question with updated hints visible
-      // Hint 1 shown after 1st wrong, Hint 2 after 2nd, Hint 3 after 3rd
+      // Hint 1 shown after 1st wrong, Hint 2 after 2nd
       return NextResponse.json({
         isCorrect: false,
         floor: session.floor,
         wrongCount: newWrongCount,
-        // Return same question - frontend will show hints based on wrongCount
         sameQuestion: true,
         hint: newWrongCount === 1 ? question.hint1 : 
-              newWrongCount === 2 ? question.hint2 : 
-              newWrongCount === 3 ? question.hint3 : null,
+              newWrongCount === 2 ? question.hint2 : null,
       })
     }
   } catch (error) {

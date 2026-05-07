@@ -56,6 +56,7 @@ export const materials = sqliteTable('materials', {
   id: text('id').primaryKey(),
   title: text('title').notNull(),
   description: text('description'),
+  shortDescription: text('short_description'), // Deskripsi singkat materi
   grade: text('grade').notNull().default('4'), // Tingkat kelas
   summaryUrl: text('summary_url'), // Google Drive link untuk ringkasan PDF
   fullUrl: text('full_url'), // Google Drive link untuk materi lengkap PDF
@@ -64,13 +65,24 @@ export const materials = sqliteTable('materials', {
   order: integer('order').notNull(),
   isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
   createdAt: text('created_at'),
+  // === Konten Akademik (Jalur 2) ===
+  learningObjectives: text('learning_objectives'), // JSON array of strings
+  summaryContent: text('summary_content'), // Teks ringkasan materi lengkap
+  commonMistakes: text('common_mistakes'), // Kesalahan umum siswa
+  remedialText: text('remedial_text'), // Teks untuk layar remedial
+  videoDescription: text('video_description'), // Deskripsi konten video (panduan produksi)
+  checkpointQuestion: text('checkpoint_question'), // Soal checkpoint
+  checkpointAnswer: text('checkpoint_answer'), // Jawaban checkpoint
 })
 
 // Questions
 export const questions = sqliteTable('questions', {
   id: text('id').primaryKey(),
   materialId: text('material_id').notNull().references(() => materials.id),
+  mode: text('mode', { enum: ['PRACTICE', 'PRETEST', 'POSTTEST', 'ALL'] }).notNull().default('ALL'),
+  indicator: text('indicator', { enum: ['I1', 'I2', 'I3', 'I4'] }).notNull().default('I1'),
   difficulty: integer('difficulty').notNull(),
+  questionType: text('question_type').default('PG'),
   question: text('question').notNull(),
   optA: text('opt_a').notNull(),
   optB: text('opt_b').notNull(),
@@ -81,6 +93,7 @@ export const questions = sqliteTable('questions', {
   hint2: text('hint2'),
   hint3: text('hint3'),
   explanation: text('explanation'),
+  remedialMaterialId: text('remedial_material_id'),
 })
 
 // Practice Sessions
@@ -90,20 +103,46 @@ export const practiceSessions = sqliteTable('practice_sessions', {
   materialId: text('material_id').notNull().references(() => materials.id),
   floor: integer('floor').notNull().default(0),
   wrongCount: integer('wrong_count').notNull().default(0),
+  currentStreak: integer('current_streak').notNull().default(0),
   startedAt: text('started_at').notNull(),
   endedAt: text('ended_at'),
-  status: text('status', { enum: ['ACTIVE', 'COMPLETED', 'ABANDONED'] }).notNull().default('ACTIVE'),
+  status: text('status', { enum: ['ACTIVE', 'COMPLETED', 'ABANDONED', 'REMEDIAL_REQUIRED'] })
+    .notNull()
+    .default('ACTIVE'),
 })
 
-// Attempts
-export const attempts = sqliteTable('attempts', {
+// Practice Attempts
+export const practiceAttempts = sqliteTable('practice_attempts', {
   id: text('id').primaryKey(),
   sessionId: text('session_id').notNull().references(() => practiceSessions.id),
   floor: integer('floor').notNull(),
   questionId: text('question_id').notNull().references(() => questions.id),
   answer: text('answer', { enum: ['A', 'B', 'C', 'D'] }).notNull(),
   isCorrect: integer('is_correct', { mode: 'boolean' }).notNull(),
+  usedHintLevel: integer('used_hint_level').default(0),
+  isRemedialSession: integer('is_remedial_session', { mode: 'boolean' }).default(false),
   responseMs: integer('response_ms').notNull(),
+  createdAt: text('created_at').notNull(),
+})
+
+// Test Sessions (Strict)
+export const testSessions = sqliteTable('test_sessions', {
+  id: text('id').primaryKey(),
+  studentUserId: text('student_user_id').notNull().references(() => users.id),
+  materialId: text('material_id').notNull().references(() => materials.id),
+  testType: text('test_type', { enum: ['PRETEST', 'POSTTEST'] }).notNull(),
+  startedAt: text('started_at').notNull(),
+  completedAt: text('completed_at'),
+})
+
+// Test Attempts (Strict)
+export const testAttempts = sqliteTable('test_attempts', {
+  id: text('id').primaryKey(),
+  sessionId: text('session_id').notNull().references(() => testSessions.id),
+  questionId: text('question_id').notNull().references(() => questions.id),
+  answer: text('answer').notNull(),
+  isCorrect: integer('is_correct', { mode: 'boolean' }),
+  responseMs: integer('response_ms'),
   createdAt: text('created_at').notNull(),
 })
 

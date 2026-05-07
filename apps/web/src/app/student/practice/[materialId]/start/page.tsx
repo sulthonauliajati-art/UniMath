@@ -4,9 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { StarryBackground } from '@/components/ui/StarryBackground'
-import { GlassCard } from '@/components/ui/GlassCard'
-import { NeonButton } from '@/components/ui/NeonButton'
+import { StarryBackground, TowerBackground, RobotMascot, GlassCard, NeonButton } from '@/components/ui'
 import { useAuth } from '@/lib/auth/context'
 import { mockMaterials } from '@/data/mock/seed'
 
@@ -59,8 +57,31 @@ export default function PracticeStartPage() {
   }
 
   return (
-    <main className="relative min-h-[100dvh] flex items-center justify-center overflow-hidden">
-      <StarryBackground />
+    <main className="relative min-h-[100dvh] flex items-center justify-center overflow-hidden bg-uni-bg pb-24 pt-20">
+      <StarryBackground density="high" />
+      <TowerBackground variant="flat" />
+      
+      {/* Top Header */}
+      <div className="absolute top-0 left-0 w-full p-4 sm:p-6 z-30 flex justify-between items-center">
+        {/* Left: Logo */}
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-md bg-gradient-to-br from-uni-primary to-uni-accent flex items-center justify-center shadow-[0_0_10px_rgba(0,229,255,0.3)]">
+            <span className="text-white font-bold text-lg leading-none">U</span>
+          </div>
+          <span className="text-white font-bold text-xl tracking-wide hidden sm:block">Unimath</span>
+        </div>
+
+        {/* Right: Static Info */}
+        <div className="flex items-center gap-3">
+          <div className="text-right hidden sm:block">
+             <div className="text-white font-semibold text-sm">{user.name}</div>
+             <div className="text-uni-primary text-xs">Siswa Aktif</div>
+          </div>
+          <div className="w-10 h-10 rounded-full border border-uni-primary bg-gradient-to-br from-[#1E293B] to-[#0F172A] flex items-center justify-center shadow-[0_0_10px_rgba(0,229,255,0.2)] overflow-hidden">
+             <span className="text-xl">🤖</span>
+          </div>
+        </div>
+      </div>
       
       <div className="relative z-10 w-full max-w-md px-4">
         <motion.div
@@ -68,45 +89,48 @@ export default function PracticeStartPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <GlassCard className="p-6 sm:p-8 text-center">
+          <GlassCard className="p-6 sm:p-10 text-center glass-strong border-uni-primary/40 relative">
+            {/* Ambient glow */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-uni-primary/10 blur-[40px] pointer-events-none"></div>
+
             {/* Robot illustration */}
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="mb-4 sm:mb-6"
+              className="mb-6 sm:mb-8 relative z-10"
             >
-              <div className="w-24 h-24 sm:w-32 sm:h-32 mx-auto bg-gradient-to-br from-uni-primary/20 to-uni-accent/20 rounded-full flex items-center justify-center">
-                <span className="text-5xl sm:text-6xl">🤖</span>
+              <div className="w-28 h-28 sm:w-36 sm:h-36 mx-auto bg-gradient-to-br from-[#1E293B] to-[#0F172A] border-2 border-uni-primary rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(0,229,255,0.3)]">
+                <span className="text-6xl sm:text-7xl">🤖</span>
               </div>
             </motion.div>
 
             {/* Material title */}
-            <h1 className="text-xl sm:text-2xl font-bold text-white mb-1 sm:mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 relative z-10">
               {material?.title || 'Latihan'}
             </h1>
-            <p className="text-text-secondary text-sm sm:text-base mb-4 sm:mb-6">
+            <p className="text-text-secondary text-sm sm:text-base mb-6 sm:mb-8 relative z-10">
               Bantu robot naik gedung dengan menjawab soal!
             </p>
 
             {/* Mode toggle */}
-            <div className="flex gap-2 mb-6 sm:mb-8 p-1 bg-uni-bg-secondary/50 rounded-xl">
+            <div className="flex gap-2 mb-8 p-1.5 bg-black/30 border border-white/10 rounded-xl relative z-10">
               <button
                 onClick={() => setMode('pretest')}
-                className={`flex-1 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
+                className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all ${
                   mode === 'pretest'
-                    ? 'bg-uni-primary text-white'
-                    : 'text-text-secondary hover:text-white'
+                    ? 'bg-uni-primary text-white shadow-[0_0_10px_rgba(0,229,255,0.4)]'
+                    : 'text-text-secondary hover:text-white hover:bg-white/5'
                 }`}
               >
                 Pre-test
               </button>
               <button
                 onClick={() => setMode('posttest')}
-                className={`flex-1 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
+                className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all ${
                   mode === 'posttest'
-                    ? 'bg-uni-primary text-white'
-                    : 'text-text-secondary hover:text-white'
+                    ? 'bg-uni-primary text-white shadow-[0_0_10px_rgba(0,229,255,0.4)]'
+                    : 'text-text-secondary hover:text-white hover:bg-white/5'
                 }`}
               >
                 Post-test
@@ -114,15 +138,15 @@ export default function PracticeStartPage() {
             </div>
 
             {/* Start button */}
-            <NeonButton
-              variant="primary"
-              size="lg"
-              className="w-full"
-              onClick={handleStart}
-              loading={loading}
-            >
-              🚀 Mulai Latihan
-            </NeonButton>
+            <div className="relative z-10">
+              <button
+                className="w-full py-4 bg-gradient-to-r from-uni-primary to-uni-accent hover:from-uni-primary-dark hover:to-uni-primary rounded-xl text-white font-bold text-lg shadow-[0_0_20px_rgba(0,229,255,0.4)] flex items-center justify-center gap-3 transition-transform hover:scale-105"
+                onClick={handleStart}
+                disabled={loading}
+              >
+                {loading ? 'Menyiapkan...' : '🚀 Mulai Latihan'}
+              </button>
+            </div>
 
             {/* Back link */}
             <Link

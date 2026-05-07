@@ -4,9 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { StarryBackground } from '@/components/ui/StarryBackground'
-import { GlassCard } from '@/components/ui/GlassCard'
-import { NeonButton } from '@/components/ui/NeonButton'
+import { StarryBackground, TowerBackground, GlassCard, NeonButton } from '@/components/ui'
 import { Input } from '@/components/ui/Input'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { ConfirmModal } from '@/components/ui/Modal'
@@ -178,8 +176,9 @@ export default function ClassDetailPage() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden">
-      <StarryBackground />
+    <main className="relative min-h-[100dvh] bg-uni-bg overflow-hidden flex flex-col pb-24">
+      <StarryBackground density="high" />
+      <TowerBackground variant="flat" />
       
       {/* P1 Fix: Modal confirmation for removing student */}
       <ConfirmModal
@@ -194,25 +193,111 @@ export default function ClassDetailPage() {
         loading={deletingId === removeModal.studentId}
       />
       
-      <div className="relative z-10 p-6">
+      <div className="relative z-20 w-full max-w-4xl mx-auto px-4 pt-8 pb-8 flex-grow flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <Link href="/teacher/classes" className="text-text-secondary hover:text-white">
-              ← Kembali
-            </Link>
-            <div>
-              <h1 className="text-2xl font-bold text-white">
-                {loading ? 'Loading...' : classData?.name}
-              </h1>
-              {classData && (
-                <p className="text-text-secondary">Tingkat {classData.grade}</p>
-              )}
+          <Link href="/teacher/classes" className="w-10 h-10 flex items-center justify-center rounded-xl border border-uni-primary/30 bg-uni-bg-secondary text-white hover:bg-uni-primary/20 transition-colors shadow-[0_0_10px_rgba(0,229,255,0.1)]">
+             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+             </svg>
+          </Link>
+          <div className="flex flex-col items-center">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-wide">
+              Rincian Kelas
+            </h1>
+            <div className="mt-2 flex items-center justify-center gap-2">
+               <div className="h-px w-12 bg-uni-primary/50" />
+               <div className="w-2 h-2 rotate-45 bg-uni-primary shadow-[0_0_5px_var(--primary-glow)]" />
+               <div className="h-px w-12 bg-uni-primary/50" />
             </div>
           </div>
-          <NeonButton onClick={() => setShowForm(true)}>
-            + Tambah Siswa
-          </NeonButton>
+          <div className="w-10 h-10"></div> {/* Spacer for centering */}
+        </div>
+
+        {/* Top Summary Area */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+           {/* Left: Class Info Card */}
+           <GlassCard className="p-6 flex flex-col items-center justify-center glass-strong border-uni-primary/40 relative overflow-hidden">
+              <div className="absolute top-4 left-0 w-full text-center z-10">
+                 <h2 className="text-2xl font-bold text-white tracking-tight">{loading ? 'Loading...' : classData?.name}</h2>
+              </div>
+              <div className="w-32 h-40 mt-8 mb-4 relative z-0 flex items-center justify-center">
+                 <svg viewBox="0 0 100 140" fill="none" className="w-full h-full drop-shadow-[0_0_15px_rgba(0,119,255,0.6)]">
+                    <path d="M50 10 L80 25 L80 115 L50 130 L20 115 L20 25 Z" fill="#0A1128" stroke="#00E5FF" strokeWidth="2" />
+                    <path d="M20 25 L50 40 L80 25" stroke="#00E5FF" strokeWidth="2" />
+                    <path d="M50 10 L50 40" stroke="#00E5FF" strokeWidth="2" />
+                    <path d="M25 45 L50 55 L75 45" stroke="#00E5FF" strokeWidth="2.5" className="drop-shadow-[0_0_5px_#00E5FF]" />
+                    <path d="M25 65 L50 75 L75 65" stroke="#00E5FF" strokeWidth="2.5" className="drop-shadow-[0_0_5px_#00E5FF]" />
+                    <path d="M25 85 L50 95 L75 85" stroke="#00E5FF" strokeWidth="2.5" className="drop-shadow-[0_0_5px_#00E5FF]" />
+                    <path d="M25 105 L50 115 L75 105" stroke="#00E5FF" strokeWidth="2.5" className="drop-shadow-[0_0_5px_#00E5FF]" />
+                 </svg>
+              </div>
+              <div className="flex items-center justify-center gap-2 text-text-secondary z-10">
+                 <span className="text-uni-primary">👥</span>
+                 <span className="font-medium text-white">{students.length} Siswa</span>
+              </div>
+           </GlassCard>
+
+           {/* Right: Summary Stats */}
+           <GlassCard className="p-6 glass-strong flex flex-col justify-between h-full">
+              <div className="flex items-center gap-2 mb-6">
+                 <svg className="w-5 h-5 text-uni-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                 </svg>
+                 <h3 className="font-semibold text-white">Ringkasan Kelas</h3>
+              </div>
+
+              <div className="space-y-4 flex-grow flex flex-col justify-center">
+                 <div className="flex items-center justify-between pb-3 border-b border-white/5">
+                    <div className="flex items-center gap-3">
+                       <div className="w-8 h-8 rounded-full bg-uni-primary/20 flex items-center justify-center text-uni-primary shadow-[0_0_10px_rgba(0,229,255,0.2)]">★</div>
+                       <span className="text-text-secondary text-sm">Rata-rata Nilai</span>
+                    </div>
+                    <span className="text-uni-primary font-bold text-lg">
+                       {students.length > 0 ? Math.round(students.reduce((acc, curr) => acc + curr.stats.accuracy, 0) / students.length) : 0}%
+                    </span>
+                 </div>
+                 
+                 <div className="flex items-center justify-between pb-3 border-b border-white/5">
+                    <div className="flex items-center gap-3">
+                       <div className="w-8 h-8 rounded-full bg-uni-accent/20 flex items-center justify-center text-uni-accent shadow-[0_0_10px_rgba(0,119,255,0.2)]">👥</div>
+                       <span className="text-text-secondary text-sm">Murid Aktif</span>
+                    </div>
+                    <span className="text-uni-accent font-bold text-lg">{students.length}</span>
+                 </div>
+
+                 <div className="flex items-center justify-between pb-3 border-b border-white/5">
+                    <div className="flex items-center gap-3">
+                       <div className="w-8 h-8 rounded-full bg-uni-warning/20 flex items-center justify-center text-uni-warning shadow-[0_0_10px_rgba(245,158,11,0.2)]">⚠️</div>
+                       <span className="text-text-secondary text-sm">Butuh Bimbingan</span>
+                    </div>
+                    <span className="text-uni-warning font-bold text-lg">
+                       {students.filter(s => s.stats.accuracy < 50).length}
+                    </span>
+                 </div>
+
+                 <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                       <div className="w-8 h-8 rounded-full bg-uni-success/20 flex items-center justify-center text-uni-success shadow-[0_0_10px_rgba(16,185,129,0.2)]">🏆</div>
+                       <span className="text-text-secondary text-sm">Top Student</span>
+                    </div>
+                    <span className="text-uni-success font-bold text-lg">
+                       {students.length > 0 ? [...students].sort((a,b) => b.stats.accuracy - a.stats.accuracy)[0].name.split(' ')[0] : '-'}
+                    </span>
+                 </div>
+              </div>
+           </GlassCard>
+        </div>
+
+        {/* List Students Header */}
+        <div className="flex items-center justify-between mb-4 mt-4">
+           <div className="flex items-center gap-2">
+              <div className="w-1 h-6 bg-uni-primary rounded-full shadow-[0_0_10px_rgba(0,229,255,0.5)]"></div>
+              <h3 className="text-lg font-bold text-white">Daftar Siswa</h3>
+           </div>
+           <button onClick={() => setShowForm(true)} className="px-4 py-2 bg-uni-primary/20 text-uni-primary border border-uni-primary/50 hover:bg-uni-primary/40 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+              <span>+</span> Tambah Siswa
+           </button>
         </div>
 
         {/* Add Student Form */}
@@ -317,57 +402,45 @@ export default function ClassDetailPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
               >
-                {/* P0 Fix: Single click navigation with clear CTA */}
-                <GlassCard hover className="p-4 cursor-pointer" onClick={() => router.push(`/teacher/students/${student.id}`)}>
+                <GlassCard hover className="p-4 cursor-pointer glass-strong border-white/5" onClick={() => router.push(`/teacher/students/${student.id}`)}>
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-uni-primary/20 rounded-full flex items-center justify-center">
-                      <span>👤</span>
+                    <div className="w-12 h-12 bg-gradient-to-br from-[#1E293B] to-[#0F172A] border border-uni-primary/30 rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(0,229,255,0.1)] flex-shrink-0 relative overflow-hidden">
+                      <span className="text-xl">🤖</span>
                     </div>
+                    
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-semibold text-white">{student.name}</h3>
-                        {student.passwordStatus === 'UNSET' && (
-                          <span className="text-xs bg-uni-warning/20 text-uni-warning px-2 py-0.5 rounded">
-                            Belum aktif
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-sm text-text-secondary">NISN: {student.nisn}</p>
-                    </div>
-                    <div className="text-right hidden sm:block">
-                      <div className="text-sm text-text-secondary mb-1">Progress</div>
-                      <div className="w-24">
-                        <ProgressBar value={student.stats.accuracy} size="sm" />
+                      <h3 className="font-semibold text-white text-base md:text-lg mb-1 truncate">{student.name}</h3>
+                      <div className="flex items-center gap-2">
+                         <span className="text-xs text-uni-primary">Siswa Aktif</span>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-lg font-bold text-uni-primary">
-                        {student.stats.totalFloors}
+                    
+                    <div className="hidden sm:block flex-shrink-0 w-32 md:w-48 text-right pr-4">
+                      <div className="flex justify-end items-center gap-2 mb-1">
+                         <span className="text-lg font-bold text-uni-primary">{student.stats.accuracy}%</span>
                       </div>
-                      <div className="text-xs text-text-secondary">Lantai</div>
+                      <ProgressBar value={student.stats.accuracy} size="sm" />
                     </div>
-                    {/* P1 Fix: Clear action buttons with labels */}
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          router.push(`/teacher/students/${student.id}`)
-                        }}
-                        className="px-3 py-1.5 text-xs bg-uni-primary/20 text-uni-primary hover:bg-uni-primary/30 rounded-lg transition-colors"
-                      >
-                        Detail
-                      </button>
+
+                    <div className="flex items-center gap-2 ml-auto">
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
                           setRemoveModal({ show: true, studentId: student.id, studentName: student.name })
                         }}
                         disabled={deletingId === student.id}
-                        className="px-3 py-1.5 text-xs bg-uni-error/10 text-uni-error hover:bg-uni-error/20 rounded-lg transition-colors disabled:opacity-50"
+                        className="p-2 text-text-muted hover:text-uni-error hover:bg-uni-error/10 rounded-lg transition-colors disabled:opacity-50"
                         title="Keluarkan dari kelas"
                       >
-                        {deletingId === student.id ? '...' : 'Keluarkan'}
+                        {deletingId === student.id ? '...' : (
+                           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        )}
                       </button>
+                      <div className="w-8 h-8 flex items-center justify-center text-text-secondary group-hover:text-white group-hover:translate-x-1 transition-all">
+                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                         </svg>
+                      </div>
                     </div>
                   </div>
                 </GlassCard>
