@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
 
     // If no currentQuestionId or not found, pick a new one
     if (!currentQuestion) {
-      const usedQuestionIds = [...new Set(sessionAttempts.map(a => a.questionId))]
+      const usedQuestionIds = Array.from(new Set(sessionAttempts.map(a => a.questionId)))
       const targetDifficulty = session.currentDifficulty || 2
 
       let available = await db.select().from(questions)

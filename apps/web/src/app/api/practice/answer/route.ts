@@ -153,7 +153,7 @@ export async function POST(request: NextRequest) {
       .from(practiceAttempts)
       .where(eq(practiceAttempts.sessionId, sessionId))
 
-    const usedQuestionIds = [...new Set(usedAttempts.map((a) => a.questionId))]
+    const usedQuestionIds = Array.from(new Set(usedAttempts.map((a) => a.questionId)))
     usedQuestionIds.push(questionId) // also exclude current question
 
     // Save attempt
