@@ -4,7 +4,8 @@ import { useEffect, useState, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import confetti from 'canvas-confetti'
-import { StarryBackground, TowerBackground, RobotMascot } from '@/components/ui'
+import { TowerBackground, GlassCard } from '@/components/ui'
+import { useAuth } from '@/lib/auth/context'
 import { Question } from '@/lib/types'
 
 interface QuestionWithHints extends Question {
@@ -28,13 +29,15 @@ interface GameState {
   stats: { floorsClimbed: number; correctAnswers: number; totalAttempts: number }
 }
 
+const TOTAL_FLOORS = 10 // visual reference for the progress bar
+
 export default function GamePlayPage() {
   const params = useParams()
   const materialId = params.materialId as string
   const router = useRouter()
   const { user, isLoading } = useAuth()
   const [gameState, setGameState] = useState<GameState | null>(null)
-  const [robotState, setRobotState] = useState<'idle' | 'climbing' | 'celebrating'>('idle')
+  const [, setRobotState] = useState<'idle' | 'climbing' | 'celebrating'>('idle')
   const [showWrongFeedback, setShowWrongFeedback] = useState(false)
 
   useEffect(() => {
@@ -82,15 +85,14 @@ export default function GamePlayPage() {
           } else {
             router.push(`/student/practice/${materialId}/start`)
           }
-        } catch (error) {
+        } catch {
           router.push(`/student/practice/${materialId}/start`)
         }
       }
     }
-    
+
     initSession()
   }, [user, isLoading, router, materialId])
-
 
   const fireConfetti = useCallback(() => {
     confetti({
@@ -166,10 +168,9 @@ export default function GamePlayPage() {
           }, 800)
         }, 1500)
       } else {
-        // Show wrong feedback animation
         setShowWrongFeedback(true)
         setTimeout(() => setShowWrongFeedback(false), 600)
-        
+
         if (data.mustStudy) {
           sessionStorage.setItem(
             'studyMaterial',
@@ -232,21 +233,25 @@ export default function GamePlayPage() {
     } catch (error) {
       console.error('Failed to end session:', error)
     }
-    // P1 Fix: Include materialId and materialTitle for better feedback on complete page
-    sessionStorage.setItem('practiceStats', JSON.stringify({
-      ...gameState.stats,
-      materialId: gameState.materialId,
-      materialTitle: gameState.materialName,
-    }))
+    sessionStorage.setItem(
+      'practiceStats',
+      JSON.stringify({
+        ...gameState.stats,
+        materialId: gameState.materialId,
+        materialTitle: gameState.materialName,
+      })
+    )
     sessionStorage.removeItem('practiceSession')
     router.push('/student/practice/complete')
   }
 
   if (isLoading || !user || !gameState) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0e1a]">
-        <div className="text-white">Loading...</div>
-      </div>
+      <TowerBackground variant="practice">
+        <div className="min-h-[100dvh] flex items-center justify-center">
+          <div className="text-white/80 text-sm animate-pulse">Menyiapkan latihan…</div>
+        </div>
+      </TowerBackground>
     )
   }
 
@@ -257,190 +262,244 @@ export default function GamePlayPage() {
     { key: 'D', text: gameState.question.optD },
   ]
 
+  const progressPct = Math.min(
+    100,
+    Math.round(((gameState.floor - 1) / TOTAL_FLOORS) * 100)
+  )
+
+  const cardGlow: 'cyan' | 'red' = showWrongFeedback ? 'red' : 'cyan'
 
   return (
-    <main className="relative w-full h-[100dvh] overflow-hidden bg-uni-bg pb-24">
-      {/* Wrong Answer Shake Effect */}
+    <TowerBackground variant="practice">
+      {/* Red flash feedback on wrong answer */}
       <AnimatePresence>
         {showWrongFeedback && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-50 pointer-events-none"
-            style={{ background: 'radial-gradient(circle, rgba(239,68,68,0.2) 0%, transparent 70%)' }}
+            className="fixed inset-0 z-50 pointer-events-none"
+            style={{
+              background:
+                'radial-gradient(circle at center, rgba(239,68,68,0.25) 0%, transparent 65%)',
+            }}
           />
         )}
       </AnimatePresence>
 
-      <StarryBackground density="high" />
-      <TowerBackground variant="practice" />
-
-      {/* Top Header */}
-      <div className="absolute top-0 left-0 w-full p-4 sm:p-6 z-30 flex justify-between items-center pointer-events-none">
-        {/* Left: Logo */}
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-md bg-gradient-to-br from-uni-primary to-uni-accent flex items-center justify-center shadow-[0_0_10px_rgba(0,229,255,0.3)]">
-            <span className="text-white font-bold text-lg leading-none">U</span>
+      {/* ── TOP HEADER: logo + floor badge + progress bar ─────────────── */}
+      <header className="relative z-30 w-full px-4 pt-4 sm:px-6 sm:pt-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-md bg-gradient-to-br from-uni-primary to-uni-accent flex items-center justify-center shadow-[0_0_10px_rgba(0,229,255,0.4)]">
+              <span className="text-white font-bold text-lg leading-none">U</span>
+            </div>
+            <span className="text-white font-bold text-xl tracking-wide hidden sm:block">
+              Unimath
+            </span>
           </div>
-          <span className="text-white font-bold text-xl tracking-wide hidden sm:block">Unimath</span>
+
+          <motion.div
+            key={gameState.floor}
+            initial={{ scale: 0.85, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="px-3 py-1.5 rounded-full bg-[rgba(7,17,36,0.75)] border border-cyan-400/60 backdrop-blur-md shadow-[0_0_18px_-4px_rgba(6,182,212,0.7)]"
+          >
+            <span className="text-cyan-300 font-bold text-xs sm:text-sm tracking-wide">
+              🏢 Lantai {gameState.floor}
+            </span>
+          </motion.div>
         </div>
 
-        {/* Right: Floor Badge */}
+        {/* Progress bar */}
+        <div className="mt-3 mx-auto max-w-md">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] sm:text-xs text-white/60 uppercase tracking-[0.15em]">
+              Progress
+            </span>
+            <span className="text-[10px] sm:text-xs text-cyan-300 font-semibold">
+              {progressPct}%
+            </span>
+          </div>
+          <div className="h-2 rounded-full bg-black/50 border border-cyan-500/20 overflow-hidden">
+            <motion.div
+              className="h-full bg-gradient-to-r from-cyan-400 via-cyan-300 to-emerald-400"
+              initial={{ width: 0 }}
+              animate={{ width: `${progressPct}%` }}
+              transition={{ duration: 0.6, ease: 'easeOut' }}
+              style={{ boxShadow: '0 0 12px rgba(6,182,212,0.7)' }}
+            />
+          </div>
+        </div>
+      </header>
+
+      {/* ── QUESTION CARD ──────────────────────────────────────────── */}
+      <section className="relative z-20 flex-1 flex items-start sm:items-center justify-center px-4 pt-6 pb-40">
         <motion.div
-          key={gameState.floor}
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-uni-bg-secondary/80 border border-uni-primary/50 shadow-[0_0_15px_rgba(0,229,255,0.3)] backdrop-blur-md"
-        >
-          <span className="text-uni-primary font-bold text-sm sm:text-base tracking-wide">🏢 Lantai {gameState.floor}</span>
-        </motion.div>
-      </div>
-
-      {/* Stars Background - Reduced for mobile performance */}
-      <div className="absolute inset-0">
-
-
-
-      {/* Question Card - Mobile First Design */}
-      <div className="absolute inset-x-0 top-12 sm:top-16 bottom-36 sm:bottom-44 flex items-start justify-center z-20 px-3 sm:px-4 pt-2 overflow-y-auto">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ 
-            opacity: 1, 
-            scale: 1, 
+          initial={{ opacity: 0, y: 20, scale: 0.97 }}
+          animate={{
+            opacity: 1,
             y: 0,
-            x: showWrongFeedback ? [-5, 5, -5, 5, 0] : 0
+            scale: 1,
+            x: showWrongFeedback ? [-6, 6, -4, 4, 0] : 0,
           }}
-          transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="w-full max-w-md p-4 sm:p-5 rounded-2xl"
-          style={{
-            background: 'rgba(15, 23, 42, 0.85)',
-            backdropFilter: 'blur(20px)',
-            border: showWrongFeedback ? '1px solid rgba(239, 68, 68, 0.5)' : '1px solid rgba(6, 182, 212, 0.3)',
-            boxShadow: showWrongFeedback 
-              ? '0 0 30px rgba(239,68,68,0.3)' 
-              : '0 0 40px -15px rgba(6,182,212,0.4), inset 0 1px 0 rgba(255,255,255,0.1)',
-          }}
+          transition={{ duration: 0.45, ease: 'easeOut' }}
+          className="w-full max-w-md"
         >
-          {/* Material Info - Compact */}
-          <div className="text-center mb-2">
-            <p className="text-slate-400 text-xs sm:text-sm font-medium">
+          <GlassCard
+            glowColor={cardGlow}
+            intensity="strong"
+            className="p-5 sm:p-6"
+          >
+            {/* Material label */}
+            <p className="text-center text-[11px] sm:text-xs text-cyan-200/70 uppercase tracking-[0.2em] mb-3">
               {gameState.materialName}
             </p>
-          </div>
 
-          {/* Question Text */}
-          <h2 className="text-base sm:text-lg md:text-xl font-semibold text-cyan-300 text-center leading-relaxed mb-4">
-            {gameState.question.question}
-          </h2>
+            {/* Question */}
+            <h2 className="text-center text-base sm:text-lg md:text-xl font-semibold text-white leading-relaxed mb-5">
+              {gameState.question.question}
+            </h2>
 
-          {/* Answer Options - Stack on mobile, 2x2 on larger */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mb-3">
-            {options.map((opt) => (
-              <motion.button
-                key={opt.key}
-                onClick={() => handleSelectAnswer(opt.key)}
-                disabled={gameState.isSubmitting}
-                className={`py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl sm:rounded-full text-left sm:text-center font-medium transition-all duration-200 border-2 text-sm sm:text-base ${
-                  gameState.selectedAnswer === opt.key
-                    ? 'bg-cyan-500/30 border-cyan-400 text-white shadow-[0_0_20px_rgba(6,182,212,0.5)]'
-                    : 'bg-slate-800/50 border-slate-600/50 text-slate-200 active:bg-cyan-500/20 active:border-cyan-400'
-                } ${gameState.isSubmitting ? 'opacity-50' : ''}`}
-                whileTap={!gameState.isSubmitting ? { scale: 0.98 } : undefined}
-              >
-                <span className="font-bold text-cyan-400 mr-2">{opt.key}.</span>
-                {opt.text}
-              </motion.button>
-            ))}
-          </div>
+            {/* Options: 2×2 grid with pill-shaped glass buttons */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-4">
+              {options.map((opt) => {
+                const selected = gameState.selectedAnswer === opt.key
+                return (
+                  <motion.button
+                    key={opt.key}
+                    onClick={() => handleSelectAnswer(opt.key)}
+                    disabled={gameState.isSubmitting}
+                    whileTap={!gameState.isSubmitting ? { scale: 0.97 } : undefined}
+                    className={[
+                      'group relative py-2.5 px-4 rounded-xl text-left text-sm sm:text-[15px] font-medium transition-all duration-200 border backdrop-blur-sm',
+                      selected
+                        ? 'bg-cyan-400/20 border-cyan-300 text-white shadow-[0_0_22px_-4px_rgba(6,182,212,0.9)]'
+                        : 'bg-black/40 border-cyan-500/25 text-slate-100 hover:border-cyan-400/70 hover:bg-cyan-500/10',
+                      gameState.isSubmitting && 'opacity-60 cursor-not-allowed',
+                    ].join(' ')}
+                  >
+                    <span
+                      className={[
+                        'inline-flex items-center justify-center w-6 h-6 rounded-md mr-2 text-xs font-bold transition-colors',
+                        selected
+                          ? 'bg-cyan-300 text-slate-900'
+                          : 'bg-cyan-500/15 text-cyan-300 group-hover:bg-cyan-400/25',
+                      ].join(' ')}
+                    >
+                      {opt.key}
+                    </span>
+                    {opt.text}
+                  </motion.button>
+                )
+              })}
+            </div>
 
-          {/* Hints Section - Compact */}
-          <AnimatePresence>
-            {gameState.wrongCount > 0 && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="mb-3 space-y-1.5"
-              >
-                {gameState.wrongCount >= 1 && gameState.question.hint1 && (
-                  <div className="p-2.5 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-xs sm:text-sm">
-                    <span className="text-yellow-400 font-semibold">💡 </span>
-                    <span className="text-slate-200">{gameState.question.hint1}</span>
-                  </div>
-                )}
-                {gameState.wrongCount >= 2 && gameState.question.hint2 && (
-                  <div className="p-2.5 bg-orange-500/10 border border-orange-500/30 rounded-lg text-xs sm:text-sm">
-                    <span className="text-orange-400 font-semibold">💡 </span>
-                    <span className="text-slate-200">{gameState.question.hint2}</span>
-                  </div>
-                )}
-                {gameState.wrongCount >= 3 && gameState.question.hint3 && (
-                  <div className="p-2.5 bg-red-500/10 border border-red-500/30 rounded-lg text-xs sm:text-sm">
-                    <span className="text-red-400 font-semibold">💡 </span>
-                    <span className="text-slate-200">{gameState.question.hint3}</span>
-                  </div>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
+            {/* Hints (progressive) */}
+            <AnimatePresence initial={false}>
+              {gameState.wrongCount > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-2 mb-4"
+                >
+                  {gameState.wrongCount >= 1 && gameState.question.hint1 && (
+                    <HintPill tone="yellow" text={gameState.question.hint1} />
+                  )}
+                  {gameState.wrongCount >= 2 && gameState.question.hint2 && (
+                    <HintPill tone="orange" text={gameState.question.hint2} />
+                  )}
+                  {gameState.wrongCount >= 3 && gameState.question.hint3 && (
+                    <HintPill tone="red" text={gameState.question.hint3} />
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-          {/* Submit Button */}
-          <motion.button
-            onClick={handleSubmitAnswer}
-            disabled={!gameState.selectedAnswer || gameState.isSubmitting}
-            className={`w-full py-3 rounded-xl sm:rounded-full font-bold text-base sm:text-lg transition-all duration-300 ${
-              gameState.selectedAnswer && !gameState.isSubmitting
-                ? 'bg-gradient-to-r from-emerald-400 to-teal-500 text-slate-900 shadow-lg shadow-emerald-500/30 active:shadow-emerald-500/50'
-                : 'bg-slate-700/50 text-slate-500'
-            }`}
-            whileTap={gameState.selectedAnswer && !gameState.isSubmitting ? { scale: 0.98 } : undefined}
-          >
-            {gameState.isSubmitting ? (
-              <span className="flex items-center justify-center gap-2">
-                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                Memeriksa...
-              </span>
-            ) : 'Kirim Jawaban'}
-          </motion.button>
+            {/* Submit */}
+            <motion.button
+              onClick={handleSubmitAnswer}
+              disabled={!gameState.selectedAnswer || gameState.isSubmitting}
+              whileTap={
+                gameState.selectedAnswer && !gameState.isSubmitting
+                  ? { scale: 0.98 }
+                  : undefined
+              }
+              className={[
+                'w-full py-3 rounded-xl font-bold text-sm sm:text-base transition-all duration-300',
+                gameState.selectedAnswer && !gameState.isSubmitting
+                  ? 'bg-gradient-to-r from-emerald-400 to-cyan-400 text-slate-900 shadow-[0_0_24px_-4px_rgba(16,185,129,0.7)] hover:shadow-[0_0_32px_-4px_rgba(16,185,129,0.9)]'
+                  : 'bg-slate-700/40 text-slate-400 cursor-not-allowed',
+              ].join(' ')}
+            >
+              {gameState.isSubmitting ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="none"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                  Memeriksa…
+                </span>
+              ) : (
+                'Kirim Jawaban'
+              )}
+            </motion.button>
+          </GlassCard>
         </motion.div>
+      </section>
+
+      {/* ── BOTTOM STATUS BAR: XP / Lantai ───────────────────────────── */}
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-20 w-[calc(100%-2rem)] max-w-md pointer-events-none">
+        <div className="pointer-events-auto flex items-center gap-2 px-4 py-2.5 rounded-full bg-[rgba(7,17,36,0.8)] border border-cyan-400/40 backdrop-blur-md shadow-[0_0_24px_-8px_rgba(6,182,212,0.8)]">
+          <span className="text-cyan-300 text-lg">✨</span>
+          <div className="flex-1">
+            <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.15em] text-white/60 mb-0.5">
+              <span>XP · Lantai</span>
+              <span className="text-cyan-300">
+                {gameState.stats.correctAnswers} / {gameState.floor}
+              </span>
+            </div>
+            <div className="h-1.5 rounded-full bg-black/60 overflow-hidden">
+              <motion.div
+                className="h-full bg-gradient-to-r from-cyan-400 to-emerald-400"
+                initial={{ width: 0 }}
+                animate={{
+                  width: `${Math.min(
+                    100,
+                    (gameState.stats.correctAnswers /
+                      Math.max(1, gameState.stats.totalAttempts)) *
+                      100
+                  )}%`,
+                }}
+                transition={{ duration: 0.6 }}
+                style={{ boxShadow: '0 0 8px rgba(6,182,212,0.7)' }}
+              />
+            </div>
+          </div>
+          <button
+            onClick={handleEndSession}
+            className="ml-1 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-slate-900 bg-gradient-to-r from-teal-300 to-cyan-300 shadow-[0_0_12px_-2px_rgba(6,182,212,0.7)] active:scale-95 transition"
+            title="Udah dulu latihan hari ini"
+          >
+            Selesai
+          </button>
+        </div>
       </div>
 
-
-      {/* Robot Mascot Area */}
-      <div className="absolute bottom-6 sm:bottom-10 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
-        <RobotMascot state={robotState} size="xl" />
-      </div>
-
-
-      {/* Exit Button - Bottom left on mobile */}
-      <motion.button
-        onClick={handleEndSession}
-        className="fixed bottom-3 left-3 sm:bottom-6 sm:left-auto sm:right-6 z-30 flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-full font-semibold shadow-lg transition-all text-sm sm:text-base"
-        style={{
-          background: 'linear-gradient(135deg, #14b8a6, #06b6d4)',
-          color: '#0f172a',
-          boxShadow: '0 0 15px rgba(20,184,166,0.4)',
-        }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-          />
-        </svg>
-        <span className="hidden sm:inline">Udah dulu</span>
-        <span className="sm:hidden">Selesai</span>
-      </motion.button>
-
-      {/* Correct Answer Modal - Mobile optimized */}
+      {/* ── CORRECT MODAL ───────────────────────────────────────────── */}
       <AnimatePresence>
         {gameState.showCorrectModal && (
           <motion.div
@@ -450,35 +509,34 @@ export default function GamePlayPage() {
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4"
           >
             <motion.div
-              initial={{ scale: 0.5, opacity: 0, y: 20 }}
+              initial={{ scale: 0.6, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.8, opacity: 0, y: -20 }}
               transition={{ type: 'spring', damping: 15 }}
-              className="p-6 sm:p-8 text-center w-full max-w-xs sm:max-w-sm rounded-2xl sm:rounded-3xl"
-              style={{
-                background: 'rgba(15, 23, 42, 0.95)',
-                backdropFilter: 'blur(20px)',
-                border: '2px solid rgba(16, 185, 129, 0.5)',
-                boxShadow: '0 0 60px rgba(16,185,129,0.4)',
-              }}
+              className="w-full max-w-xs sm:max-w-sm"
             >
-              <motion.div
-                className="text-5xl sm:text-7xl mb-3"
-                animate={{ rotate: [0, -15, 15, 0], scale: [1, 1.3, 1] }}
-                transition={{ duration: 0.6 }}
-              >
-                🎉
-              </motion.div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-emerald-400 mb-2">Benar!</h2>
-              <p className="text-white text-base sm:text-lg font-medium">
-                Naik ke lantai <span className="text-cyan-400 font-bold">{gameState.floor + 1}</span>! 🚀
-              </p>
+              <GlassCard glowColor="emerald" intensity="strong" className="p-6 sm:p-8 text-center">
+                <motion.div
+                  className="text-5xl sm:text-7xl mb-3"
+                  animate={{ rotate: [0, -15, 15, 0], scale: [1, 1.3, 1] }}
+                  transition={{ duration: 0.6 }}
+                >
+                  🎉
+                </motion.div>
+                <h2 className="text-2xl sm:text-3xl font-bold text-emerald-300 mb-2">
+                  Benar!
+                </h2>
+                <p className="text-white text-sm sm:text-base font-medium">
+                  Naik ke lantai{' '}
+                  <span className="text-cyan-300 font-bold">{gameState.floor + 1}</span>! 🚀
+                </p>
+              </GlassCard>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Must Study Modal - Mobile optimized */}
+      {/* ── MUST-STUDY MODAL ───────────────────────────────────────── */}
       <AnimatePresence>
         {gameState.showWrongModal && (
           <motion.div
@@ -488,58 +546,74 @@ export default function GamePlayPage() {
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4"
           >
             <motion.div
-              initial={{ scale: 0.5, opacity: 0 }}
+              initial={{ scale: 0.6, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
-              className="p-5 sm:p-8 text-center w-full max-w-xs sm:max-w-sm rounded-2xl sm:rounded-3xl"
-              style={{
-                background: 'rgba(15, 23, 42, 0.95)',
-                backdropFilter: 'blur(20px)',
-                border: '2px solid rgba(249, 115, 22, 0.5)',
-                boxShadow: '0 0 50px rgba(249,115,22,0.3)',
-              }}
+              className="w-full max-w-xs sm:max-w-sm"
             >
-              <div className="text-5xl sm:text-6xl mb-3">📚</div>
-              <h2 className="text-lg sm:text-xl font-bold text-white mb-2">Yuk belajar dulu!</h2>
-              <p className="text-slate-400 text-xs sm:text-sm mb-2">Kamu sudah mencoba 4 kali di soal ini.</p>
-              <p className="text-cyan-400 font-semibold mb-4 sm:mb-6 text-sm sm:text-base">📖 {gameState.materialName}</p>
-              <div className="space-y-2">
-                <motion.button
-                  onClick={() => router.push(`/student/materials/${gameState.materialId}`)}
-                  className="w-full py-2.5 sm:py-3 rounded-xl sm:rounded-full font-bold shadow-lg text-sm sm:text-base"
-                  style={{
-                    background: 'linear-gradient(135deg, #06b6d4, #14b8a6)',
-                    color: '#0f172a',
-                    boxShadow: '0 0 15px rgba(6,182,212,0.4)',
-                  }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  📖 Pelajari Materi
-                </motion.button>
-                <button
-                  onClick={() => setGameState(prev => prev ? { ...prev, showWrongModal: false } : null)}
-                  className="w-full py-2 text-slate-400 text-xs sm:text-sm hover:text-white transition-colors"
-                >
-                  Coba lagi nanti
-                </button>
-              </div>
+              <GlassCard glowColor="amber" intensity="strong" className="p-5 sm:p-7 text-center">
+                <div className="text-5xl sm:text-6xl mb-3">📚</div>
+                <h2 className="text-lg sm:text-xl font-bold text-white mb-2">
+                  Yuk belajar dulu!
+                </h2>
+                <p className="text-slate-300 text-xs sm:text-sm mb-1">
+                  Kamu sudah mencoba 4 kali di soal ini.
+                </p>
+                <p className="text-cyan-300 font-semibold mb-5 text-sm sm:text-base">
+                  📖 {gameState.materialName}
+                </p>
+                <div className="space-y-2">
+                  <motion.button
+                    onClick={() =>
+                      router.push(`/student/materials/${gameState.materialId}`)
+                    }
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full py-2.5 sm:py-3 rounded-xl font-bold text-sm sm:text-base bg-gradient-to-r from-cyan-400 to-teal-400 text-slate-900 shadow-[0_0_18px_-3px_rgba(6,182,212,0.7)]"
+                  >
+                    📖 Pelajari Materi
+                  </motion.button>
+                  <button
+                    onClick={() =>
+                      setGameState((prev) =>
+                        prev ? { ...prev, showWrongModal: false } : null
+                      )
+                    }
+                    className="w-full py-2 text-slate-400 text-xs sm:text-sm hover:text-white transition-colors"
+                  >
+                    Coba lagi nanti
+                  </button>
+                </div>
+              </GlassCard>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
+    </TowerBackground>
+  )
+}
 
-      {/* CSS for twinkle animation */}
-      <style jsx>{`
-        @keyframes twinkle {
-          0%,
-          100% {
-            opacity: 0.3;
-          }
-          50% {
-            opacity: 1;
-          }
-        }
-      `}</style>
-    </main>
+/* ────────────────────────────────────────────────────────────────── */
+
+function HintPill({
+  tone,
+  text,
+}: {
+  tone: 'yellow' | 'orange' | 'red'
+  text: string
+}) {
+  const toneClasses =
+    tone === 'yellow'
+      ? 'bg-yellow-500/10 border-yellow-400/40 text-yellow-200'
+      : tone === 'orange'
+      ? 'bg-orange-500/10 border-orange-400/40 text-orange-200'
+      : 'bg-red-500/10 border-red-400/40 text-red-200'
+
+  return (
+    <div
+      className={`flex gap-2 items-start p-2.5 rounded-lg border backdrop-blur-sm text-xs sm:text-sm ${toneClasses}`}
+    >
+      <span aria-hidden>💡</span>
+      <span className="text-slate-100/90 leading-snug">{text}</span>
+    </div>
   )
 }

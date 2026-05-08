@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import confetti from 'canvas-confetti'
-import { StarryBackground, TowerBackground, GlassCard, NeonButton } from '@/components/ui'
+import { TowerBackground, GlassCard } from '@/components/ui'
 import { useAuth } from '@/lib/auth/context'
 
 interface PracticeStats {
@@ -27,202 +27,249 @@ export default function PracticeCompletePage() {
       return
     }
 
-    // Load stats from sessionStorage
     const statsData = sessionStorage.getItem('practiceStats')
     if (statsData) {
       setStats(JSON.parse(statsData))
       sessionStorage.removeItem('practiceStats')
-      
-      // Fire confetti
+
       confetti({
         particleCount: 150,
         spread: 100,
         origin: { y: 0.5 },
-        colors: ['#00d4aa', '#00b4d8', '#ffffff', '#f6ad55'],
+        colors: ['#06B6D4', '#10B981', '#ffffff', '#F59E0B'],
       })
     }
   }, [user, isLoading, router])
 
   if (isLoading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-uni-bg">
-        <div className="text-white">Loading...</div>
-      </div>
+      <TowerBackground variant="practice">
+        <div className="min-h-[100dvh] flex items-center justify-center">
+          <div className="text-white/80 text-sm animate-pulse">Loading…</div>
+        </div>
+      </TowerBackground>
     )
   }
 
-  const accuracy = stats && stats.totalAttempts > 0 
-    ? Math.round((stats.correctAnswers / stats.totalAttempts) * 100) 
-    : 0
+  const accuracy =
+    stats && stats.totalAttempts > 0
+      ? Math.round((stats.correctAnswers / stats.totalAttempts) * 100)
+      : 0
 
-  // P1 Fix: Generate motivational message based on performance
   const getMotivationalMessage = () => {
-    if (!stats) return { emoji: '🎉', title: 'Selamat!', message: 'Kamu udah berlatih untuk hari ini!' }
-    
-    if (accuracy >= 90) {
-      return { emoji: '🌟', title: 'Luar Biasa!', message: 'Akurasi kamu sangat tinggi! Kamu siap naik level!' }
-    } else if (accuracy >= 70) {
-      return { emoji: '👏', title: 'Bagus Sekali!', message: 'Terus berlatih untuk hasil yang lebih baik!' }
-    } else if (accuracy >= 50) {
-      return { emoji: '💪', title: 'Semangat!', message: 'Coba ulangi materi ini untuk meningkatkan akurasi.' }
-    } else {
-      return { emoji: '📚', title: 'Jangan Menyerah!', message: 'Pelajari kembali materinya dan coba lagi ya!' }
+    if (!stats)
+      return {
+        emoji: '🎉',
+        title: 'Selamat!',
+        message: 'Kamu udah berlatih untuk hari ini!',
+      }
+    if (accuracy >= 90)
+      return {
+        emoji: '🌟',
+        title: 'Luar Biasa!',
+        message: 'Akurasi kamu sangat tinggi! Kamu siap naik level!',
+      }
+    if (accuracy >= 70)
+      return {
+        emoji: '👏',
+        title: 'Bagus Sekali!',
+        message: 'Terus berlatih untuk hasil yang lebih baik!',
+      }
+    if (accuracy >= 50)
+      return {
+        emoji: '💪',
+        title: 'Semangat!',
+        message: 'Coba ulangi materi ini untuk meningkatkan akurasi.',
+      }
+    return {
+      emoji: '📚',
+      title: 'Jangan Menyerah!',
+      message: 'Pelajari kembali materinya dan coba lagi ya!',
     }
   }
 
   const motivation = getMotivationalMessage()
 
-  // P1 Fix: Recommendation based on accuracy
   const getRecommendation = () => {
     if (!stats) return null
     if (accuracy >= 80) {
-      return { text: 'Lanjut ke Materi Berikutnya', href: '/student/materials', variant: 'primary' as const }
-    } else {
-      return { text: 'Ulangi Latihan', href: stats.materialId ? `/student/practice/${stats.materialId}/start` : '/student/practice', variant: 'secondary' as const }
+      return {
+        text: 'Lanjut ke Materi Berikutnya',
+        href: '/student/materials',
+      }
+    }
+    return {
+      text: 'Ulangi Latihan',
+      href: stats.materialId
+        ? `/student/practice/${stats.materialId}/start`
+        : '/student/practice',
     }
   }
 
   const recommendation = getRecommendation()
 
   return (
-    <main className="relative min-h-[100dvh] flex items-center justify-center overflow-hidden bg-uni-bg pb-24 pt-20">
-      <StarryBackground density="high" />
-      <TowerBackground variant="flat" />
-      
-      {/* Top Header */}
-      <div className="absolute top-0 left-0 w-full p-4 sm:p-6 z-30 flex justify-between items-center">
-        {/* Left: Logo */}
+    <TowerBackground variant="practice">
+      {/* Header */}
+      <header className="relative z-30 w-full px-4 pt-4 sm:px-6 sm:pt-6 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-md bg-gradient-to-br from-uni-primary to-uni-accent flex items-center justify-center shadow-[0_0_10px_rgba(0,229,255,0.3)]">
+          <div className="w-8 h-8 rounded-md bg-gradient-to-br from-uni-primary to-uni-accent flex items-center justify-center shadow-[0_0_10px_rgba(0,229,255,0.4)]">
             <span className="text-white font-bold text-lg leading-none">U</span>
           </div>
-          <span className="text-white font-bold text-xl tracking-wide hidden sm:block">Unimath</span>
+          <span className="text-white font-bold text-xl tracking-wide hidden sm:block">
+            Unimath
+          </span>
         </div>
-
-        {/* Right: Static Info */}
         <div className="flex items-center gap-3">
           <div className="text-right hidden sm:block">
-             <div className="text-white font-semibold text-sm">{user.name}</div>
-             <div className="text-uni-primary text-xs">Siswa Aktif</div>
+            <div className="text-white font-semibold text-sm">{user.name}</div>
+            <div className="text-cyan-300 text-xs">Siswa Aktif</div>
           </div>
-          <div className="w-10 h-10 rounded-full border border-uni-primary bg-gradient-to-br from-[#1E293B] to-[#0F172A] flex items-center justify-center shadow-[0_0_10px_rgba(0,229,255,0.2)] overflow-hidden">
-             <span className="text-xl">🤖</span>
+          <div className="w-10 h-10 rounded-full border border-cyan-400/50 bg-gradient-to-br from-[#1E293B] to-[#0F172A] flex items-center justify-center shadow-[0_0_10px_rgba(0,229,255,0.25)]">
+            <span className="text-xl">🤖</span>
           </div>
         </div>
-      </div>
-      
-      <div className="relative z-10 w-full max-w-md px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <GlassCard className="p-6 sm:p-10 text-center glass-strong border-uni-primary/40 relative">
-            {/* Ambient glow */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-uni-primary/10 blur-[40px] pointer-events-none"></div>
+      </header>
 
-            {/* Celebration illustration */}
+      {/* Card */}
+      <section className="relative z-20 flex-1 flex items-center justify-center px-4 py-8">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-md"
+        >
+          <GlassCard glowColor="cyan" intensity="strong" className="p-6 sm:p-8 text-center">
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-              className="mb-6 sm:mb-8 relative z-10"
+              className="mb-4"
             >
-              <div className="w-28 h-28 sm:w-36 sm:h-36 mx-auto bg-gradient-to-br from-[#1E293B] to-[#0F172A] border-2 border-uni-primary rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(0,229,255,0.3)]">
-                <span className="text-6xl sm:text-7xl">{motivation.emoji}</span>
-              </div>
+              <div className="text-6xl sm:text-7xl mx-auto">{motivation.emoji}</div>
             </motion.div>
 
-            {/* Message - P1 Fix: Dynamic motivational message */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="relative z-10"
+              transition={{ delay: 0.35 }}
             >
               <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
                 {motivation.title}
               </h1>
-              <p className="text-text-secondary text-sm sm:text-base mb-6 sm:mb-8">
+              <p className="text-slate-300 text-sm sm:text-base mb-6 sm:mb-7">
                 {motivation.message}
               </p>
             </motion.div>
 
-            {/* Stats */}
             {stats && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
-                className="grid grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8 relative z-10"
+                transition={{ delay: 0.5 }}
+                className="grid grid-cols-3 gap-2.5 sm:gap-3 mb-6"
               >
-                <div className="bg-uni-bg-secondary/40 border border-uni-primary/20 rounded-xl p-4 text-center">
-                  <div className="text-2xl sm:text-3xl font-bold text-uni-primary drop-shadow-[0_0_8px_rgba(0,229,255,0.5)]">
-                    {stats.floorsClimbed}
-                  </div>
-                  <div className="text-[10px] sm:text-xs text-text-secondary uppercase tracking-wider mt-1">Lantai</div>
-                </div>
-                <div className="bg-uni-bg-secondary/40 border border-uni-accent/20 rounded-xl p-4 text-center">
-                  <div className="text-2xl sm:text-3xl font-bold text-uni-accent drop-shadow-[0_0_8px_rgba(0,119,255,0.5)]">
-                    {stats.correctAnswers}
-                  </div>
-                  <div className="text-[10px] sm:text-xs text-text-secondary uppercase tracking-wider mt-1">Benar</div>
-                </div>
-                <div className="bg-uni-bg-secondary/40 border border-white/10 rounded-xl p-4 text-center">
-                  <div className={`text-2xl sm:text-3xl font-bold ${accuracy >= 70 ? 'text-uni-success drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]' : accuracy >= 50 ? 'text-uni-warning drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]' : 'text-uni-error drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]'}`}>
-                    {accuracy}%
-                  </div>
-                  <div className="text-[10px] sm:text-xs text-text-secondary uppercase tracking-wider mt-1">Akurasi</div>
-                </div>
+                <StatPill
+                  value={stats.floorsClimbed}
+                  label="Lantai"
+                  color="cyan"
+                />
+                <StatPill
+                  value={stats.correctAnswers}
+                  label="Benar"
+                  color="cyan"
+                />
+                <StatPill
+                  value={`${accuracy}%`}
+                  label="Akurasi"
+                  color={
+                    accuracy >= 70 ? 'emerald' : accuracy >= 50 ? 'amber' : 'red'
+                  }
+                />
               </motion.div>
             )}
 
-            {/* P1 Fix: Performance insight */}
             {stats && stats.totalAttempts > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7 }}
-                className="mb-6 sm:mb-8 p-3 bg-black/30 border border-white/5 rounded-lg relative z-10"
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.6 }}
+                className="mb-6 p-3 bg-black/35 border border-cyan-500/15 rounded-lg text-xs sm:text-sm text-slate-300"
               >
-                <p className="text-xs sm:text-sm text-text-secondary">
-                  Kamu menjawab <span className="text-uni-success font-semibold">{stats.correctAnswers}</span> benar 
-                  dari <span className="text-white font-semibold">{stats.totalAttempts}</span> soal
-                  {stats.totalAttempts - stats.correctAnswers > 0 && (
-                    <span className="text-uni-error"> ({stats.totalAttempts - stats.correctAnswers} salah)</span>
-                  )}
-                </p>
-              </motion.div>
+                Kamu menjawab{' '}
+                <span className="text-emerald-300 font-semibold">
+                  {stats.correctAnswers}
+                </span>{' '}
+                benar dari{' '}
+                <span className="text-white font-semibold">{stats.totalAttempts}</span>{' '}
+                soal
+                {stats.totalAttempts - stats.correctAnswers > 0 && (
+                  <>
+                    {' '}
+                    <span className="text-red-300">
+                      ({stats.totalAttempts - stats.correctAnswers} salah)
+                    </span>
+                  </>
+                )}
+              </motion.p>
             )}
 
-            {/* Actions - P1 Fix: Clear action buttons with recommendations */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8 }}
-              className="space-y-3 sm:space-y-4 relative z-10"
+              transition={{ delay: 0.7 }}
+              className="space-y-2.5"
             >
               {recommendation && (
                 <Link href={recommendation.href} className="block">
-                  <button className="w-full py-4 bg-gradient-to-r from-uni-primary to-uni-accent hover:from-uni-primary-dark hover:to-uni-primary rounded-xl text-white font-bold text-sm sm:text-base shadow-[0_0_20px_rgba(0,229,255,0.4)] transition-transform hover:scale-[1.02]">
+                  <button className="w-full py-3.5 rounded-xl bg-gradient-to-r from-cyan-400 to-emerald-400 text-slate-900 font-bold text-sm sm:text-base shadow-[0_0_24px_-4px_rgba(6,182,212,0.8)] hover:shadow-[0_0_32px_-4px_rgba(6,182,212,1)] transition-shadow">
                     {recommendation.text}
                   </button>
                 </Link>
               )}
               <Link href="/student/materials" className="block">
-                <button className="w-full py-3 bg-black/40 border border-uni-primary/50 hover:bg-uni-primary/20 rounded-xl text-white font-bold text-sm sm:text-base transition-all shadow-[0_0_10px_rgba(0,229,255,0.1)]">
+                <button className="w-full py-3 rounded-xl bg-black/40 border border-cyan-400/50 text-white font-semibold text-sm sm:text-base hover:bg-cyan-500/10 transition-colors">
                   Pilih Materi Lain
                 </button>
               </Link>
               <Link href="/student/dashboard" className="block">
-                <button className="w-full py-3 bg-transparent hover:bg-white/5 rounded-xl text-text-secondary hover:text-white font-medium text-sm sm:text-base transition-colors">
+                <button className="w-full py-2.5 rounded-xl text-slate-400 hover:text-white text-sm transition-colors">
                   Kembali ke Dashboard
                 </button>
               </Link>
             </motion.div>
           </GlassCard>
         </motion.div>
+      </section>
+    </TowerBackground>
+  )
+}
+
+function StatPill({
+  value,
+  label,
+  color,
+}: {
+  value: number | string
+  label: string
+  color: 'cyan' | 'emerald' | 'amber' | 'red'
+}) {
+  const tones = {
+    cyan: 'text-cyan-300 border-cyan-400/30 shadow-[0_0_12px_-4px_rgba(6,182,212,0.6)]',
+    emerald:
+      'text-emerald-300 border-emerald-400/30 shadow-[0_0_12px_-4px_rgba(16,185,129,0.6)]',
+    amber:
+      'text-amber-300 border-amber-400/30 shadow-[0_0_12px_-4px_rgba(245,158,11,0.6)]',
+    red: 'text-red-300 border-red-400/30 shadow-[0_0_12px_-4px_rgba(239,68,68,0.6)]',
+  }
+  return (
+    <div
+      className={`bg-black/35 border rounded-xl p-3 ${tones[color]}`}
+    >
+      <div className="text-2xl sm:text-3xl font-bold">{value}</div>
+      <div className="text-[10px] sm:text-xs text-slate-400 uppercase tracking-wider mt-1">
+        {label}
       </div>
-    </main>
+    </div>
   )
 }

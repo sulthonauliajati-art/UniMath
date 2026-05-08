@@ -1,92 +1,121 @@
 'use client'
 
+import Image from 'next/image'
+import { Children } from 'react'
 import { clsx } from 'clsx'
 
+type TowerVariant = 'practice' | 'teacher' | 'dashboard' | 'landing' | 'flat'
+
 interface TowerBackgroundProps {
-  variant?: 'landing' | 'practice' | 'dashboard' | 'flat'
+  /**
+   * Determines which pre-rendered 3D scene is used as the base background layer.
+   * - `practice` / `landing` → tower + robot (student perspective)
+   * - `teacher` / `dashboard` → isometric building (teacher perspective)
+   * - `flat` → no image, just the deep-space gradient (use on auth/modal screens)
+   */
+  variant?: TowerVariant
   children?: React.ReactNode
   className?: string
-  floorLevel?: number
+  /**
+   * Darken the top/bottom bands so content/cards remain readable over the
+   * 3D scene. Default: true.
+   */
+  overlay?: boolean
 }
 
-export function TowerBackground({ 
-  variant = 'landing',
+const SCENE_MAP: Record<TowerVariant, string | null> = {
+  practice: '/bg-practice.png',
+  landing: '/bg-practice.png',
+  teacher: '/bg-teacher.png',
+  dashboard: '/bg-teacher.png',
+  flat: null,
+}
+
+/**
+ * Background layer rendered as a `fixed inset-0 -z-10` element so it sits
+ * behind every other paint without taking up layout flow.
+ *
+ * This is split out so the component can be used in two ways:
+ *  1. As a page wrapper:    <TowerBackground variant="practice">{children}</TowerBackground>
+ *  2. As a background-only sibling inside someone else's <main> (legacy call
+ *     sites):               <TowerBackground variant="flat" />
+ *
+ * In mode (2) we skip the wrapping div entirely so we don't inject an empty
+ * 100dvh block into the layout flow.
+ */
+function BackgroundLayer({
+  variant,
+  overlay,
+}: {
+  variant: TowerVariant
+  overlay: boolean
+}) {
+  const src = SCENE_MAP[variant] ?? null
+
+  if (!src) {
+    // Fallback: solid radial gradient for `flat` / unknown variants.
+    return (
+      <div
+        aria-hidden
+        className="fixed inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_#0A1128_0%,_#040914_70%)] pointer-events-none"
+      />
+    )
+  }
+
+  return (
+    <div
+      aria-hidden
+      className="fixed inset-0 -z-10 pointer-events-none select-none"
+    >
+      <Image
+        src={src}
+        alt=""
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover object-center"
+      />
+      {overlay && (
+        <>
+          {/* Top shade for header legibility */}
+          <div className="absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-[#040914]/80 via-[#040914]/40 to-transparent" />
+          {/* Bottom shade to anchor CTA / floor bars */}
+          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#040914]/85 via-[#040914]/35 to-transparent" />
+        </>
+      )}
+    </div>
+  )
+}
+
+/**
+ * Base visual layer for all UniMath routes. Renders the authored 3D sci-fi
+ * artwork (robot + tower for students, isometric classroom building for
+ * teachers) as the deepest layer, behind any foreground content.
+ */
+export function TowerBackground({
+  variant = 'practice',
   children,
   className,
-  floorLevel = 1
+  overlay = true,
 }: TowerBackgroundProps) {
-  
+  const hasChildren = Children.count(children) > 0
+
+  // Legacy call-site mode: used only for its background visual, children live
+  // elsewhere in the layout. Render nothing in the flow.
+  if (!hasChildren) {
+    return <BackgroundLayer variant={variant} overlay={overlay} />
+  }
+
+  // Wrapper mode: provides a flex column container that owns the page layout.
   return (
-    <div className={clsx('relative w-full min-h-screen flex flex-col items-center overflow-hidden', className)}>
-      
-      {/* Base Grid & Grid Perspective */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        <div className="absolute bottom-0 w-full h-[50vh] perspective-origin-bottom perspective-[800px]">
-          <div className="w-[200%] h-[200%] -ml-[50%] bg-[linear-gradient(rgba(0,229,255,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(0,229,255,0.1)_1px,transparent_1px)] bg-[length:40px_40px] transform rotateX-[60deg] translate-y-24 opacity-40"></div>
-        </div>
-      </div>
-
-      {/* Building / Tower Central Column */}
-      {(variant === 'landing' || variant === 'practice') && (
-        <div className="absolute inset-0 z-0 flex justify-center pointer-events-none opacity-80">
-          <svg className="w-full h-full max-w-4xl" viewBox="0 0 800 1000" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
-            {/* Tower Body */}
-            <path d="M 250 0 L 550 0 L 600 1000 L 200 1000 Z" fill="url(#towerGradient)" />
-            <path d="M 250 0 L 550 0 L 600 1000 L 200 1000 Z" stroke="#00E5FF" strokeWidth="2" strokeOpacity="0.5" />
-            
-            {/* Tower Core / Neon Zigzag (Based on design) */}
-            <path d="M 400 0 L 350 150 L 450 300 L 350 450 L 450 600 L 350 750 L 450 900 L 400 1000" stroke="#00E5FF" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" className="drop-shadow-[0_0_15px_rgba(0,229,255,1)]" />
-            
-            {/* Windows / Tech lines */}
-            <line x1="280" y1="200" x2="330" y2="200" stroke="#00E5FF" strokeWidth="2" strokeOpacity="0.4" />
-            <line x1="470" y1="200" x2="520" y2="200" stroke="#00E5FF" strokeWidth="2" strokeOpacity="0.4" />
-            
-            <line x1="270" y1="400" x2="320" y2="400" stroke="#00E5FF" strokeWidth="2" strokeOpacity="0.4" />
-            <line x1="480" y1="400" x2="530" y2="400" stroke="#00E5FF" strokeWidth="2" strokeOpacity="0.4" />
-            
-            <line x1="260" y1="600" x2="310" y2="600" stroke="#00E5FF" strokeWidth="2" strokeOpacity="0.4" />
-            <line x1="490" y1="600" x2="540" y2="600" stroke="#00E5FF" strokeWidth="2" strokeOpacity="0.4" />
-            
-            <line x1="240" y1="800" x2="290" y2="800" stroke="#00E5FF" strokeWidth="2" strokeOpacity="0.4" />
-            <line x1="510" y1="800" x2="560" y2="800" stroke="#00E5FF" strokeWidth="2" strokeOpacity="0.4" />
-
-            <defs>
-              <linearGradient id="towerGradient" x1="400" y1="0" x2="400" y2="1000" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#0F172A" stopOpacity="0.8" />
-                <stop offset="100%" stopColor="#040914" stopOpacity="0.9" />
-              </linearGradient>
-            </defs>
-          </svg>
-        </div>
+    <div
+      className={clsx(
+        'relative w-full min-h-[100dvh] flex flex-col',
+        className
       )}
-
-      {/* Practice Mode Stairs (Dynamic based on floorLevel) */}
-      {variant === 'practice' && (
-        <div className="absolute bottom-0 w-full h-[40vh] flex flex-col items-center justify-end pb-8 pointer-events-none z-0">
-          <div className="relative w-full max-w-2xl flex flex-col gap-2 opacity-80 perspective-[800px] transform-gpu">
-             {/* Render stairs, wider at bottom, narrower at top */}
-             {[...Array(6)].map((_, i) => (
-                <div 
-                  key={i} 
-                  className="mx-auto h-8 bg-[#0F172A] border-t-2 border-[#00E5FF] drop-shadow-[0_-5px_10px_rgba(0,229,255,0.3)] flex justify-center items-center"
-                  style={{ 
-                    width: `${100 - (i * 10)}%`,
-                    transform: `translateZ(${i * -50}px) translateY(${i * -10}px)`,
-                    opacity: 1 - (i * 0.15)
-                  }}
-                >
-                  {i === 0 && <div className="absolute inset-0 bg-[#00E5FF] opacity-10 animate-pulse-glow" />}
-                </div>
-             ))}
-          </div>
-        </div>
-      )}
-
-      {/* Main Content Layer */}
-      <div className="relative z-10 w-full h-full flex-grow flex flex-col">
-        {children}
-      </div>
-
+    >
+      <BackgroundLayer variant={variant} overlay={overlay} />
+      {children}
     </div>
   )
 }
