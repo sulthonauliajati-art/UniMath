@@ -160,7 +160,7 @@ async function main() {
 
   // ── PHASE 1: Ensure materials exist (especially R1-R3) ──
   console.log('═══ PHASE 1: Memastikan material terdaftar ═══')
-  const uniqueMaterials = [...new Set(dataRows.map((row) => row[1]?.trim()).filter(Boolean))]
+  const uniqueMaterials = Array.from(new Set(dataRows.map((row) => row[1]?.trim()).filter(Boolean)))
   
   for (const matId of uniqueMaterials) {
     const existing = await db.query.materials.findFirst({
