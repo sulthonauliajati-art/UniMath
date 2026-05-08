@@ -3,6 +3,7 @@ import { db } from '@/lib/db/client'
 import { practiceSessions, practiceAttempts, classStudents, classes, schools, teacherProfiles } from '@/lib/db/schema'
 import { eq, sql } from 'drizzle-orm'
 
+
 // Helper function to award points to teacher
 async function awardTeacherPoints(studentUserId: string, pointsToAdd: number) {
   try {

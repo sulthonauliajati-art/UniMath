@@ -84,8 +84,9 @@ export interface PracticeSession {
   studentUserId: string
   materialId: string
   floor: number
-  wrongCount: number
-  currentStreak: number
+  consecutiveWrong: number
+  currentDifficulty: number // 1=Mudah, 2=Sedang, 3=Sulit
+  currentQuestionId?: string
   startedAt: string
   endedAt?: string
   status: 'ACTIVE' | 'COMPLETED' | 'ABANDONED' | 'REMEDIAL_REQUIRED'
@@ -98,7 +99,8 @@ export interface PracticeAttempt {
   questionId: string
   answer: 'A' | 'B' | 'C' | 'D'
   isCorrect: boolean
-  usedHintLevel: number
+  hintCountAtAnswer: number
+  difficultyAtAnswer: number
   isRemedialSession: boolean
   responseMs: number
   createdAt: string
@@ -153,9 +155,12 @@ export interface ApiResponse<T> {
 export interface AnswerResponse {
   isCorrect: boolean
   floor: number
-  wrongCount: number
-  unlockedHints: { h1?: string; h2?: string; h3?: string }
+  consecutiveWrong: number
+  currentDifficulty: number
+  difficultyLabel: string
   nextQuestion?: Question
+  previousHint?: string // hint dari soal yang baru dijawab salah
+  mustStudy?: boolean
   explanation?: string
 }
 

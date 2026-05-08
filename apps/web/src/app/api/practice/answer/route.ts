@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db/client'
 import { questions, materials, practiceSessions, practiceAttempts } from '@/lib/db/schema'
-import { eq, and, notInArray } from 'drizzle-orm'
+import { eq, and, notInArray, or } from 'drizzle-orm'
 
 const DIFFICULTY_LABELS: Record<number, string> = {
   1: 'Mudah',
@@ -9,13 +9,17 @@ const DIFFICULTY_LABELS: Record<number, string> = {
   3: 'Sulit',
 }
 
+/**
+ * Fetch a new PRACTICE question at the given difficulty, excluding already-used question IDs.
+ * Falls back to any difficulty if none found at target, then resets exclusion list if truly empty.
+ */
 async function getNewQuestion(
   materialId: string,
   difficulty: number,
   excludeIds: string[]
 ) {
-  // Get questions at exact difficulty, excluding used ones
-  let availableQuestions = await db
+  // 1. Try exact difficulty, excluding used
+  let available = await db
     .select()
     .from(questions)
     .where(
@@ -23,34 +27,64 @@ async function getNewQuestion(
         ? and(
             eq(questions.materialId, materialId),
             eq(questions.difficulty, difficulty),
+            or(eq(questions.mode, 'PRACTICE'), eq(questions.mode, 'ALL')),
             notInArray(questions.id, excludeIds)
           )
-        : and(eq(questions.materialId, materialId), eq(questions.difficulty, difficulty))
+        : and(
+            eq(questions.materialId, materialId),
+            eq(questions.difficulty, difficulty),
+            or(eq(questions.mode, 'PRACTICE'), eq(questions.mode, 'ALL'))
+          )
     )
 
-  // If no questions at exact difficulty, try any difficulty
-  if (availableQuestions.length === 0) {
-    availableQuestions = await db
+  // 2. If no unused at target difficulty, try any PRACTICE question not yet used
+  if (available.length === 0) {
+    available = await db
       .select()
       .from(questions)
       .where(
         excludeIds.length > 0
-          ? and(eq(questions.materialId, materialId), notInArray(questions.id, excludeIds))
-          : eq(questions.materialId, materialId)
+          ? and(
+              eq(questions.materialId, materialId),
+              or(eq(questions.mode, 'PRACTICE'), eq(questions.mode, 'ALL')),
+              notInArray(questions.id, excludeIds)
+            )
+          : and(
+              eq(questions.materialId, materialId),
+              or(eq(questions.mode, 'PRACTICE'), eq(questions.mode, 'ALL'))
+            )
       )
   }
 
-  // If still no questions, reset and get any
-  if (availableQuestions.length === 0) {
-    availableQuestions = await db
+  // 3. If ALL used, reset (allow repeats) but try target difficulty first
+  if (available.length === 0) {
+    available = await db
       .select()
       .from(questions)
-      .where(and(eq(questions.materialId, materialId), eq(questions.difficulty, difficulty)))
+      .where(
+        and(
+          eq(questions.materialId, materialId),
+          eq(questions.difficulty, difficulty),
+          or(eq(questions.mode, 'PRACTICE'), eq(questions.mode, 'ALL'))
+        )
+      )
   }
 
-  if (availableQuestions.length === 0) return null
+  // 4. Absolute fallback: any PRACTICE question for this material
+  if (available.length === 0) {
+    available = await db
+      .select()
+      .from(questions)
+      .where(
+        and(
+          eq(questions.materialId, materialId),
+          or(eq(questions.mode, 'PRACTICE'), eq(questions.mode, 'ALL'))
+        )
+      )
+  }
 
-  return availableQuestions[Math.floor(Math.random() * availableQuestions.length)]
+  if (available.length === 0) return null
+  return available[Math.floor(Math.random() * available.length)]
 }
 
 function formatQuestionForClient(q: typeof questions.$inferSelect) {
@@ -64,12 +98,13 @@ function formatQuestionForClient(q: typeof questions.$inferSelect) {
     optB: q.optB,
     optC: q.optC,
     optD: q.optD,
-    hint1: q.hint1,
-    hint2: q.hint2,
-    hint3: q.hint3,
   }
 }
 
+/** Clamp difficulty between 1 (Mudah) and 3 (Sulit) */
+function clampDifficulty(d: number): number {
+  return Math.max(1, Math.min(3, d))
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -82,7 +117,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get question
+    // Get the question being answered
     const [question] = await db
       .select()
       .from(questions)
@@ -96,7 +131,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get session
+    // Get the session
     const [session] = await db
       .select()
       .from(practiceSessions)
@@ -112,14 +147,14 @@ export async function POST(request: NextRequest) {
 
     const isCorrect = answer === question.correct
 
-    // Get used question IDs from attempts
+    // Collect all used question IDs in this session for rotation
     const usedAttempts = await db
       .select({ questionId: practiceAttempts.questionId })
       .from(practiceAttempts)
       .where(eq(practiceAttempts.sessionId, sessionId))
 
-    const usedQuestionIds = usedAttempts.map((a) => a.questionId)
-    usedQuestionIds.push(questionId)
+    const usedQuestionIds = [...new Set(usedAttempts.map((a) => a.questionId))]
+    usedQuestionIds.push(questionId) // also exclude current question
 
     // Save attempt
     await db.insert(practiceAttempts).values({
@@ -129,80 +164,116 @@ export async function POST(request: NextRequest) {
       questionId,
       answer: answer as 'A' | 'B' | 'C' | 'D',
       isCorrect,
-      usedHintLevel: Math.max(0, session.wrongCount), // 0 initially, 1 after 1 wrong, 2 after 2 wrongs
+      hintCountAtAnswer: session.consecutiveWrong, // how many hints were visible when they answered
+      difficultyAtAnswer: session.currentDifficulty,
       isRemedialSession: session.status === 'REMEDIAL_REQUIRED',
       responseMs: responseMs || 0,
       createdAt: new Date().toISOString(),
     })
 
-    // Get material for name
+    // Get material name
     const [material] = await db
       .select()
       .from(materials)
       .where(eq(materials.id, session.materialId))
       .limit(1)
 
-    // Determine current difficulty from question
-    let currentDifficulty = question.difficulty
-
+    // ──────────────────────────────────────────────────────────────────
+    // CASE 1: CORRECT ANSWER
+    // ──────────────────────────────────────────────────────────────────
     if (isCorrect) {
-      // Correct answer - move to next floor
       const newFloor = session.floor + 1
-      
+
+      // Difficulty goes UP:  Mudah→Sedang, Sedang→Sulit, Sulit→Sulit
+      const nextDifficulty = clampDifficulty(session.currentDifficulty + 1)
+
+      // Get next question at new difficulty
+      const nextQ = await getNewQuestion(session.materialId, nextDifficulty, usedQuestionIds)
+
+      // Update session: reset consecutive wrong, raise floor & difficulty
       await db
         .update(practiceSessions)
-        .set({ floor: newFloor, wrongCount: 0 })
+        .set({
+          floor: newFloor,
+          consecutiveWrong: 0,
+          currentDifficulty: nextQ ? nextQ.difficulty : nextDifficulty,
+          currentQuestionId: nextQ?.id || null,
+        })
         .where(eq(practiceSessions.id, sessionId))
-
-      // After correct: Sedang → Sulit, Sulit → tetap Sulit
-      const nextDifficulty = currentDifficulty >= 2 ? 3 : 2
-      const nextQ = await getNewQuestion(session.materialId, nextDifficulty, usedQuestionIds)
 
       return NextResponse.json({
         isCorrect: true,
         floor: newFloor,
-        wrongCount: 0,
+        consecutiveWrong: 0,
+        currentDifficulty: nextQ ? nextQ.difficulty : nextDifficulty,
+        difficultyLabel: DIFFICULTY_LABELS[nextQ ? nextQ.difficulty : nextDifficulty] || 'Sedang',
         nextQuestion: nextQ ? formatQuestionForClient(nextQ) : null,
       })
-    } else {
-      // Wrong answer - student stays on SAME question until correct or 3 wrong
-      const newWrongCount = session.wrongCount + 1
+    }
 
-      if (newWrongCount >= 3) {
-        // Wrong 3 times on same question - must go to materials
-        await db
-          .update(practiceSessions)
-          .set({ status: 'REMEDIAL_REQUIRED', wrongCount: newWrongCount })
-          .where(eq(practiceSessions.id, sessionId))
+    // ──────────────────────────────────────────────────────────────────
+    // CASE 2: WRONG ANSWER
+    // ──────────────────────────────────────────────────────────────────
+    const newConsecutiveWrong = session.consecutiveWrong + 1
 
-        return NextResponse.json({
-          isCorrect: false,
-          floor: session.floor,
-          wrongCount: newWrongCount,
-          mustStudy: true,
-          materialId: session.materialId,
-          materialName: material?.title || 'Materi',
-          explanation: question.explanation,
-          message: 'Kamu perlu memahami materi lagi sebelum melanjutkan',
-        })
-      }
+    // Difficulty goes DOWN: Sulit→Sedang, Sedang→Mudah, Mudah→Mudah
+    const nextDifficulty = clampDifficulty(session.currentDifficulty - 1)
 
+    // ── CASE 2a: 3 consecutive wrong → WAJIB BELAJAR ──
+    if (newConsecutiveWrong >= 3) {
       await db
         .update(practiceSessions)
-        .set({ wrongCount: newWrongCount })
+        .set({
+          status: 'REMEDIAL_REQUIRED',
+          consecutiveWrong: newConsecutiveWrong,
+          currentDifficulty: nextDifficulty,
+          currentQuestionId: null, // will get new question after remedial
+        })
         .where(eq(practiceSessions.id, sessionId))
 
-      // Return SAME question with updated hints visible
-      // Hint 1 shown after 1st wrong, Hint 2 after 2nd
       return NextResponse.json({
         isCorrect: false,
         floor: session.floor,
-        wrongCount: newWrongCount,
-        sameQuestion: true,
-        hint: newWrongCount === 1 ? question.hint1 : 
-              newWrongCount === 2 ? question.hint2 : null,
+        consecutiveWrong: newConsecutiveWrong,
+        currentDifficulty: nextDifficulty,
+        difficultyLabel: DIFFICULTY_LABELS[nextDifficulty] || 'Sedang',
+        mustStudy: true,
+        materialId: session.materialId,
+        materialName: material?.title || 'Materi',
+        explanation: question.explanation,
+        message: 'Kamu sudah salah menjawab 3 kali berturut-turut. Yuk pelajari materi dulu!',
       })
     }
+
+    // ── CASE 2b: wrong but < 3 consecutive → give hint + NEW question ──
+    // Get NEW question at the lowered difficulty
+    const nextQ = await getNewQuestion(session.materialId, nextDifficulty, usedQuestionIds)
+
+    // Update session
+    await db
+      .update(practiceSessions)
+      .set({
+        consecutiveWrong: newConsecutiveWrong,
+        currentDifficulty: nextQ ? nextQ.difficulty : nextDifficulty,
+        currentQuestionId: nextQ?.id || null,
+      })
+      .where(eq(practiceSessions.id, sessionId))
+
+    // Determine which hint to show FROM THE QUESTION JUST ANSWERED WRONG
+    // consecutiveWrong==1 → show hint1, consecutiveWrong==2 → show hint2
+    const previousHint =
+      newConsecutiveWrong === 1 ? question.hint1 :
+      newConsecutiveWrong === 2 ? question.hint2 : null
+
+    return NextResponse.json({
+      isCorrect: false,
+      floor: session.floor,
+      consecutiveWrong: newConsecutiveWrong,
+      currentDifficulty: nextQ ? nextQ.difficulty : nextDifficulty,
+      difficultyLabel: DIFFICULTY_LABELS[nextQ ? nextQ.difficulty : nextDifficulty] || 'Sedang',
+      nextQuestion: nextQ ? formatQuestionForClient(nextQ) : null,
+      previousHint, // hint from the OLD question to display as banner
+    })
   } catch (error) {
     console.error('Answer error:', error)
     return NextResponse.json(

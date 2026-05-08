@@ -8,28 +8,42 @@ import { TowerBackground, GlassCard } from '@/components/ui'
 import { useAuth } from '@/lib/auth/context'
 import { Question } from '@/lib/types'
 
-interface QuestionWithHints extends Question {
-  difficultyLabel?: string
-  hint1?: string
-  hint2?: string
-  hint3?: string
+interface QuestionForClient {
+  id: string
+  materialId: string
+  difficulty: number
+  difficultyLabel: string
+  question: string
+  optA: string
+  optB: string
+  optC: string
+  optD: string
 }
 
 interface GameState {
   sessionId: string
   floor: number
-  wrongCount: number
-  question: QuestionWithHints
+  consecutiveWrong: number
+  currentDifficulty: number
+  difficultyLabel: string
+  question: QuestionForClient
   materialId: string
   materialName: string
   selectedAnswer: string | null
   showCorrectModal: boolean
-  showWrongModal: boolean
+  showMustStudyModal: boolean
   isSubmitting: boolean
+  previousHint: string | null
   stats: { floorsClimbed: number; correctAnswers: number; totalAttempts: number }
 }
 
-const TOTAL_FLOORS = 10 // visual reference for the progress bar
+const TOTAL_FLOORS = 10
+
+const DIFFICULTY_COLORS: Record<number, { bg: string; border: string; text: string; label: string }> = {
+  1: { bg: 'bg-emerald-500/20', border: 'border-emerald-400/60', text: 'text-emerald-300', label: 'Mudah' },
+  2: { bg: 'bg-yellow-500/20', border: 'border-yellow-400/60', text: 'text-yellow-300', label: 'Sedang' },
+  3: { bg: 'bg-red-500/20', border: 'border-red-400/60', text: 'text-red-300', label: 'Sulit' },
+}
 
 export default function GamePlayPage() {
   const params = useParams()
@@ -53,14 +67,17 @@ export default function GamePlayPage() {
         setGameState({
           sessionId: data.sessionId,
           floor: data.floor || 1,
-          wrongCount: data.wrongCount || 0,
+          consecutiveWrong: data.consecutiveWrong || 0,
+          currentDifficulty: data.currentDifficulty || 2,
+          difficultyLabel: data.difficultyLabel || 'Sedang',
           question: data.question,
           materialId: data.materialId || materialId,
           materialName: data.materialName || 'Matematika',
           selectedAnswer: null,
           showCorrectModal: false,
-          showWrongModal: false,
+          showMustStudyModal: false,
           isSubmitting: false,
+          previousHint: null,
           stats: data.stats || { floorsClimbed: 0, correctAnswers: 0, totalAttempts: 0 },
         })
       } else {
@@ -72,14 +89,17 @@ export default function GamePlayPage() {
             setGameState({
               sessionId: data.sessionId,
               floor: data.floor,
-              wrongCount: data.wrongCount,
+              consecutiveWrong: data.consecutiveWrong || 0,
+              currentDifficulty: data.currentDifficulty || 2,
+              difficultyLabel: data.difficultyLabel || 'Sedang',
               question: data.question,
               materialId: data.materialId,
               materialName: data.materialName,
               selectedAnswer: null,
               showCorrectModal: false,
-              showWrongModal: false,
+              showMustStudyModal: false,
               isSubmitting: false,
+              previousHint: null,
               stats: data.stats,
             })
           } else {
@@ -126,6 +146,7 @@ export default function GamePlayPage() {
       const data = await res.json()
 
       if (data.isCorrect) {
+        // ─── CORRECT ───
         setRobotState('celebrating')
         fireConfetti()
 
@@ -135,6 +156,7 @@ export default function GamePlayPage() {
                 ...prev,
                 showCorrectModal: true,
                 isSubmitting: false,
+                previousHint: null,
                 stats: {
                   ...prev.stats,
                   floorsClimbed: prev.stats.floorsClimbed + 1,
@@ -155,10 +177,13 @@ export default function GamePlayPage() {
                   ? {
                       ...prev,
                       floor: data.floor,
-                      wrongCount: 0,
+                      consecutiveWrong: 0,
+                      currentDifficulty: data.currentDifficulty,
+                      difficultyLabel: data.difficultyLabel,
                       question: data.nextQuestion,
                       selectedAnswer: null,
                       showCorrectModal: false,
+                      previousHint: null,
                     }
                   : null
               )
@@ -168,10 +193,12 @@ export default function GamePlayPage() {
           }, 800)
         }, 1500)
       } else {
+        // ─── WRONG ───
         setShowWrongFeedback(true)
         setTimeout(() => setShowWrongFeedback(false), 600)
 
         if (data.mustStudy) {
+          // 3x consecutive wrong → Wajib Belajar
           sessionStorage.setItem(
             'studyMaterial',
             JSON.stringify({
@@ -183,30 +210,30 @@ export default function GamePlayPage() {
             prev
               ? {
                   ...prev,
-                  wrongCount: data.wrongCount,
+                  consecutiveWrong: data.consecutiveWrong,
+                  currentDifficulty: data.currentDifficulty,
+                  difficultyLabel: data.difficultyLabel,
                   selectedAnswer: null,
                   isSubmitting: false,
-                  showWrongModal: true,
+                  showMustStudyModal: true,
+                  previousHint: null,
                   stats: { ...prev.stats, totalAttempts: prev.stats.totalAttempts + 1 },
                 }
               : null
           )
         } else {
+          // Wrong but < 3 → show hint banner + new question
           setGameState((prev) => {
             if (!prev) return null
-            const updatedQuestion = { ...prev.question }
-            if (data.wrongCount >= 1 && data.hint) {
-              if (data.wrongCount === 1) updatedQuestion.hint1 = data.hint
-              else if (data.wrongCount === 2) updatedQuestion.hint2 = data.hint
-              else if (data.wrongCount === 3) updatedQuestion.hint3 = data.hint
-            }
             return {
               ...prev,
-              wrongCount: data.wrongCount,
-              question: updatedQuestion,
+              consecutiveWrong: data.consecutiveWrong,
+              currentDifficulty: data.currentDifficulty,
+              difficultyLabel: data.difficultyLabel,
+              question: data.nextQuestion || prev.question,
               selectedAnswer: null,
               isSubmitting: false,
-              showWrongModal: false,
+              previousHint: data.previousHint || null,
               stats: { ...prev.stats, totalAttempts: prev.stats.totalAttempts + 1 },
             }
           })
@@ -262,12 +289,9 @@ export default function GamePlayPage() {
     { key: 'D', text: gameState.question.optD },
   ]
 
-  const progressPct = Math.min(
-    100,
-    Math.round(((gameState.floor - 1) / TOTAL_FLOORS) * 100)
-  )
-
+  const progressPct = Math.min(100, Math.round(((gameState.floor - 1) / TOTAL_FLOORS) * 100))
   const cardGlow: 'cyan' | 'red' = showWrongFeedback ? 'red' : 'cyan'
+  const diffStyle = DIFFICULTY_COLORS[gameState.currentDifficulty] || DIFFICULTY_COLORS[2]
 
   return (
     <TowerBackground variant="practice">
@@ -287,7 +311,7 @@ export default function GamePlayPage() {
         )}
       </AnimatePresence>
 
-      {/* ── TOP HEADER: logo + floor badge + progress bar ─────────────── */}
+      {/* ── TOP HEADER ─────────────────────────────────────────────── */}
       <header className="relative z-30 w-full px-4 pt-4 sm:px-6 sm:pt-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -299,16 +323,31 @@ export default function GamePlayPage() {
             </span>
           </div>
 
-          <motion.div
-            key={gameState.floor}
-            initial={{ scale: 0.85, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="px-3 py-1.5 rounded-full bg-[rgba(7,17,36,0.75)] border border-cyan-400/60 backdrop-blur-md shadow-[0_0_18px_-4px_rgba(6,182,212,0.7)]"
-          >
-            <span className="text-cyan-300 font-bold text-xs sm:text-sm tracking-wide">
-              🏢 Lantai {gameState.floor}
-            </span>
-          </motion.div>
+          <div className="flex items-center gap-2">
+            {/* Difficulty badge */}
+            <motion.div
+              key={gameState.currentDifficulty}
+              initial={{ scale: 0.85, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className={`px-2.5 py-1 rounded-full ${diffStyle.bg} border ${diffStyle.border} backdrop-blur-md`}
+            >
+              <span className={`${diffStyle.text} font-bold text-xs tracking-wide`}>
+                ⚡ {diffStyle.label}
+              </span>
+            </motion.div>
+
+            {/* Floor badge */}
+            <motion.div
+              key={gameState.floor}
+              initial={{ scale: 0.85, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="px-3 py-1.5 rounded-full bg-[rgba(7,17,36,0.75)] border border-cyan-400/60 backdrop-blur-md shadow-[0_0_18px_-4px_rgba(6,182,212,0.7)]"
+            >
+              <span className="text-cyan-300 font-bold text-xs sm:text-sm tracking-wide">
+                🏢 Lantai {gameState.floor}
+              </span>
+            </motion.div>
+          </div>
         </div>
 
         {/* Progress bar */}
@@ -346,11 +385,39 @@ export default function GamePlayPage() {
           transition={{ duration: 0.45, ease: 'easeOut' }}
           className="w-full max-w-md"
         >
-          <GlassCard
-            glowColor={cardGlow}
-            intensity="strong"
-            className="p-5 sm:p-6"
-          >
+          {/* ── HINT BANNER (from previous wrong question) ─────── */}
+          <AnimatePresence>
+            {gameState.previousHint && (
+              <motion.div
+                initial={{ opacity: 0, y: -10, height: 0 }}
+                animate={{ opacity: 1, y: 0, height: 'auto' }}
+                exit={{ opacity: 0, y: -10, height: 0 }}
+                className="mb-3"
+              >
+                <div className="flex gap-2 items-start p-3 rounded-xl border border-amber-400/50 bg-amber-500/10 backdrop-blur-sm">
+                  <span className="text-lg">💡</span>
+                  <div className="flex-1">
+                    <p className="text-[10px] uppercase tracking-[0.15em] text-amber-300/80 font-semibold mb-1">
+                      Petunjuk dari soal sebelumnya
+                    </p>
+                    <p className="text-sm text-slate-100/90 leading-snug">
+                      {gameState.previousHint}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() =>
+                      setGameState((prev) => (prev ? { ...prev, previousHint: null } : null))
+                    }
+                    className="text-amber-300/60 hover:text-white text-xs mt-0.5"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <GlassCard glowColor={cardGlow} intensity="strong" className="p-5 sm:p-6">
             {/* Material label */}
             <p className="text-center text-[11px] sm:text-xs text-cyan-200/70 uppercase tracking-[0.2em] mb-3">
               {gameState.materialName}
@@ -361,7 +428,7 @@ export default function GamePlayPage() {
               {gameState.question.question}
             </h2>
 
-            {/* Options: 2×2 grid with pill-shaped glass buttons */}
+            {/* Options */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-4">
               {options.map((opt) => {
                 const selected = gameState.selectedAnswer === opt.key
@@ -395,27 +462,24 @@ export default function GamePlayPage() {
               })}
             </div>
 
-            {/* Hints (progressive) */}
-            <AnimatePresence initial={false}>
-              {gameState.wrongCount > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="space-y-2 mb-4"
-                >
-                  {gameState.wrongCount >= 1 && gameState.question.hint1 && (
-                    <HintPill tone="yellow" text={gameState.question.hint1} />
-                  )}
-                  {gameState.wrongCount >= 2 && gameState.question.hint2 && (
-                    <HintPill tone="orange" text={gameState.question.hint2} />
-                  )}
-                  {gameState.wrongCount >= 3 && gameState.question.hint3 && (
-                    <HintPill tone="red" text={gameState.question.hint3} />
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {/* Consecutive wrong indicator */}
+            {gameState.consecutiveWrong > 0 && (
+              <div className="flex items-center justify-center gap-1 mb-3">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className={`w-2.5 h-2.5 rounded-full transition-all ${
+                      i <= gameState.consecutiveWrong
+                        ? 'bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.7)]'
+                        : 'bg-slate-600/50'
+                    }`}
+                  />
+                ))}
+                <span className="text-[10px] text-red-300/70 ml-1.5">
+                  {gameState.consecutiveWrong}/3 salah berturut
+                </span>
+              </div>
+            )}
 
             {/* Submit */}
             <motion.button
@@ -436,20 +500,8 @@ export default function GamePlayPage() {
               {gameState.isSubmitting ? (
                 <span className="flex items-center justify-center gap-2">
                   <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                      fill="none"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
                   Memeriksa…
                 </span>
@@ -461,7 +513,7 @@ export default function GamePlayPage() {
         </motion.div>
       </section>
 
-      {/* ── BOTTOM STATUS BAR: XP / Lantai ───────────────────────────── */}
+      {/* ── BOTTOM STATUS BAR ──────────────────────────────────────── */}
       <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-20 w-[calc(100%-2rem)] max-w-md pointer-events-none">
         <div className="pointer-events-auto flex items-center gap-2 px-4 py-2.5 rounded-full bg-[rgba(7,17,36,0.8)] border border-cyan-400/40 backdrop-blur-md shadow-[0_0_24px_-8px_rgba(6,182,212,0.8)]">
           <span className="text-cyan-300 text-lg">✨</span>
@@ -536,14 +588,14 @@ export default function GamePlayPage() {
         )}
       </AnimatePresence>
 
-      {/* ── MUST-STUDY MODAL ───────────────────────────────────────── */}
+      {/* ── WAJIB BELAJAR MODAL (no escape!) ─────────────────────── */}
       <AnimatePresence>
-        {gameState.showWrongModal && (
+        {gameState.showMustStudyModal && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm px-4"
           >
             <motion.div
               initial={{ scale: 0.6, opacity: 0 }}
@@ -554,66 +606,32 @@ export default function GamePlayPage() {
               <GlassCard glowColor="amber" intensity="strong" className="p-5 sm:p-7 text-center">
                 <div className="text-5xl sm:text-6xl mb-3">📚</div>
                 <h2 className="text-lg sm:text-xl font-bold text-white mb-2">
-                  Yuk belajar dulu!
+                  Wajib Belajar!
                 </h2>
                 <p className="text-slate-300 text-xs sm:text-sm mb-1">
-                  Kamu sudah mencoba 4 kali di soal ini.
+                  Kamu sudah salah menjawab <span className="text-red-300 font-bold">3 kali berturut-turut</span>.
+                </p>
+                <p className="text-slate-400 text-xs mb-1">
+                  Yuk, pelajari materi dulu sebelum melanjutkan latihan.
                 </p>
                 <p className="text-cyan-300 font-semibold mb-5 text-sm sm:text-base">
                   📖 {gameState.materialName}
                 </p>
-                <div className="space-y-2">
-                  <motion.button
-                    onClick={() =>
-                      router.push(`/student/materials/${gameState.materialId}`)
-                    }
-                    whileTap={{ scale: 0.98 }}
-                    className="w-full py-2.5 sm:py-3 rounded-xl font-bold text-sm sm:text-base bg-gradient-to-r from-cyan-400 to-teal-400 text-slate-900 shadow-[0_0_18px_-3px_rgba(6,182,212,0.7)]"
-                  >
-                    📖 Pelajari Materi
-                  </motion.button>
-                  <button
-                    onClick={() =>
-                      setGameState((prev) =>
-                        prev ? { ...prev, showWrongModal: false } : null
-                      )
-                    }
-                    className="w-full py-2 text-slate-400 text-xs sm:text-sm hover:text-white transition-colors"
-                  >
-                    Coba lagi nanti
-                  </button>
-                </div>
+                <motion.button
+                  onClick={() =>
+                    router.push(`/student/materials/${gameState.materialId}`)
+                  }
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full py-2.5 sm:py-3 rounded-xl font-bold text-sm sm:text-base bg-gradient-to-r from-cyan-400 to-teal-400 text-slate-900 shadow-[0_0_18px_-3px_rgba(6,182,212,0.7)]"
+                >
+                  📖 Pelajari Materi Sekarang
+                </motion.button>
+                {/* NO "coba lagi nanti" button — this is mandatory */}
               </GlassCard>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
     </TowerBackground>
-  )
-}
-
-/* ────────────────────────────────────────────────────────────────── */
-
-function HintPill({
-  tone,
-  text,
-}: {
-  tone: 'yellow' | 'orange' | 'red'
-  text: string
-}) {
-  const toneClasses =
-    tone === 'yellow'
-      ? 'bg-yellow-500/10 border-yellow-400/40 text-yellow-200'
-      : tone === 'orange'
-      ? 'bg-orange-500/10 border-orange-400/40 text-orange-200'
-      : 'bg-red-500/10 border-red-400/40 text-red-200'
-
-  return (
-    <div
-      className={`flex gap-2 items-start p-2.5 rounded-lg border backdrop-blur-sm text-xs sm:text-sm ${toneClasses}`}
-    >
-      <span aria-hidden>💡</span>
-      <span className="text-slate-100/90 leading-snug">{text}</span>
-    </div>
   )
 }

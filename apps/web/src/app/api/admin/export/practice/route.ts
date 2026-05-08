@@ -13,7 +13,8 @@ export async function GET(request: NextRequest) {
         questionId: questions.id,
         indicator: questions.indicator,
         difficulty: questions.difficulty,
-        usedHintLevel: practiceAttempts.usedHintLevel,
+        hintCountAtAnswer: practiceAttempts.hintCountAtAnswer,
+        difficultyAtAnswer: practiceAttempts.difficultyAtAnswer,
         isCorrect: practiceAttempts.isCorrect,
         isRemedialSession: practiceAttempts.isRemedialSession,
         createdAt: practiceAttempts.createdAt,
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
     // Generate CSV
     const headers = [
       'Student Name', 'Material', 'Floor', 'Question ID', 'Indicator', 
-      'Difficulty', 'Used Hint Level', 'Is Correct', 'Is Remedial Session', 'Timestamp'
+      'Difficulty', 'Difficulty At Answer', 'Hint Count At Answer', 'Is Correct', 'Is Remedial Session', 'Timestamp'
     ]
 
     const csvRows = [headers.join(',')]
@@ -41,7 +42,8 @@ export async function GET(request: NextRequest) {
         `"${r.questionId}"`,
         `"${r.indicator}"`,
         r.difficulty,
-        r.usedHintLevel || 0,
+        r.difficultyAtAnswer || 0,
+        r.hintCountAtAnswer || 0,
         r.isCorrect ? '1' : '0',
         r.isRemedialSession ? '1' : '0',
         `"${r.createdAt}"`

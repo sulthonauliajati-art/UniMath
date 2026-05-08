@@ -1,0 +1,1713 @@
+"content_id","material_id","material_title","material_type","content_variant","related_floor_start","related_floor_end","related_indicators","related_remedial_ids","trigger_common_errors","estimated_reading_minutes","display_title","short_description","why_redirected","learning_objectives","concept_text","formulas","steps","examples","common_mistakes","checkpoint_items","body_markdown","wajib_belajar_message","is_active"
+"M1A-SHORT","M1A","Diskon dan Harga Akhir","MAIN","SHORT","1","8","I1,I2,I3,I4","R1","ERR_PERCENT_CONVERSION;ERR_DISCOUNT_BASE;ERR_DISCOUNT_AS_FINAL_PRICE;ERR_FINAL_PRICE_SUBTRACTION;ERR_INITIAL_FROM_FINAL;ERR_COMPARE_PROMO;ERR_SEQUENTIAL_DISCOUNT;ERR_CONTEXT_INTERPRETATION","3","Ringkasan Diskon dan Harga Akhir","Diskon adalah potongan dari harga awal. Jika barang Rp100.000 diskon 20%, besar diskonnya Rp20.000 dan harga akhirnya Rp80.000.","Kamu beberapa kali salah pada soal diskon, besar potongan, harga akhir, atau pilihan promo. Ingat: diskon adalah potongan dari harga awal, bukan harga akhir.","[""Memahami diskon sebagai potongan harga"", ""Menghitung besar diskon"", ""Menentukan harga setelah diskon"", ""Menghindari kesalahan diskon dianggap harga akhir""]","Diskon adalah potongan dari harga awal. Jika barang Rp100.000 diskon 20%, besar diskonnya Rp20.000 dan harga akhirnya Rp80.000.","[""Besar diskon = persen diskon × harga awal"", ""Harga akhir = harga awal − besar diskon"", ""Harga akhir = (100% − persen diskon) × harga awal""]","[""Cari harga awal"", ""Cari persen diskon"", ""Hitung besar diskon"", ""Kurangkan diskon dari harga awal"", ""Jika membandingkan promo, hitung harga akhir tiap pilihan""]","[{""title"": ""Diskon 15%"", ""problem"": ""Sepatu Rp200.000 diskon 15%."", ""solution"": ""Diskon = 15% × Rp200.000 = Rp30.000. Harga akhir = Rp200.000 − Rp30.000 = Rp170.000.""}, {""title"": ""Diskon 25%"", ""problem"": ""Tas Rp120.000 diskon 25%."", ""solution"": ""25% = 1/4. Diskon = Rp120.000 ÷ 4 = Rp30.000. Harga akhir = Rp90.000.""}]","[""Menganggap diskon sebagai harga akhir"", ""Menghitung diskon dari harga akhir"", ""Lupa mengurangkan diskon"", ""Memilih promo hanya dari persen terbesar""]","[{""question"": ""Harga buku Rp100.000 diskon 10%. Harga akhir?"", ""options"": ""A Rp10.000 | B Rp90.000 | C Rp100.000 | D Rp110.000"", ""answer"": ""B"", ""explanation"": ""Diskon Rp10.000, harga akhir Rp90.000.""}, {""question"": ""Tas Rp200.000 diskon 25%. Besar diskon?"", ""options"": ""A Rp25.000 | B Rp40.000 | C Rp50.000 | D Rp150.000"", ""answer"": ""C"", ""explanation"": ""25% × Rp200.000 = Rp50.000.""}, {""question"": ""Sepatu Rp300.000 diskon 20%. Harga akhir?"", ""options"": ""A Rp60.000 | B Rp220.000 | C Rp240.000 | D Rp280.000"", ""answer"": ""C"", ""explanation"": ""Diskon Rp60.000, harga akhir Rp240.000.""}]","# Ringkasan Materi: Diskon dan Harga Akhir
+
+**material_id:** M1A
+**content_variant:** SHORT
+**material_type:** MAIN
+**cakupan lantai:** Lantai 1–8
+**indikator terkait:** I1,I2,I3,I4
+
+## Kenapa kamu diarahkan ke materi ini?
+Kamu beberapa kali salah pada soal diskon, besar potongan, harga akhir, atau pilihan promo. Ingat: diskon adalah potongan dari harga awal, bukan harga akhir.
+
+## Tujuan belajar
+- Memahami diskon sebagai potongan harga
+- Menghitung besar diskon
+- Menentukan harga setelah diskon
+- Menghindari kesalahan diskon dianggap harga akhir
+
+## Konsep inti
+Diskon adalah potongan dari harga awal. Jika barang Rp100.000 diskon 20%, besar diskonnya Rp20.000 dan harga akhirnya Rp80.000.
+
+## Rumus penting
+- Besar diskon = persen diskon × harga awal
+- Harga akhir = harga awal − besar diskon
+- Harga akhir = (100% − persen diskon) × harga awal
+
+## Langkah cepat
+1. Cari harga awal
+2. Cari persen diskon
+3. Hitung besar diskon
+4. Kurangkan diskon dari harga awal
+5. Jika membandingkan promo, hitung harga akhir tiap pilihan
+
+## Contoh pembahasan
+### Diskon 15%
+**Soal/konteks:** Sepatu Rp200.000 diskon 15%.
+**Penyelesaian:** Diskon = 15% × Rp200.000 = Rp30.000. Harga akhir = Rp200.000 − Rp30.000 = Rp170.000.
+
+### Diskon 25%
+**Soal/konteks:** Tas Rp120.000 diskon 25%.
+**Penyelesaian:** 25% = 1/4. Diskon = Rp120.000 ÷ 4 = Rp30.000. Harga akhir = Rp90.000.
+
+## Kesalahan yang harus dihindari
+- Menganggap diskon sebagai harga akhir
+- Menghitung diskon dari harga akhir
+- Lupa mengurangkan diskon
+- Memilih promo hanya dari persen terbesar
+
+## Checkpoint
+### Checkpoint 1
+Harga buku Rp100.000 diskon 10%. Harga akhir?
+A Rp10.000 | B Rp90.000 | C Rp100.000 | D Rp110.000
+**Jawaban:** B
+**Pembahasan:** Diskon Rp10.000, harga akhir Rp90.000.
+
+### Checkpoint 2
+Tas Rp200.000 diskon 25%. Besar diskon?
+A Rp25.000 | B Rp40.000 | C Rp50.000 | D Rp150.000
+**Jawaban:** C
+**Pembahasan:** 25% × Rp200.000 = Rp50.000.
+
+### Checkpoint 3
+Sepatu Rp300.000 diskon 20%. Harga akhir?
+A Rp60.000 | B Rp220.000 | C Rp240.000 | D Rp280.000
+**Jawaban:** C
+**Pembahasan:** Diskon Rp60.000, harga akhir Rp240.000.
+
+## Syarat kembali ke latihan
+- Siswa sudah membaca materi ini.
+- Siswa sudah mengerjakan checkpoint.
+- Siswa sudah melihat pembahasan checkpoint.
+- Siswa memahami kesalahan utama sebelum kembali ke Bank Soal Latihan.
+
+## Pesan Wajib Belajar
+Wajib Belajar Dulu. Kamu beberapa kali salah pada soal Diskon dan Harga Akhir. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan.","Wajib Belajar Dulu. Kamu beberapa kali salah pada soal Diskon dan Harga Akhir. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan.","TRUE"
+"M1A-FULL","M1A","Diskon dan Harga Akhir","MAIN","FULL","1","8","I1,I2,I3,I4","R1","ERR_PERCENT_CONVERSION;ERR_DISCOUNT_BASE;ERR_DISCOUNT_AS_FINAL_PRICE;ERR_FINAL_PRICE_SUBTRACTION;ERR_INITIAL_FROM_FINAL;ERR_COMPARE_PROMO;ERR_SEQUENTIAL_DISCOUNT;ERR_CONTEXT_INTERPRETATION","9","Materi Lengkap Diskon dan Harga Akhir","Diskon adalah potongan harga. Harga akhir adalah harga yang dibayar setelah potongan. Diskon bertingkat dihitung berurutan: diskon kedua dihitung dari harga baru, bukan dari harga awal.","Materi lengkap ini dipakai ketika siswa masih salah pada konsep diskon setelah membaca ringkasan, terutama pada harga awal, perbandingan promo, dan diskon bertingkat.","[""Menjelaskan arti diskon dalam transaksi"", ""Menghitung besar diskon rupiah"", ""Menentukan harga akhir"", ""Menentukan harga awal dari harga akhir"", ""Membandingkan promo"", ""Menghitung diskon bertingkat"", ""Mengambil keputusan hemat""]","Diskon adalah potongan harga. Harga akhir adalah harga yang dibayar setelah potongan. Diskon bertingkat dihitung berurutan: diskon kedua dihitung dari harga baru, bukan dari harga awal.","[""Besar diskon = persen diskon × harga awal"", ""Harga akhir = harga awal − besar diskon"", ""Harga akhir = sisa persen × harga awal"", ""Harga awal = harga akhir ÷ sisa persen"", ""Diskon bertingkat: harga awal → diskon 1 → harga baru → diskon 2""]","[""Tentukan harga awal dan persen diskon"", ""Hitung besar diskon"", ""Kurangkan dari harga awal"", ""Untuk harga awal, tentukan sisa persen lalu bagi harga akhir dengan sisa persen"", ""Untuk perbandingan, hitung semua harga akhir"", ""Untuk diskon bertingkat, hitung satu per satu""]","[{""title"": ""Besar diskon"", ""problem"": ""Buku Rp80.000 diskon 10%."", ""solution"": ""Diskon = Rp8.000.""}, {""title"": ""Harga akhir"", ""problem"": ""Tas Rp150.000 diskon 20%."", ""solution"": ""Diskon Rp30.000, harga akhir Rp120.000.""}, {""title"": ""Harga awal"", ""problem"": ""Harga akhir setelah diskon 25% adalah Rp180.000."", ""solution"": ""Harga akhir = 75% harga awal. Harga awal = Rp180.000 ÷ 0,75 = Rp240.000.""}, {""title"": ""Membandingkan promo"", ""problem"": ""Toko A Rp200.000 diskon 20%; Toko B Rp180.000 diskon 10%."", ""solution"": ""A Rp160.000, B Rp162.000. Toko A lebih hemat Rp2.000.""}, {""title"": ""Diskon bertingkat"", ""problem"": ""Jaket Rp300.000 diskon 20% lalu 10%."", ""solution"": ""Setelah 20% = Rp240.000. Diskon kedua 10% = Rp24.000. Harga akhir Rp216.000.""}]","[""Diskon dianggap harga akhir"", ""Harga awal dicari dengan menambahkan persen ke harga akhir"", ""Diskon bertingkat dijumlahkan langsung"", ""Kesimpulan promo dibuat tanpa menghitung harga akhir""]","[{""question"": ""Buku Rp120.000 diskon 10%. Harga akhir?"", ""options"": ""A Rp12.000 | B Rp100.000 | C Rp108.000 | D Rp132.000"", ""answer"": ""C"", ""explanation"": ""Rp120.000 − Rp12.000 = Rp108.000.""}, {""question"": ""Tas Rp240.000 diskon 25%. Besar diskon?"", ""options"": ""A Rp40.000 | B Rp50.000 | C Rp60.000 | D Rp180.000"", ""answer"": ""C"", ""explanation"": ""25% × Rp240.000 = Rp60.000.""}, {""question"": ""Harga akhir Rp160.000 setelah diskon 20%. Harga awal?"", ""options"": ""A Rp180.000 | B Rp200.000 | C Rp220.000 | D Rp240.000"", ""answer"": ""B"", ""explanation"": ""Rp160.000 ÷ 0,8 = Rp200.000.""}, {""question"": ""Toko A Rp300.000 diskon 25%, Toko B Rp260.000 diskon 10%. Mana hemat?"", ""options"": ""A Toko A | B Toko B | C Sama | D Tidak dapat ditentukan"", ""answer"": ""A"", ""explanation"": ""A Rp225.000, B Rp234.000.""}, {""question"": ""Barang Rp400.000 diskon 25% lalu 10%. Harga akhir?"", ""options"": ""A Rp260.000 | B Rp270.000 | C Rp280.000 | D Rp300.000"", ""answer"": ""B"", ""explanation"": ""Setelah diskon pertama Rp300.000, setelah diskon kedua Rp270.000.""}]","# Materi Lengkap: Diskon dan Harga Akhir
+
+**material_id:** M1A
+**content_variant:** FULL
+**material_type:** MAIN
+**cakupan lantai:** Lantai 1–8
+**indikator terkait:** I1,I2,I3,I4
+
+## Kenapa kamu diarahkan ke materi ini?
+Materi lengkap ini dipakai ketika siswa masih salah pada konsep diskon setelah membaca ringkasan, terutama pada harga awal, perbandingan promo, dan diskon bertingkat.
+
+## Tujuan belajar
+- Menjelaskan arti diskon dalam transaksi
+- Menghitung besar diskon rupiah
+- Menentukan harga akhir
+- Menentukan harga awal dari harga akhir
+- Membandingkan promo
+- Menghitung diskon bertingkat
+- Mengambil keputusan hemat
+
+## Konsep inti
+Diskon adalah potongan harga. Harga akhir adalah harga yang dibayar setelah potongan. Diskon bertingkat dihitung berurutan: diskon kedua dihitung dari harga baru, bukan dari harga awal.
+
+## Rumus penting
+- Besar diskon = persen diskon × harga awal
+- Harga akhir = harga awal − besar diskon
+- Harga akhir = sisa persen × harga awal
+- Harga awal = harga akhir ÷ sisa persen
+- Diskon bertingkat: harga awal → diskon 1 → harga baru → diskon 2
+
+## Langkah cepat
+1. Tentukan harga awal dan persen diskon
+2. Hitung besar diskon
+3. Kurangkan dari harga awal
+4. Untuk harga awal, tentukan sisa persen lalu bagi harga akhir dengan sisa persen
+5. Untuk perbandingan, hitung semua harga akhir
+6. Untuk diskon bertingkat, hitung satu per satu
+
+## Contoh pembahasan
+### Besar diskon
+**Soal/konteks:** Buku Rp80.000 diskon 10%.
+**Penyelesaian:** Diskon = Rp8.000.
+
+### Harga akhir
+**Soal/konteks:** Tas Rp150.000 diskon 20%.
+**Penyelesaian:** Diskon Rp30.000, harga akhir Rp120.000.
+
+### Harga awal
+**Soal/konteks:** Harga akhir setelah diskon 25% adalah Rp180.000.
+**Penyelesaian:** Harga akhir = 75% harga awal. Harga awal = Rp180.000 ÷ 0,75 = Rp240.000.
+
+### Membandingkan promo
+**Soal/konteks:** Toko A Rp200.000 diskon 20%; Toko B Rp180.000 diskon 10%.
+**Penyelesaian:** A Rp160.000, B Rp162.000. Toko A lebih hemat Rp2.000.
+
+### Diskon bertingkat
+**Soal/konteks:** Jaket Rp300.000 diskon 20% lalu 10%.
+**Penyelesaian:** Setelah 20% = Rp240.000. Diskon kedua 10% = Rp24.000. Harga akhir Rp216.000.
+
+## Kesalahan yang harus dihindari
+- Diskon dianggap harga akhir
+- Harga awal dicari dengan menambahkan persen ke harga akhir
+- Diskon bertingkat dijumlahkan langsung
+- Kesimpulan promo dibuat tanpa menghitung harga akhir
+
+## Checkpoint
+### Checkpoint 1
+Buku Rp120.000 diskon 10%. Harga akhir?
+A Rp12.000 | B Rp100.000 | C Rp108.000 | D Rp132.000
+**Jawaban:** C
+**Pembahasan:** Rp120.000 − Rp12.000 = Rp108.000.
+
+### Checkpoint 2
+Tas Rp240.000 diskon 25%. Besar diskon?
+A Rp40.000 | B Rp50.000 | C Rp60.000 | D Rp180.000
+**Jawaban:** C
+**Pembahasan:** 25% × Rp240.000 = Rp60.000.
+
+### Checkpoint 3
+Harga akhir Rp160.000 setelah diskon 20%. Harga awal?
+A Rp180.000 | B Rp200.000 | C Rp220.000 | D Rp240.000
+**Jawaban:** B
+**Pembahasan:** Rp160.000 ÷ 0,8 = Rp200.000.
+
+### Checkpoint 4
+Toko A Rp300.000 diskon 25%, Toko B Rp260.000 diskon 10%. Mana hemat?
+A Toko A | B Toko B | C Sama | D Tidak dapat ditentukan
+**Jawaban:** A
+**Pembahasan:** A Rp225.000, B Rp234.000.
+
+### Checkpoint 5
+Barang Rp400.000 diskon 25% lalu 10%. Harga akhir?
+A Rp260.000 | B Rp270.000 | C Rp280.000 | D Rp300.000
+**Jawaban:** B
+**Pembahasan:** Setelah diskon pertama Rp300.000, setelah diskon kedua Rp270.000.
+
+## Syarat kembali ke latihan
+- Siswa sudah membaca materi ini.
+- Siswa sudah mengerjakan checkpoint.
+- Siswa sudah melihat pembahasan checkpoint.
+- Siswa memahami kesalahan utama sebelum kembali ke Bank Soal Latihan.
+
+## Pesan Wajib Belajar
+Wajib Belajar Dulu. Kamu beberapa kali salah pada soal Diskon dan Harga Akhir. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan.","Wajib Belajar Dulu. Kamu beberapa kali salah pada soal Diskon dan Harga Akhir. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan.","TRUE"
+"M1B-SHORT","M1B","PPN, Biaya Layanan, dan Ongkir","MAIN","SHORT","9","16","I1,I2,I3,I4","R1,R2","ERR_TAX_BASE;ERR_SERVICE_BASE;ERR_FORGET_SHIPPING;ERR_VOUCHER_ORDER;ERR_OPERATION_ORDER;ERR_PERCENT_CONVERSION;ERR_DECIMAL_PERCENT;ERR_CONTEXT_INTERPRETATION;ERR_FINAL_AMOUNT_FORMULA","4","Ringkasan PPN, Biaya Layanan, dan Ongkir","Total bayar sering bukan hanya harga barang. Diskon dan voucher mengurangi harga, sedangkan PPN, biaya layanan, dan ongkir menambah total bayar.","Kamu beberapa kali salah pada total bayar transaksi, PPN, biaya layanan, voucher, atau ongkir. Ingat: voucher/diskon mengurangi; PPN, biaya layanan, dan ongkir menambah.","[""Membedakan komponen potongan dan tambahan"", ""Menghitung subtotal"", ""Menghitung PPN/biaya layanan sederhana"", ""Menambahkan ongkir ke total akhir""]","Total bayar sering bukan hanya harga barang. Diskon dan voucher mengurangi harga, sedangkan PPN, biaya layanan, dan ongkir menambah total bayar.","[""Subtotal = harga barang − diskon/voucher"", ""PPN = persentase PPN × subtotal"", ""Biaya layanan = persentase layanan × subtotal"", ""Total bayar = subtotal + PPN + biaya layanan + ongkir""]","[""Mulai dari harga barang"", ""Kurangi diskon/voucher"", ""Hitung subtotal"", ""Hitung PPN/biaya layanan dari basis yang diminta"", ""Tambahkan ongkir"", ""Dapatkan total bayar""]","[{""title"": ""PPN"", ""problem"": ""Barang Rp100.000 kena PPN 11%."", ""solution"": ""PPN Rp11.000, total Rp111.000.""}, {""title"": ""Voucher dan layanan"", ""problem"": ""Barang Rp200.000 voucher Rp50.000, layanan 2% setelah voucher."", ""solution"": ""Subtotal Rp150.000, layanan Rp3.000, total Rp153.000.""}, {""title"": ""Diskon, PPN, ongkir"", ""problem"": ""Barang Rp300.000 diskon 20%, PPN 11%, ongkir Rp15.000."", ""solution"": ""Subtotal Rp240.000, PPN Rp26.400, total Rp281.400.""}]","[""Lupa ongkir"", ""Voucher ditambahkan"", ""PPN dihitung dari basis salah"", ""Biaya layanan dihitung dari harga awal padahal setelah voucher"", ""Berhenti di subtotal""]","[{""question"": ""Barang Rp100.000 kena PPN 11%. Total bayar?"", ""options"": ""A Rp100.000 | B Rp101.100 | C Rp111.000 | D Rp121.000"", ""answer"": ""C"", ""explanation"": ""PPN Rp11.000, total Rp111.000.""}, {""question"": ""Barang Rp200.000 voucher Rp50.000, layanan 2%. Total?"", ""options"": ""A Rp150.000 | B Rp153.000 | C Rp154.000 | D Rp204.000"", ""answer"": ""B"", ""explanation"": ""Subtotal Rp150.000, layanan Rp3.000.""}, {""question"": ""Barang Rp300.000 diskon 20%, PPN 11%, ongkir Rp15.000. Total?"", ""options"": ""A Rp240.000 | B Rp266.400 | C Rp281.400 | D Rp333.000"", ""answer"": ""C"", ""explanation"": ""Rp240.000 + Rp26.400 + Rp15.000.""}]","# Ringkasan Materi: PPN, Biaya Layanan, dan Ongkir
+
+**material_id:** M1B
+**content_variant:** SHORT
+**material_type:** MAIN
+**cakupan lantai:** Lantai 9–16
+**indikator terkait:** I1,I2,I3,I4
+
+## Kenapa kamu diarahkan ke materi ini?
+Kamu beberapa kali salah pada total bayar transaksi, PPN, biaya layanan, voucher, atau ongkir. Ingat: voucher/diskon mengurangi; PPN, biaya layanan, dan ongkir menambah.
+
+## Tujuan belajar
+- Membedakan komponen potongan dan tambahan
+- Menghitung subtotal
+- Menghitung PPN/biaya layanan sederhana
+- Menambahkan ongkir ke total akhir
+
+## Konsep inti
+Total bayar sering bukan hanya harga barang. Diskon dan voucher mengurangi harga, sedangkan PPN, biaya layanan, dan ongkir menambah total bayar.
+
+## Rumus penting
+- Subtotal = harga barang − diskon/voucher
+- PPN = persentase PPN × subtotal
+- Biaya layanan = persentase layanan × subtotal
+- Total bayar = subtotal + PPN + biaya layanan + ongkir
+
+## Langkah cepat
+1. Mulai dari harga barang
+2. Kurangi diskon/voucher
+3. Hitung subtotal
+4. Hitung PPN/biaya layanan dari basis yang diminta
+5. Tambahkan ongkir
+6. Dapatkan total bayar
+
+## Contoh pembahasan
+### PPN
+**Soal/konteks:** Barang Rp100.000 kena PPN 11%.
+**Penyelesaian:** PPN Rp11.000, total Rp111.000.
+
+### Voucher dan layanan
+**Soal/konteks:** Barang Rp200.000 voucher Rp50.000, layanan 2% setelah voucher.
+**Penyelesaian:** Subtotal Rp150.000, layanan Rp3.000, total Rp153.000.
+
+### Diskon, PPN, ongkir
+**Soal/konteks:** Barang Rp300.000 diskon 20%, PPN 11%, ongkir Rp15.000.
+**Penyelesaian:** Subtotal Rp240.000, PPN Rp26.400, total Rp281.400.
+
+## Kesalahan yang harus dihindari
+- Lupa ongkir
+- Voucher ditambahkan
+- PPN dihitung dari basis salah
+- Biaya layanan dihitung dari harga awal padahal setelah voucher
+- Berhenti di subtotal
+
+## Checkpoint
+### Checkpoint 1
+Barang Rp100.000 kena PPN 11%. Total bayar?
+A Rp100.000 | B Rp101.100 | C Rp111.000 | D Rp121.000
+**Jawaban:** C
+**Pembahasan:** PPN Rp11.000, total Rp111.000.
+
+### Checkpoint 2
+Barang Rp200.000 voucher Rp50.000, layanan 2%. Total?
+A Rp150.000 | B Rp153.000 | C Rp154.000 | D Rp204.000
+**Jawaban:** B
+**Pembahasan:** Subtotal Rp150.000, layanan Rp3.000.
+
+### Checkpoint 3
+Barang Rp300.000 diskon 20%, PPN 11%, ongkir Rp15.000. Total?
+A Rp240.000 | B Rp266.400 | C Rp281.400 | D Rp333.000
+**Jawaban:** C
+**Pembahasan:** Rp240.000 + Rp26.400 + Rp15.000.
+
+## Syarat kembali ke latihan
+- Siswa sudah membaca materi ini.
+- Siswa sudah mengerjakan checkpoint.
+- Siswa sudah melihat pembahasan checkpoint.
+- Siswa memahami kesalahan utama sebelum kembali ke Bank Soal Latihan.
+
+## Pesan Wajib Belajar
+Wajib Belajar Dulu. Kamu beberapa kali salah pada soal PPN, Biaya Layanan, dan Ongkir. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan.","Wajib Belajar Dulu. Kamu beberapa kali salah pada soal PPN, Biaya Layanan, dan Ongkir. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan.","TRUE"
+"M1B-FULL","M1B","PPN, Biaya Layanan, dan Ongkir","MAIN","FULL","9","16","I1,I2,I3,I4","R1,R2","ERR_TAX_BASE;ERR_SERVICE_BASE;ERR_FORGET_SHIPPING;ERR_VOUCHER_ORDER;ERR_OPERATION_ORDER;ERR_PERCENT_CONVERSION;ERR_DECIMAL_PERCENT;ERR_CONTEXT_INTERPRETATION;ERR_FINAL_AMOUNT_FORMULA","9","Materi Lengkap PPN, Biaya Layanan, dan Ongkir","Dalam transaksi online, harga awal belum tentu total bayar. Basis perhitungan PPN/layanan harus mengikuti soal: bisa dari harga awal, harga setelah diskon, atau harga setelah voucher.","Materi lengkap ini dipakai jika siswa masih salah pada urutan transaksi, basis PPN/layanan, voucher, atau total akhir multi-komponen.","[""Membedakan harga barang, diskon, voucher, PPN, layanan, ongkir"", ""Menentukan subtotal"", ""Menghitung PPN dari basis yang tepat"", ""Menghitung layanan dari basis yang tepat"", ""Menyelesaikan transaksi multi-langkah"", ""Mengecek kewajaran total bayar""]","Dalam transaksi online, harga awal belum tentu total bayar. Basis perhitungan PPN/layanan harus mengikuti soal: bisa dari harga awal, harga setelah diskon, atau harga setelah voucher.","[""Subtotal = harga awal − diskon/voucher"", ""PPN = persentase PPN × basis harga"", ""Biaya layanan = persentase layanan × basis harga"", ""Total bayar = subtotal + PPN + biaya layanan + ongkir""]","[""Baca semua komponen"", ""Kurangi diskon/voucher terlebih dahulu jika ada"", ""Tentukan basis PPN/layanan"", ""Hitung PPN dan layanan"", ""Tambahkan ongkir"", ""Bandingkan total jika ada beberapa toko""]","[{""title"": ""Pajak sederhana"", ""problem"": ""Barang Rp100.000 kena PPN 11%."", ""solution"": ""PPN Rp11.000, total Rp111.000.""}, {""title"": ""Voucher dan layanan"", ""problem"": ""Harga Rp200.000 voucher Rp50.000, layanan 2% setelah voucher."", ""solution"": ""Subtotal Rp150.000, layanan Rp3.000, total Rp153.000.""}, {""title"": ""Transaksi lengkap"", ""problem"": ""Harga Rp500.000 diskon 20%, voucher Rp30.000, PPN 11%, layanan 2%, ongkir Rp20.000. Pajak/layanan dari subtotal setelah potongan."", ""solution"": ""Setelah diskon Rp400.000, setelah voucher Rp370.000, PPN Rp40.700, layanan Rp7.400, total Rp438.100.""}, {""title"": ""Membandingkan toko"", ""problem"": ""Toko A Rp400.000 diskon 25% ongkir Rp20.000; Toko B Rp330.000 voucher Rp30.000 ongkir Rp15.000."", ""solution"": ""A Rp320.000, B Rp315.000. B lebih hemat Rp5.000.""}]","[""PPN dihitung dari harga awal padahal setelah diskon"", ""Biaya layanan dari basis salah"", ""Ongkir dilupakan"", ""Voucher ditambah"", ""Urutan operasi tidak jelas""]","[{""question"": ""Rp200.000 diskon 10%, PPN 11%, ongkir Rp10.000. Total?"", ""options"": ""A Rp180.000 | B Rp199.800 | C Rp209.800 | D Rp232.000"", ""answer"": ""C"", ""explanation"": ""Subtotal Rp180.000, PPN Rp19.800, total Rp209.800.""}, {""question"": ""Rp250.000 voucher Rp40.000, layanan 2,5%, ongkir Rp15.000. Total?"", ""options"": ""A Rp210.000 | B Rp215.250 | C Rp230.250 | D Rp270.250"", ""answer"": ""C"", ""explanation"": ""Subtotal Rp210.000, layanan Rp5.250, total Rp230.250.""}, {""question"": ""Rp300.000 diskon 20%, PPN 11%, layanan 2%, ongkir Rp20.000. Total?"", ""options"": ""A Rp240.000 | B Rp266.400 | C Rp271.200 | D Rp291.200"", ""answer"": ""D"", ""explanation"": ""Rp240.000 + Rp26.400 + Rp4.800 + Rp20.000.""}, {""question"": ""Toko A Rp400.000 diskon 25% ongkir Rp20.000; Toko B Rp330.000 voucher Rp30.000 ongkir Rp15.000. Mana hemat?"", ""options"": ""A A hemat Rp5.000 | B B hemat Rp5.000 | C Sama | D B lebih mahal"", ""answer"": ""B"", ""explanation"": ""A Rp320.000, B Rp315.000.""}, {""question"": ""Uang Rp300.000, barang Rp320.000 diskon 25%, PPN 11%, ongkir Rp20.000. Kesimpulan?"", ""options"": ""A kurang Rp13.600 | B cukup sisa Rp13.600 | C cukup sisa Rp26.400 | D tepat cukup"", ""answer"": ""B"", ""explanation"": ""Total Rp286.400, sisa Rp13.600.""}]","# Materi Lengkap: PPN, Biaya Layanan, dan Ongkir
+
+**material_id:** M1B
+**content_variant:** FULL
+**material_type:** MAIN
+**cakupan lantai:** Lantai 9–16
+**indikator terkait:** I1,I2,I3,I4
+
+## Kenapa kamu diarahkan ke materi ini?
+Materi lengkap ini dipakai jika siswa masih salah pada urutan transaksi, basis PPN/layanan, voucher, atau total akhir multi-komponen.
+
+## Tujuan belajar
+- Membedakan harga barang, diskon, voucher, PPN, layanan, ongkir
+- Menentukan subtotal
+- Menghitung PPN dari basis yang tepat
+- Menghitung layanan dari basis yang tepat
+- Menyelesaikan transaksi multi-langkah
+- Mengecek kewajaran total bayar
+
+## Konsep inti
+Dalam transaksi online, harga awal belum tentu total bayar. Basis perhitungan PPN/layanan harus mengikuti soal: bisa dari harga awal, harga setelah diskon, atau harga setelah voucher.
+
+## Rumus penting
+- Subtotal = harga awal − diskon/voucher
+- PPN = persentase PPN × basis harga
+- Biaya layanan = persentase layanan × basis harga
+- Total bayar = subtotal + PPN + biaya layanan + ongkir
+
+## Langkah cepat
+1. Baca semua komponen
+2. Kurangi diskon/voucher terlebih dahulu jika ada
+3. Tentukan basis PPN/layanan
+4. Hitung PPN dan layanan
+5. Tambahkan ongkir
+6. Bandingkan total jika ada beberapa toko
+
+## Contoh pembahasan
+### Pajak sederhana
+**Soal/konteks:** Barang Rp100.000 kena PPN 11%.
+**Penyelesaian:** PPN Rp11.000, total Rp111.000.
+
+### Voucher dan layanan
+**Soal/konteks:** Harga Rp200.000 voucher Rp50.000, layanan 2% setelah voucher.
+**Penyelesaian:** Subtotal Rp150.000, layanan Rp3.000, total Rp153.000.
+
+### Transaksi lengkap
+**Soal/konteks:** Harga Rp500.000 diskon 20%, voucher Rp30.000, PPN 11%, layanan 2%, ongkir Rp20.000. Pajak/layanan dari subtotal setelah potongan.
+**Penyelesaian:** Setelah diskon Rp400.000, setelah voucher Rp370.000, PPN Rp40.700, layanan Rp7.400, total Rp438.100.
+
+### Membandingkan toko
+**Soal/konteks:** Toko A Rp400.000 diskon 25% ongkir Rp20.000; Toko B Rp330.000 voucher Rp30.000 ongkir Rp15.000.
+**Penyelesaian:** A Rp320.000, B Rp315.000. B lebih hemat Rp5.000.
+
+## Kesalahan yang harus dihindari
+- PPN dihitung dari harga awal padahal setelah diskon
+- Biaya layanan dari basis salah
+- Ongkir dilupakan
+- Voucher ditambah
+- Urutan operasi tidak jelas
+
+## Checkpoint
+### Checkpoint 1
+Rp200.000 diskon 10%, PPN 11%, ongkir Rp10.000. Total?
+A Rp180.000 | B Rp199.800 | C Rp209.800 | D Rp232.000
+**Jawaban:** C
+**Pembahasan:** Subtotal Rp180.000, PPN Rp19.800, total Rp209.800.
+
+### Checkpoint 2
+Rp250.000 voucher Rp40.000, layanan 2,5%, ongkir Rp15.000. Total?
+A Rp210.000 | B Rp215.250 | C Rp230.250 | D Rp270.250
+**Jawaban:** C
+**Pembahasan:** Subtotal Rp210.000, layanan Rp5.250, total Rp230.250.
+
+### Checkpoint 3
+Rp300.000 diskon 20%, PPN 11%, layanan 2%, ongkir Rp20.000. Total?
+A Rp240.000 | B Rp266.400 | C Rp271.200 | D Rp291.200
+**Jawaban:** D
+**Pembahasan:** Rp240.000 + Rp26.400 + Rp4.800 + Rp20.000.
+
+### Checkpoint 4
+Toko A Rp400.000 diskon 25% ongkir Rp20.000; Toko B Rp330.000 voucher Rp30.000 ongkir Rp15.000. Mana hemat?
+A A hemat Rp5.000 | B B hemat Rp5.000 | C Sama | D B lebih mahal
+**Jawaban:** B
+**Pembahasan:** A Rp320.000, B Rp315.000.
+
+### Checkpoint 5
+Uang Rp300.000, barang Rp320.000 diskon 25%, PPN 11%, ongkir Rp20.000. Kesimpulan?
+A kurang Rp13.600 | B cukup sisa Rp13.600 | C cukup sisa Rp26.400 | D tepat cukup
+**Jawaban:** B
+**Pembahasan:** Total Rp286.400, sisa Rp13.600.
+
+## Syarat kembali ke latihan
+- Siswa sudah membaca materi ini.
+- Siswa sudah mengerjakan checkpoint.
+- Siswa sudah melihat pembahasan checkpoint.
+- Siswa memahami kesalahan utama sebelum kembali ke Bank Soal Latihan.
+
+## Pesan Wajib Belajar
+Wajib Belajar Dulu. Kamu beberapa kali salah pada soal PPN, Biaya Layanan, dan Ongkir. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan.","Wajib Belajar Dulu. Kamu beberapa kali salah pada soal PPN, Biaya Layanan, dan Ongkir. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan.","TRUE"
+"M1C-SHORT","M1C","Untung, Rugi, dan Persentase","MAIN","SHORT","17","24","I1,I2,I3,I4","R1,R2,R3","ERR_PROFIT_LOSS_DIRECTION;ERR_PROFIT_FORMULA;ERR_LOSS_FORMULA;ERR_PROFIT_BASE;ERR_LOSS_BASE;ERR_ADDITIONAL_COST_MODAL;ERR_TARGET_PROFIT_PRICE;ERR_SELLING_PRICE_AFTER_DISCOUNT;ERR_UNIT_PRICE;ERR_CONTEXT_INTERPRETATION","4","Ringkasan Untung, Rugi, dan Persentase","Jika harga jual lebih besar dari modal, terjadi untung. Jika harga jual lebih kecil dari modal, terjadi rugi. Jika sama, impas.","Kamu beberapa kali salah pada modal, harga jual, untung, rugi, atau persentase keuntungan/kerugian. Ingat: untung/rugi selalu dibandingkan dengan modal.","[""Membedakan modal dan harga jual"", ""Menentukan untung/rugi/impas"", ""Menghitung besar untung/rugi"", ""Menghitung persentase untung/rugi dasar""]","Jika harga jual lebih besar dari modal, terjadi untung. Jika harga jual lebih kecil dari modal, terjadi rugi. Jika sama, impas.","[""Untung = Harga jual − Modal"", ""Rugi = Modal − Harga jual"", ""Persentase untung = (Untung ÷ Modal) × 100%"", ""Persentase rugi = (Rugi ÷ Modal) × 100%""]","[""Cari modal"", ""Cari harga jual"", ""Bandingkan harga jual dengan modal"", ""Hitung untung/rugi"", ""Jika diminta persen, bagi selisih dengan modal""]","[{""title"": ""Untung"", ""problem"": ""Modal Rp80.000, dijual Rp100.000."", ""solution"": ""Untung Rp20.000.""}, {""title"": ""Rugi"", ""problem"": ""Modal Rp150.000, dijual Rp120.000."", ""solution"": ""Rugi Rp30.000.""}, {""title"": ""Persentase untung"", ""problem"": ""Modal Rp200.000, harga jual Rp250.000."", ""solution"": ""Untung Rp50.000, persen untung 25%.""}]","[""Tertukar untung dan rugi"", ""Persentase untung/rugi dihitung dari harga jual"", ""Biaya tambahan tidak masuk modal"", ""Harga label dianggap harga jual akhir meski ada diskon""]","[{""question"": ""Modal Rp100.000 dijual Rp130.000. Untung?"", ""options"": ""A Rp20.000 | B Rp30.000 | C Rp100.000 | D Rp230.000"", ""answer"": ""B"", ""explanation"": ""Rp130.000 − Rp100.000 = Rp30.000.""}, {""question"": ""Modal Rp150.000 dijual Rp120.000. Rugi?"", ""options"": ""A Rp20.000 | B Rp30.000 | C Rp120.000 | D Rp270.000"", ""answer"": ""B"", ""explanation"": ""Rp150.000 − Rp120.000 = Rp30.000.""}, {""question"": ""Modal Rp200.000, harga jual Rp250.000. Persentase untung?"", ""options"": ""A 20% | B 25% | C 30% | D 50%"", ""answer"": ""B"", ""explanation"": ""Untung Rp50.000; Rp50.000 ÷ Rp200.000 × 100% = 25%.""}]","# Ringkasan Materi: Untung, Rugi, dan Persentase
+
+**material_id:** M1C
+**content_variant:** SHORT
+**material_type:** MAIN
+**cakupan lantai:** Lantai 17–24
+**indikator terkait:** I1,I2,I3,I4
+
+## Kenapa kamu diarahkan ke materi ini?
+Kamu beberapa kali salah pada modal, harga jual, untung, rugi, atau persentase keuntungan/kerugian. Ingat: untung/rugi selalu dibandingkan dengan modal.
+
+## Tujuan belajar
+- Membedakan modal dan harga jual
+- Menentukan untung/rugi/impas
+- Menghitung besar untung/rugi
+- Menghitung persentase untung/rugi dasar
+
+## Konsep inti
+Jika harga jual lebih besar dari modal, terjadi untung. Jika harga jual lebih kecil dari modal, terjadi rugi. Jika sama, impas.
+
+## Rumus penting
+- Untung = Harga jual − Modal
+- Rugi = Modal − Harga jual
+- Persentase untung = (Untung ÷ Modal) × 100%
+- Persentase rugi = (Rugi ÷ Modal) × 100%
+
+## Langkah cepat
+1. Cari modal
+2. Cari harga jual
+3. Bandingkan harga jual dengan modal
+4. Hitung untung/rugi
+5. Jika diminta persen, bagi selisih dengan modal
+
+## Contoh pembahasan
+### Untung
+**Soal/konteks:** Modal Rp80.000, dijual Rp100.000.
+**Penyelesaian:** Untung Rp20.000.
+
+### Rugi
+**Soal/konteks:** Modal Rp150.000, dijual Rp120.000.
+**Penyelesaian:** Rugi Rp30.000.
+
+### Persentase untung
+**Soal/konteks:** Modal Rp200.000, harga jual Rp250.000.
+**Penyelesaian:** Untung Rp50.000, persen untung 25%.
+
+## Kesalahan yang harus dihindari
+- Tertukar untung dan rugi
+- Persentase untung/rugi dihitung dari harga jual
+- Biaya tambahan tidak masuk modal
+- Harga label dianggap harga jual akhir meski ada diskon
+
+## Checkpoint
+### Checkpoint 1
+Modal Rp100.000 dijual Rp130.000. Untung?
+A Rp20.000 | B Rp30.000 | C Rp100.000 | D Rp230.000
+**Jawaban:** B
+**Pembahasan:** Rp130.000 − Rp100.000 = Rp30.000.
+
+### Checkpoint 2
+Modal Rp150.000 dijual Rp120.000. Rugi?
+A Rp20.000 | B Rp30.000 | C Rp120.000 | D Rp270.000
+**Jawaban:** B
+**Pembahasan:** Rp150.000 − Rp120.000 = Rp30.000.
+
+### Checkpoint 3
+Modal Rp200.000, harga jual Rp250.000. Persentase untung?
+A 20% | B 25% | C 30% | D 50%
+**Jawaban:** B
+**Pembahasan:** Untung Rp50.000; Rp50.000 ÷ Rp200.000 × 100% = 25%.
+
+## Syarat kembali ke latihan
+- Siswa sudah membaca materi ini.
+- Siswa sudah mengerjakan checkpoint.
+- Siswa sudah melihat pembahasan checkpoint.
+- Siswa memahami kesalahan utama sebelum kembali ke Bank Soal Latihan.
+
+## Pesan Wajib Belajar
+Wajib Belajar Dulu. Kamu beberapa kali salah pada soal Untung, Rugi, dan Persentase. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan.","Wajib Belajar Dulu. Kamu beberapa kali salah pada soal Untung, Rugi, dan Persentase. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan.","TRUE"
+"M1C-FULL","M1C","Untung, Rugi, dan Persentase","MAIN","FULL","17","24","I1,I2,I3,I4","R1,R2,R3","ERR_PROFIT_LOSS_DIRECTION;ERR_PROFIT_FORMULA;ERR_LOSS_FORMULA;ERR_PROFIT_BASE;ERR_LOSS_BASE;ERR_ADDITIONAL_COST_MODAL;ERR_TARGET_PROFIT_PRICE;ERR_SELLING_PRICE_AFTER_DISCOUNT;ERR_UNIT_PRICE;ERR_CONTEXT_INTERPRETATION","9","Materi Lengkap Untung, Rugi, dan Persentase","Modal adalah seluruh biaya yang dikeluarkan, bukan hanya harga beli. Persentase untung/rugi selalu dibandingkan dengan modal total. Jika harga jual mendapat diskon, harga jual sebenarnya adalah harga setelah diskon.","Materi lengkap ini dipakai jika siswa masih salah pada harga jual target, modal total, persentase untung/rugi, atau harga jual setelah diskon.","[""Membedakan modal, harga jual, untung, rugi, impas"", ""Menghitung besar untung/rugi"", ""Menghitung persentase untung/rugi"", ""Menentukan harga jual target"", ""Menghitung modal total dengan biaya tambahan"", ""Menafsirkan diskon pada harga jual""]","Modal adalah seluruh biaya yang dikeluarkan, bukan hanya harga beli. Persentase untung/rugi selalu dibandingkan dengan modal total. Jika harga jual mendapat diskon, harga jual sebenarnya adalah harga setelah diskon.","[""Modal total = harga beli + biaya tambahan"", ""Untung = harga jual − modal"", ""Rugi = modal − harga jual"", ""Persentase untung = untung ÷ modal × 100%"", ""Persentase rugi = rugi ÷ modal × 100%"", ""Harga jual target = modal × (100% + persen untung)""]","[""Tentukan modal total"", ""Tentukan harga jual sebenarnya"", ""Bandingkan harga jual dengan modal"", ""Hitung selisih"", ""Hitung persen jika diminta"", ""Untuk target, tambahkan target keuntungan ke modal""]","[{""title"": ""Untung"", ""problem"": ""Modal Rp80.000, dijual Rp100.000."", ""solution"": ""Untung Rp20.000.""}, {""title"": ""Persentase rugi"", ""problem"": ""Modal Rp240.000, dijual Rp192.000."", ""solution"": ""Rugi Rp48.000, persentase rugi 20%.""}, {""title"": ""Biaya tambahan"", ""problem"": ""Harga beli Rp250.000, kemasan Rp30.000, dijual Rp315.000."", ""solution"": ""Modal total Rp280.000, untung Rp35.000.""}, {""title"": ""Harga jual target"", ""problem"": ""Modal Rp180.000, target untung 25%."", ""solution"": ""Untung Rp45.000, harga jual Rp225.000.""}, {""title"": ""Harga jual setelah diskon"", ""problem"": ""Modal Rp250.000, label Rp350.000 diskon 20%."", ""solution"": ""Harga jual Rp280.000, untung Rp30.000.""}]","[""Persentase untung dihitung dari harga jual"", ""Biaya tambahan tidak masuk modal"", ""Harga label dianggap harga jual akhir"", ""Rumus rugi dibalik"", ""Target keuntungan tidak ditambahkan ke modal""]","[{""question"": ""Barang dibeli Rp120.000 dijual Rp150.000. Untung?"", ""options"": ""A Rp20.000 | B Rp30.000 | C Rp120.000 | D Rp270.000"", ""answer"": ""B"", ""explanation"": ""Rp150.000 − Rp120.000 = Rp30.000.""}, {""question"": ""Barang dibeli Rp200.000 dijual Rp160.000. Persentase rugi?"", ""options"": ""A 10% | B 15% | C 20% | D 25%"", ""answer"": ""C"", ""explanation"": ""Rugi Rp40.000; Rp40.000 ÷ Rp200.000 × 100% = 20%.""}, {""question"": ""Harga beli Rp250.000, kemasan Rp30.000, dijual Rp315.000. Untung sebenarnya?"", ""options"": ""A Rp35.000 | B Rp45.000 | C Rp65.000 | D Rp95.000"", ""answer"": ""A"", ""explanation"": ""Modal total Rp280.000, untung Rp35.000.""}, {""question"": ""Modal Rp180.000, ingin untung 25%. Harga jual?"", ""options"": ""A Rp205.000 | B Rp215.000 | C Rp225.000 | D Rp240.000"", ""answer"": ""C"", ""explanation"": ""Rp180.000 + 25% × Rp180.000 = Rp225.000.""}, {""question"": ""Modal Rp250.000, label Rp350.000 diskon 20%. Untung?"", ""options"": ""A Rp20.000 | B Rp30.000 | C Rp50.000 | D Rp100.000"", ""answer"": ""B"", ""explanation"": ""Harga jual Rp280.000, untung Rp30.000.""}]","# Materi Lengkap: Untung, Rugi, dan Persentase
+
+**material_id:** M1C
+**content_variant:** FULL
+**material_type:** MAIN
+**cakupan lantai:** Lantai 17–24
+**indikator terkait:** I1,I2,I3,I4
+
+## Kenapa kamu diarahkan ke materi ini?
+Materi lengkap ini dipakai jika siswa masih salah pada harga jual target, modal total, persentase untung/rugi, atau harga jual setelah diskon.
+
+## Tujuan belajar
+- Membedakan modal, harga jual, untung, rugi, impas
+- Menghitung besar untung/rugi
+- Menghitung persentase untung/rugi
+- Menentukan harga jual target
+- Menghitung modal total dengan biaya tambahan
+- Menafsirkan diskon pada harga jual
+
+## Konsep inti
+Modal adalah seluruh biaya yang dikeluarkan, bukan hanya harga beli. Persentase untung/rugi selalu dibandingkan dengan modal total. Jika harga jual mendapat diskon, harga jual sebenarnya adalah harga setelah diskon.
+
+## Rumus penting
+- Modal total = harga beli + biaya tambahan
+- Untung = harga jual − modal
+- Rugi = modal − harga jual
+- Persentase untung = untung ÷ modal × 100%
+- Persentase rugi = rugi ÷ modal × 100%
+- Harga jual target = modal × (100% + persen untung)
+
+## Langkah cepat
+1. Tentukan modal total
+2. Tentukan harga jual sebenarnya
+3. Bandingkan harga jual dengan modal
+4. Hitung selisih
+5. Hitung persen jika diminta
+6. Untuk target, tambahkan target keuntungan ke modal
+
+## Contoh pembahasan
+### Untung
+**Soal/konteks:** Modal Rp80.000, dijual Rp100.000.
+**Penyelesaian:** Untung Rp20.000.
+
+### Persentase rugi
+**Soal/konteks:** Modal Rp240.000, dijual Rp192.000.
+**Penyelesaian:** Rugi Rp48.000, persentase rugi 20%.
+
+### Biaya tambahan
+**Soal/konteks:** Harga beli Rp250.000, kemasan Rp30.000, dijual Rp315.000.
+**Penyelesaian:** Modal total Rp280.000, untung Rp35.000.
+
+### Harga jual target
+**Soal/konteks:** Modal Rp180.000, target untung 25%.
+**Penyelesaian:** Untung Rp45.000, harga jual Rp225.000.
+
+### Harga jual setelah diskon
+**Soal/konteks:** Modal Rp250.000, label Rp350.000 diskon 20%.
+**Penyelesaian:** Harga jual Rp280.000, untung Rp30.000.
+
+## Kesalahan yang harus dihindari
+- Persentase untung dihitung dari harga jual
+- Biaya tambahan tidak masuk modal
+- Harga label dianggap harga jual akhir
+- Rumus rugi dibalik
+- Target keuntungan tidak ditambahkan ke modal
+
+## Checkpoint
+### Checkpoint 1
+Barang dibeli Rp120.000 dijual Rp150.000. Untung?
+A Rp20.000 | B Rp30.000 | C Rp120.000 | D Rp270.000
+**Jawaban:** B
+**Pembahasan:** Rp150.000 − Rp120.000 = Rp30.000.
+
+### Checkpoint 2
+Barang dibeli Rp200.000 dijual Rp160.000. Persentase rugi?
+A 10% | B 15% | C 20% | D 25%
+**Jawaban:** C
+**Pembahasan:** Rugi Rp40.000; Rp40.000 ÷ Rp200.000 × 100% = 20%.
+
+### Checkpoint 3
+Harga beli Rp250.000, kemasan Rp30.000, dijual Rp315.000. Untung sebenarnya?
+A Rp35.000 | B Rp45.000 | C Rp65.000 | D Rp95.000
+**Jawaban:** A
+**Pembahasan:** Modal total Rp280.000, untung Rp35.000.
+
+### Checkpoint 4
+Modal Rp180.000, ingin untung 25%. Harga jual?
+A Rp205.000 | B Rp215.000 | C Rp225.000 | D Rp240.000
+**Jawaban:** C
+**Pembahasan:** Rp180.000 + 25% × Rp180.000 = Rp225.000.
+
+### Checkpoint 5
+Modal Rp250.000, label Rp350.000 diskon 20%. Untung?
+A Rp20.000 | B Rp30.000 | C Rp50.000 | D Rp100.000
+**Jawaban:** B
+**Pembahasan:** Harga jual Rp280.000, untung Rp30.000.
+
+## Syarat kembali ke latihan
+- Siswa sudah membaca materi ini.
+- Siswa sudah mengerjakan checkpoint.
+- Siswa sudah melihat pembahasan checkpoint.
+- Siswa memahami kesalahan utama sebelum kembali ke Bank Soal Latihan.
+
+## Pesan Wajib Belajar
+Wajib Belajar Dulu. Kamu beberapa kali salah pada soal Untung, Rugi, dan Persentase. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan.","Wajib Belajar Dulu. Kamu beberapa kali salah pada soal Untung, Rugi, dan Persentase. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan.","TRUE"
+"M1D-SHORT","M1D","Bunga Sederhana","MAIN","SHORT","25","32","I1,I2,I3,I4","R1,R2","ERR_INTEREST_COMPONENT;ERR_SIMPLE_INTEREST_BASE;ERR_MONTHLY_INTEREST;ERR_YEARLY_INTEREST;ERR_TIME_CONVERSION;ERR_DECIMAL_PERCENT;ERR_FINAL_AMOUNT_FORMULA;ERR_COMPARE_INTEREST;ERR_CONTEXT_INTERPRETATION","4","Ringkasan Bunga Sederhana","Bunga sederhana dihitung dari modal awal. Jika bunga per tahun tetapi waktu dalam bulan, waktu harus diubah ke tahun.","Kamu beberapa kali salah pada bunga sederhana, tabungan, pinjaman, waktu, atau jumlah akhir. Ingat: bunga sederhana dihitung dari modal awal.","[""Mengenal modal, suku bunga, waktu, bunga"", ""Menghitung bunga sederhana"", ""Mengubah bulan ke tahun"", ""Menentukan jumlah akhir tabungan/pinjaman""]","Bunga sederhana dihitung dari modal awal. Jika bunga per tahun tetapi waktu dalam bulan, waktu harus diubah ke tahun.","[""Bunga = Modal × Suku bunga × Waktu"", ""Jumlah akhir = Modal + Bunga"", ""Total pengembalian = Pinjaman awal + Bunga"", ""Waktu tahun = jumlah bulan ÷ 12""]","[""Cari modal"", ""Cari suku bunga"", ""Cek per bulan atau per tahun"", ""Samakan waktu"", ""Hitung bunga"", ""Tambahkan bunga ke modal/pinjaman jika diminta jumlah akhir""]","[{""title"": ""Bunga tahunan"", ""problem"": ""Rp1.000.000 bunga 5% per tahun selama 1 tahun."", ""solution"": ""Bunga Rp50.000.""}, {""title"": ""Bunga bulanan"", ""problem"": ""Pinjaman Rp500.000 bunga 2% per bulan selama 4 bulan."", ""solution"": ""Bunga Rp40.000.""}, {""title"": ""Bunga tahunan 6 bulan"", ""problem"": ""Rp2.000.000 bunga 6% per tahun selama 6 bulan."", ""solution"": ""Bunga Rp60.000, jumlah akhir Rp2.060.000.""}]","[""Lupa mengubah bulan ke tahun"", ""Menghitung bunga dari jumlah akhir"", ""Lupa menambahkan bunga ke modal"", ""Salah membedakan per bulan dan per tahun""]","[{""question"": ""Rp1.000.000 bunga 5% setahun. Bunga?"", ""options"": ""A Rp5.000 | B Rp50.000 | C Rp100.000 | D Rp1.050.000"", ""answer"": ""B"", ""explanation"": ""5% × Rp1.000.000 = Rp50.000.""}, {""question"": ""Rp2.000.000 bunga 6% per tahun selama 6 bulan. Bunga?"", ""options"": ""A Rp30.000 | B Rp60.000 | C Rp120.000 | D Rp180.000"", ""answer"": ""B"", ""explanation"": ""6 bulan = 0,5 tahun; bunga Rp60.000.""}, {""question"": ""Pinjaman Rp1.200.000 bunga 2% per bulan 5 bulan. Total pengembalian?"", ""options"": ""A Rp1.224.000 | B Rp1.300.000 | C Rp1.320.000 | D Rp1.440.000"", ""answer"": ""C"", ""explanation"": ""Bunga Rp120.000, total Rp1.320.000.""}]","# Ringkasan Materi: Bunga Sederhana
+
+**material_id:** M1D
+**content_variant:** SHORT
+**material_type:** MAIN
+**cakupan lantai:** Lantai 25–32
+**indikator terkait:** I1,I2,I3,I4
+
+## Kenapa kamu diarahkan ke materi ini?
+Kamu beberapa kali salah pada bunga sederhana, tabungan, pinjaman, waktu, atau jumlah akhir. Ingat: bunga sederhana dihitung dari modal awal.
+
+## Tujuan belajar
+- Mengenal modal, suku bunga, waktu, bunga
+- Menghitung bunga sederhana
+- Mengubah bulan ke tahun
+- Menentukan jumlah akhir tabungan/pinjaman
+
+## Konsep inti
+Bunga sederhana dihitung dari modal awal. Jika bunga per tahun tetapi waktu dalam bulan, waktu harus diubah ke tahun.
+
+## Rumus penting
+- Bunga = Modal × Suku bunga × Waktu
+- Jumlah akhir = Modal + Bunga
+- Total pengembalian = Pinjaman awal + Bunga
+- Waktu tahun = jumlah bulan ÷ 12
+
+## Langkah cepat
+1. Cari modal
+2. Cari suku bunga
+3. Cek per bulan atau per tahun
+4. Samakan waktu
+5. Hitung bunga
+6. Tambahkan bunga ke modal/pinjaman jika diminta jumlah akhir
+
+## Contoh pembahasan
+### Bunga tahunan
+**Soal/konteks:** Rp1.000.000 bunga 5% per tahun selama 1 tahun.
+**Penyelesaian:** Bunga Rp50.000.
+
+### Bunga bulanan
+**Soal/konteks:** Pinjaman Rp500.000 bunga 2% per bulan selama 4 bulan.
+**Penyelesaian:** Bunga Rp40.000.
+
+### Bunga tahunan 6 bulan
+**Soal/konteks:** Rp2.000.000 bunga 6% per tahun selama 6 bulan.
+**Penyelesaian:** Bunga Rp60.000, jumlah akhir Rp2.060.000.
+
+## Kesalahan yang harus dihindari
+- Lupa mengubah bulan ke tahun
+- Menghitung bunga dari jumlah akhir
+- Lupa menambahkan bunga ke modal
+- Salah membedakan per bulan dan per tahun
+
+## Checkpoint
+### Checkpoint 1
+Rp1.000.000 bunga 5% setahun. Bunga?
+A Rp5.000 | B Rp50.000 | C Rp100.000 | D Rp1.050.000
+**Jawaban:** B
+**Pembahasan:** 5% × Rp1.000.000 = Rp50.000.
+
+### Checkpoint 2
+Rp2.000.000 bunga 6% per tahun selama 6 bulan. Bunga?
+A Rp30.000 | B Rp60.000 | C Rp120.000 | D Rp180.000
+**Jawaban:** B
+**Pembahasan:** 6 bulan = 0,5 tahun; bunga Rp60.000.
+
+### Checkpoint 3
+Pinjaman Rp1.200.000 bunga 2% per bulan 5 bulan. Total pengembalian?
+A Rp1.224.000 | B Rp1.300.000 | C Rp1.320.000 | D Rp1.440.000
+**Jawaban:** C
+**Pembahasan:** Bunga Rp120.000, total Rp1.320.000.
+
+## Syarat kembali ke latihan
+- Siswa sudah membaca materi ini.
+- Siswa sudah mengerjakan checkpoint.
+- Siswa sudah melihat pembahasan checkpoint.
+- Siswa memahami kesalahan utama sebelum kembali ke Bank Soal Latihan.
+
+## Pesan Wajib Belajar
+Wajib Belajar Dulu. Kamu beberapa kali salah pada soal Bunga Sederhana. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan.","Wajib Belajar Dulu. Kamu beberapa kali salah pada soal Bunga Sederhana. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan.","TRUE"
+"M1D-FULL","M1D","Bunga Sederhana","MAIN","FULL","25","32","I1,I2,I3,I4","R1,R2","ERR_INTEREST_COMPONENT;ERR_SIMPLE_INTEREST_BASE;ERR_MONTHLY_INTEREST;ERR_YEARLY_INTEREST;ERR_TIME_CONVERSION;ERR_DECIMAL_PERCENT;ERR_FINAL_AMOUNT_FORMULA;ERR_COMPARE_INTEREST;ERR_CONTEXT_INTERPRETATION","9","Materi Lengkap Bunga Sederhana","Pada bunga sederhana, modal awal tetap menjadi dasar perhitungan. Untuk tabungan, bunga lebih besar menguntungkan. Untuk pinjaman, bunga lebih kecil lebih ringan.","Materi lengkap ini dipakai saat siswa masih salah pada konversi waktu, jumlah akhir, total pengembalian, atau perbandingan skema bunga.","[""Menjelaskan bunga sederhana"", ""Membedakan komponen bunga"", ""Menghitung bunga per bulan dan per tahun"", ""Mengubah bulan ke tahun"", ""Menghitung jumlah akhir tabungan"", ""Menghitung total pengembalian pinjaman"", ""Membandingkan skema bunga""]","Pada bunga sederhana, modal awal tetap menjadi dasar perhitungan. Untuk tabungan, bunga lebih besar menguntungkan. Untuk pinjaman, bunga lebih kecil lebih ringan.","[""Bunga = Modal × Suku bunga × Waktu"", ""Jumlah akhir = Modal + Bunga"", ""Total pengembalian = Pinjaman + Bunga"", ""Bulan ke tahun = bulan ÷ 12""]","[""Tentukan modal"", ""Tentukan bunga per bulan/tahun"", ""Samakan waktu dengan satuan bunga"", ""Hitung bunga"", ""Tambahkan ke modal/pinjaman"", ""Untuk perbandingan, hitung kedua skema""]","[{""title"": ""Jumlah akhir"", ""problem"": ""Rp500.000 bunga 8% setahun."", ""solution"": ""Bunga Rp40.000, jumlah akhir Rp540.000.""}, {""title"": ""Pinjaman bulanan"", ""problem"": ""Rp1.200.000 bunga 2% per bulan 5 bulan."", ""solution"": ""Bunga Rp120.000, total pengembalian Rp1.320.000.""}, {""title"": ""Waktu 8 bulan"", ""problem"": ""Rp2.400.000 bunga 7,5% setahun 8 bulan."", ""solution"": ""8/12 = 2/3 tahun, bunga Rp120.000, akhir Rp2.520.000.""}, {""title"": ""Banding tabungan"", ""problem"": ""Rp2.000.000 selama 6 bulan: A 6% per tahun, B 0,4% per bulan."", ""solution"": ""A Rp60.000, B Rp48.000, A lebih besar.""}, {""title"": ""Banding pinjaman"", ""problem"": ""Rp3.000.000 selama 6 bulan: A 1,5% per bulan, B 12% per tahun."", ""solution"": ""A Rp270.000, B Rp180.000, B lebih ringan.""}]","[""6 bulan dianggap 6 tahun"", ""Bunga sederhana dihitung dari jumlah akhir"", ""Bunga tidak ditambahkan saat ditanya jumlah akhir"", ""Kesimpulan tabungan/pinjaman tertukar""]","[{""question"": ""Rp1.500.000 bunga 8% per tahun selama 6 bulan. Jumlah akhir?"", ""options"": ""A Rp1.560.000 | B Rp1.620.000 | C Rp1.680.000 | D Rp1.800.000"", ""answer"": ""A"", ""explanation"": ""Bunga Rp60.000, akhir Rp1.560.000.""}, {""question"": ""Rp2.400.000 bunga 7,5% per tahun 8 bulan. Jumlah akhir?"", ""options"": ""A Rp2.520.000 | B Rp2.580.000 | C Rp2.640.000 | D Rp2.700.000"", ""answer"": ""A"", ""explanation"": ""8/12 tahun, bunga Rp120.000.""}, {""question"": ""Rp3.000.000 bunga 4,8% setahun 10 bulan. Jumlah akhir?"", ""options"": ""A Rp3.100.000 | B Rp3.120.000 | C Rp3.144.000 | D Rp3.240.000"", ""answer"": ""B"", ""explanation"": ""Bunga 10 bulan Rp120.000.""}, {""question"": ""Rp2.000.000 selama 6 bulan: A 6% per tahun, B 0,4% per bulan. Mana lebih besar?"", ""options"": ""A Bank A | B Bank B | C Sama | D Tidak dapat ditentukan"", ""answer"": ""A"", ""explanation"": ""A Rp60.000, B Rp48.000.""}, {""question"": ""Pinjaman Rp4.000.000 9 bulan: A 1,3% per bulan, B 12% per tahun. Mana ringan?"", ""options"": ""A A hemat Rp108.000 | B B hemat Rp108.000 | C A hemat Rp180.000 | D B hemat Rp180.000"", ""answer"": ""B"", ""explanation"": ""A Rp468.000, B Rp360.000.""}]","# Materi Lengkap: Bunga Sederhana
+
+**material_id:** M1D
+**content_variant:** FULL
+**material_type:** MAIN
+**cakupan lantai:** Lantai 25–32
+**indikator terkait:** I1,I2,I3,I4
+
+## Kenapa kamu diarahkan ke materi ini?
+Materi lengkap ini dipakai saat siswa masih salah pada konversi waktu, jumlah akhir, total pengembalian, atau perbandingan skema bunga.
+
+## Tujuan belajar
+- Menjelaskan bunga sederhana
+- Membedakan komponen bunga
+- Menghitung bunga per bulan dan per tahun
+- Mengubah bulan ke tahun
+- Menghitung jumlah akhir tabungan
+- Menghitung total pengembalian pinjaman
+- Membandingkan skema bunga
+
+## Konsep inti
+Pada bunga sederhana, modal awal tetap menjadi dasar perhitungan. Untuk tabungan, bunga lebih besar menguntungkan. Untuk pinjaman, bunga lebih kecil lebih ringan.
+
+## Rumus penting
+- Bunga = Modal × Suku bunga × Waktu
+- Jumlah akhir = Modal + Bunga
+- Total pengembalian = Pinjaman + Bunga
+- Bulan ke tahun = bulan ÷ 12
+
+## Langkah cepat
+1. Tentukan modal
+2. Tentukan bunga per bulan/tahun
+3. Samakan waktu dengan satuan bunga
+4. Hitung bunga
+5. Tambahkan ke modal/pinjaman
+6. Untuk perbandingan, hitung kedua skema
+
+## Contoh pembahasan
+### Jumlah akhir
+**Soal/konteks:** Rp500.000 bunga 8% setahun.
+**Penyelesaian:** Bunga Rp40.000, jumlah akhir Rp540.000.
+
+### Pinjaman bulanan
+**Soal/konteks:** Rp1.200.000 bunga 2% per bulan 5 bulan.
+**Penyelesaian:** Bunga Rp120.000, total pengembalian Rp1.320.000.
+
+### Waktu 8 bulan
+**Soal/konteks:** Rp2.400.000 bunga 7,5% setahun 8 bulan.
+**Penyelesaian:** 8/12 = 2/3 tahun, bunga Rp120.000, akhir Rp2.520.000.
+
+### Banding tabungan
+**Soal/konteks:** Rp2.000.000 selama 6 bulan: A 6% per tahun, B 0,4% per bulan.
+**Penyelesaian:** A Rp60.000, B Rp48.000, A lebih besar.
+
+### Banding pinjaman
+**Soal/konteks:** Rp3.000.000 selama 6 bulan: A 1,5% per bulan, B 12% per tahun.
+**Penyelesaian:** A Rp270.000, B Rp180.000, B lebih ringan.
+
+## Kesalahan yang harus dihindari
+- 6 bulan dianggap 6 tahun
+- Bunga sederhana dihitung dari jumlah akhir
+- Bunga tidak ditambahkan saat ditanya jumlah akhir
+- Kesimpulan tabungan/pinjaman tertukar
+
+## Checkpoint
+### Checkpoint 1
+Rp1.500.000 bunga 8% per tahun selama 6 bulan. Jumlah akhir?
+A Rp1.560.000 | B Rp1.620.000 | C Rp1.680.000 | D Rp1.800.000
+**Jawaban:** A
+**Pembahasan:** Bunga Rp60.000, akhir Rp1.560.000.
+
+### Checkpoint 2
+Rp2.400.000 bunga 7,5% per tahun 8 bulan. Jumlah akhir?
+A Rp2.520.000 | B Rp2.580.000 | C Rp2.640.000 | D Rp2.700.000
+**Jawaban:** A
+**Pembahasan:** 8/12 tahun, bunga Rp120.000.
+
+### Checkpoint 3
+Rp3.000.000 bunga 4,8% setahun 10 bulan. Jumlah akhir?
+A Rp3.100.000 | B Rp3.120.000 | C Rp3.144.000 | D Rp3.240.000
+**Jawaban:** B
+**Pembahasan:** Bunga 10 bulan Rp120.000.
+
+### Checkpoint 4
+Rp2.000.000 selama 6 bulan: A 6% per tahun, B 0,4% per bulan. Mana lebih besar?
+A Bank A | B Bank B | C Sama | D Tidak dapat ditentukan
+**Jawaban:** A
+**Pembahasan:** A Rp60.000, B Rp48.000.
+
+### Checkpoint 5
+Pinjaman Rp4.000.000 9 bulan: A 1,3% per bulan, B 12% per tahun. Mana ringan?
+A A hemat Rp108.000 | B B hemat Rp108.000 | C A hemat Rp180.000 | D B hemat Rp180.000
+**Jawaban:** B
+**Pembahasan:** A Rp468.000, B Rp360.000.
+
+## Syarat kembali ke latihan
+- Siswa sudah membaca materi ini.
+- Siswa sudah mengerjakan checkpoint.
+- Siswa sudah melihat pembahasan checkpoint.
+- Siswa memahami kesalahan utama sebelum kembali ke Bank Soal Latihan.
+
+## Pesan Wajib Belajar
+Wajib Belajar Dulu. Kamu beberapa kali salah pada soal Bunga Sederhana. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan.","Wajib Belajar Dulu. Kamu beberapa kali salah pada soal Bunga Sederhana. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan.","TRUE"
+"M1E-SHORT","M1E","Bruto, Neto, dan Tara","MAIN","SHORT","33","40","I1,I2,I3,I4","R1,R2,R3","ERR_BNT_RELATION;ERR_NET_FROM_GROSS_TARE;ERR_GROSS_FROM_NET_TARE;ERR_TARE_FROM_GROSS_NET;ERR_PERCENT_TARE;ERR_DECIMAL_PERCENT;ERR_UNIT_CONVERSION;ERR_COMPARE_NETO;ERR_UNIT_PRICE_OR_SHARE;ERR_OPERATION_ORDER;ERR_CONTEXT_INTERPRETATION","4","Ringkasan Bruto, Neto, dan Tara","Bruto adalah berat total dengan kemasan. Neto adalah isi bersih. Tara adalah berat kemasan.","Kamu beberapa kali salah pada bruto, neto, tara, persen tara, konversi satuan, atau perbandingan isi bersih. Ingat: bruto = neto + tara.","[""Membedakan bruto, neto, tara"", ""Menghitung neto, bruto, tara"", ""Mengonversi gram-kilogram"", ""Memahami persen tara sederhana""]","Bruto adalah berat total dengan kemasan. Neto adalah isi bersih. Tara adalah berat kemasan.","[""Bruto = Neto + Tara"", ""Neto = Bruto − Tara"", ""Tara = Bruto − Neto"", ""Tara = persen tara × Bruto"", ""1 kg = 1.000 gram""]","[""Tandai bruto/neto/tara"", ""Samakan satuan"", ""Pilih rumus"", ""Jika tara persen, hitung tara dulu"", ""Jika membandingkan, cari neto tiap produk""]","[{""title"": ""Neto"", ""problem"": ""Bruto 2 kg, tara 0,1 kg."", ""solution"": ""Neto 1,9 kg.""}, {""title"": ""Bruto"", ""problem"": ""Neto 950 gram, tara 50 gram."", ""solution"": ""Bruto 1.000 gram.""}, {""title"": ""Tara persen"", ""problem"": ""Bruto 5 kg, tara 4%."", ""solution"": ""Tara 0,2 kg, neto 4,8 kg.""}]","[""Bruto dianggap neto"", ""Tara dianggap isi bersih"", ""Neto dihitung bruto + tara"", ""Satuan gram/kg tidak disamakan"", ""Membandingkan bruto, bukan neto""]","[{""question"": ""Bruto 5 kg, tara 0,2 kg. Neto?"", ""options"": ""A 4,6 kg | B 4,8 kg | C 5,2 kg | D 5,5 kg"", ""answer"": ""B"", ""explanation"": ""5 − 0,2 = 4,8 kg.""}, {""question"": ""Neto 2,5 kg, tara 0,1 kg. Bruto?"", ""options"": ""A 2,4 kg | B 2,5 kg | C 2,6 kg | D 2,7 kg"", ""answer"": ""C"", ""explanation"": ""2,5 + 0,1 = 2,6 kg.""}, {""question"": ""Bruto 2 kg, tara 250 gram. Neto dalam gram?"", ""options"": ""A 1.500 | B 1.650 | C 1.750 | D 2.250"", ""answer"": ""C"", ""explanation"": ""2 kg = 2.000 gram; neto 1.750 gram.""}]","# Ringkasan Materi: Bruto, Neto, dan Tara
+
+**material_id:** M1E
+**content_variant:** SHORT
+**material_type:** MAIN
+**cakupan lantai:** Lantai 33–40
+**indikator terkait:** I1,I2,I3,I4
+
+## Kenapa kamu diarahkan ke materi ini?
+Kamu beberapa kali salah pada bruto, neto, tara, persen tara, konversi satuan, atau perbandingan isi bersih. Ingat: bruto = neto + tara.
+
+## Tujuan belajar
+- Membedakan bruto, neto, tara
+- Menghitung neto, bruto, tara
+- Mengonversi gram-kilogram
+- Memahami persen tara sederhana
+
+## Konsep inti
+Bruto adalah berat total dengan kemasan. Neto adalah isi bersih. Tara adalah berat kemasan.
+
+## Rumus penting
+- Bruto = Neto + Tara
+- Neto = Bruto − Tara
+- Tara = Bruto − Neto
+- Tara = persen tara × Bruto
+- 1 kg = 1.000 gram
+
+## Langkah cepat
+1. Tandai bruto/neto/tara
+2. Samakan satuan
+3. Pilih rumus
+4. Jika tara persen, hitung tara dulu
+5. Jika membandingkan, cari neto tiap produk
+
+## Contoh pembahasan
+### Neto
+**Soal/konteks:** Bruto 2 kg, tara 0,1 kg.
+**Penyelesaian:** Neto 1,9 kg.
+
+### Bruto
+**Soal/konteks:** Neto 950 gram, tara 50 gram.
+**Penyelesaian:** Bruto 1.000 gram.
+
+### Tara persen
+**Soal/konteks:** Bruto 5 kg, tara 4%.
+**Penyelesaian:** Tara 0,2 kg, neto 4,8 kg.
+
+## Kesalahan yang harus dihindari
+- Bruto dianggap neto
+- Tara dianggap isi bersih
+- Neto dihitung bruto + tara
+- Satuan gram/kg tidak disamakan
+- Membandingkan bruto, bukan neto
+
+## Checkpoint
+### Checkpoint 1
+Bruto 5 kg, tara 0,2 kg. Neto?
+A 4,6 kg | B 4,8 kg | C 5,2 kg | D 5,5 kg
+**Jawaban:** B
+**Pembahasan:** 5 − 0,2 = 4,8 kg.
+
+### Checkpoint 2
+Neto 2,5 kg, tara 0,1 kg. Bruto?
+A 2,4 kg | B 2,5 kg | C 2,6 kg | D 2,7 kg
+**Jawaban:** C
+**Pembahasan:** 2,5 + 0,1 = 2,6 kg.
+
+### Checkpoint 3
+Bruto 2 kg, tara 250 gram. Neto dalam gram?
+A 1.500 | B 1.650 | C 1.750 | D 2.250
+**Jawaban:** C
+**Pembahasan:** 2 kg = 2.000 gram; neto 1.750 gram.
+
+## Syarat kembali ke latihan
+- Siswa sudah membaca materi ini.
+- Siswa sudah mengerjakan checkpoint.
+- Siswa sudah melihat pembahasan checkpoint.
+- Siswa memahami kesalahan utama sebelum kembali ke Bank Soal Latihan.
+
+## Pesan Wajib Belajar
+Wajib Belajar Dulu. Kamu beberapa kali salah pada soal Bruto, Neto, dan Tara. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan.","Wajib Belajar Dulu. Kamu beberapa kali salah pada soal Bruto, Neto, dan Tara. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan.","TRUE"
+"M1E-FULL","M1E","Bruto, Neto, dan Tara","MAIN","FULL","33","40","I1,I2,I3,I4","R1,R2,R3","ERR_BNT_RELATION;ERR_NET_FROM_GROSS_TARE;ERR_GROSS_FROM_NET_TARE;ERR_TARE_FROM_GROSS_NET;ERR_PERCENT_TARE;ERR_DECIMAL_PERCENT;ERR_UNIT_CONVERSION;ERR_COMPARE_NETO;ERR_UNIT_PRICE_OR_SHARE;ERR_OPERATION_ORDER;ERR_CONTEXT_INTERPRETATION","9","Materi Lengkap Bruto, Neto, dan Tara","Bruto selalu terdiri dari neto dan tara. Isi bersih yang didapat pembeli adalah neto, bukan bruto. Jika satuan berbeda, samakan dulu.","Materi lengkap ini dipakai jika siswa masih salah pada persen tara, konversi satuan, pembagian isi bersih, atau perbandingan produk kemasan.","[""Menjelaskan bruto, neto, tara"", ""Menghitung neto/bruto/tara"", ""Menghitung tara persen"", ""Mengonversi gram dan kilogram"", ""Membandingkan isi bersih"", ""Membagi neto ke kantong/unit""]","Bruto selalu terdiri dari neto dan tara. Isi bersih yang didapat pembeli adalah neto, bukan bruto. Jika satuan berbeda, samakan dulu.","[""Bruto = Neto + Tara"", ""Neto = Bruto − Tara"", ""Tara = Bruto − Neto"", ""Tara = persen tara × Bruto"", ""Isi per kantong = neto total ÷ jumlah kantong"", ""kg ke gram = kg × 1.000; gram ke kg = gram ÷ 1.000""]","[""Identifikasi bruto/neto/tara"", ""Samakan satuan"", ""Gunakan rumus sesuai yang ditanya"", ""Hitung tara persen jika ada"", ""Bandingkan neto untuk pilihan produk"", ""Bagi neto jika diminta isi per kantong""]","[{""title"": ""Neto"", ""problem"": ""Bruto 2 kg, tara 0,1 kg."", ""solution"": ""Neto 1,9 kg.""}, {""title"": ""Tara"", ""problem"": ""Bruto 1 kg, neto 0,95 kg."", ""solution"": ""Tara 0,05 kg = 50 gram.""}, {""title"": ""Konversi"", ""problem"": ""Bruto 1,2 kg, tara 150 gram."", ""solution"": ""1,2 kg = 1.200 gram; neto 1.050 gram.""}, {""title"": ""Tara persen"", ""problem"": ""Bruto 12 kg, tara 2,5%."", ""solution"": ""Tara 0,3 kg, neto 11,7 kg.""}, {""title"": ""Banding produk"", ""problem"": ""A bruto 2,5 kg tara 250g; B bruto 2,4 kg tara 100g."", ""solution"": ""A 2,25 kg, B 2,3 kg; B lebih besar.""}, {""title"": ""Neto per kantong"", ""problem"": ""Bruto 20 kg, tara 4,5%, dibagi 5 kantong."", ""solution"": ""Tara 0,9 kg; neto 19,1 kg; per kantong 3,82 kg.""}]","[""Bruto disamakan dengan neto"", ""Tara tidak dikurangkan"", ""Persen tara tidak dihitung dari bruto"", ""Satuan tidak disamakan"", ""Membandingkan bruto bukan isi bersih""]","[{""question"": ""Bruto 3 kg, tara 0,2 kg. Neto?"", ""options"": ""A 2,6 kg | B 2,8 kg | C 3,2 kg | D 3,5 kg"", ""answer"": ""B"", ""explanation"": ""3 − 0,2 = 2,8 kg.""}, {""question"": ""Neto 950 gram, tara 50 gram. Bruto?"", ""options"": ""A 900 | B 950 | C 1.000 | D 1.050"", ""answer"": ""C"", ""explanation"": ""950 + 50 = 1.000 gram.""}, {""question"": ""Bruto 2,4 kg, tara 150 gram. Neto gram?"", ""options"": ""A 2.150 | B 2.250 | C 2.400 | D 2.550"", ""answer"": ""B"", ""explanation"": ""2.400 − 150 = 2.250 gram.""}, {""question"": ""Bruto 8 kg, tara 5%. Neto?"", ""options"": ""A 7,2 kg | B 7,4 kg | C 7,6 kg | D 8,4 kg"", ""answer"": ""C"", ""explanation"": ""Tara 0,4 kg, neto 7,6 kg.""}, {""question"": ""A bruto 5 kg tara 300g; B bruto 4,8 kg tara 2%. Neto lebih besar?"", ""options"": ""A A | B B | C Sama | D Tidak dapat ditentukan"", ""answer"": ""B"", ""explanation"": ""A 4,7 kg; B 4,704 kg.""}]","# Materi Lengkap: Bruto, Neto, dan Tara
+
+**material_id:** M1E
+**content_variant:** FULL
+**material_type:** MAIN
+**cakupan lantai:** Lantai 33–40
+**indikator terkait:** I1,I2,I3,I4
+
+## Kenapa kamu diarahkan ke materi ini?
+Materi lengkap ini dipakai jika siswa masih salah pada persen tara, konversi satuan, pembagian isi bersih, atau perbandingan produk kemasan.
+
+## Tujuan belajar
+- Menjelaskan bruto, neto, tara
+- Menghitung neto/bruto/tara
+- Menghitung tara persen
+- Mengonversi gram dan kilogram
+- Membandingkan isi bersih
+- Membagi neto ke kantong/unit
+
+## Konsep inti
+Bruto selalu terdiri dari neto dan tara. Isi bersih yang didapat pembeli adalah neto, bukan bruto. Jika satuan berbeda, samakan dulu.
+
+## Rumus penting
+- Bruto = Neto + Tara
+- Neto = Bruto − Tara
+- Tara = Bruto − Neto
+- Tara = persen tara × Bruto
+- Isi per kantong = neto total ÷ jumlah kantong
+- kg ke gram = kg × 1.000; gram ke kg = gram ÷ 1.000
+
+## Langkah cepat
+1. Identifikasi bruto/neto/tara
+2. Samakan satuan
+3. Gunakan rumus sesuai yang ditanya
+4. Hitung tara persen jika ada
+5. Bandingkan neto untuk pilihan produk
+6. Bagi neto jika diminta isi per kantong
+
+## Contoh pembahasan
+### Neto
+**Soal/konteks:** Bruto 2 kg, tara 0,1 kg.
+**Penyelesaian:** Neto 1,9 kg.
+
+### Tara
+**Soal/konteks:** Bruto 1 kg, neto 0,95 kg.
+**Penyelesaian:** Tara 0,05 kg = 50 gram.
+
+### Konversi
+**Soal/konteks:** Bruto 1,2 kg, tara 150 gram.
+**Penyelesaian:** 1,2 kg = 1.200 gram; neto 1.050 gram.
+
+### Tara persen
+**Soal/konteks:** Bruto 12 kg, tara 2,5%.
+**Penyelesaian:** Tara 0,3 kg, neto 11,7 kg.
+
+### Banding produk
+**Soal/konteks:** A bruto 2,5 kg tara 250g; B bruto 2,4 kg tara 100g.
+**Penyelesaian:** A 2,25 kg, B 2,3 kg; B lebih besar.
+
+### Neto per kantong
+**Soal/konteks:** Bruto 20 kg, tara 4,5%, dibagi 5 kantong.
+**Penyelesaian:** Tara 0,9 kg; neto 19,1 kg; per kantong 3,82 kg.
+
+## Kesalahan yang harus dihindari
+- Bruto disamakan dengan neto
+- Tara tidak dikurangkan
+- Persen tara tidak dihitung dari bruto
+- Satuan tidak disamakan
+- Membandingkan bruto bukan isi bersih
+
+## Checkpoint
+### Checkpoint 1
+Bruto 3 kg, tara 0,2 kg. Neto?
+A 2,6 kg | B 2,8 kg | C 3,2 kg | D 3,5 kg
+**Jawaban:** B
+**Pembahasan:** 3 − 0,2 = 2,8 kg.
+
+### Checkpoint 2
+Neto 950 gram, tara 50 gram. Bruto?
+A 900 | B 950 | C 1.000 | D 1.050
+**Jawaban:** C
+**Pembahasan:** 950 + 50 = 1.000 gram.
+
+### Checkpoint 3
+Bruto 2,4 kg, tara 150 gram. Neto gram?
+A 2.150 | B 2.250 | C 2.400 | D 2.550
+**Jawaban:** B
+**Pembahasan:** 2.400 − 150 = 2.250 gram.
+
+### Checkpoint 4
+Bruto 8 kg, tara 5%. Neto?
+A 7,2 kg | B 7,4 kg | C 7,6 kg | D 8,4 kg
+**Jawaban:** C
+**Pembahasan:** Tara 0,4 kg, neto 7,6 kg.
+
+### Checkpoint 5
+A bruto 5 kg tara 300g; B bruto 4,8 kg tara 2%. Neto lebih besar?
+A A | B B | C Sama | D Tidak dapat ditentukan
+**Jawaban:** B
+**Pembahasan:** A 4,7 kg; B 4,704 kg.
+
+## Syarat kembali ke latihan
+- Siswa sudah membaca materi ini.
+- Siswa sudah mengerjakan checkpoint.
+- Siswa sudah melihat pembahasan checkpoint.
+- Siswa memahami kesalahan utama sebelum kembali ke Bank Soal Latihan.
+
+## Pesan Wajib Belajar
+Wajib Belajar Dulu. Kamu beberapa kali salah pada soal Bruto, Neto, dan Tara. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan.","Wajib Belajar Dulu. Kamu beberapa kali salah pada soal Bruto, Neto, dan Tara. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan.","TRUE"
+"M1F-SHORT","M1F","Promo, Transaksi, dan Keputusan","MAIN","SHORT","41","50","I1,I2,I3,I4","R1,R2,R3","ERR_COMPARE_PROMO;ERR_DISCOUNT_VS_FLAT;ERR_FORGET_SHIPPING;ERR_SERVICE_BASE;ERR_TAX_BASE;ERR_OPERATION_ORDER;ERR_TABLE_TOTAL;ERR_TABLE_DISCOUNT;ERR_UNIT_PRICE;ERR_COMPARE_PAYMENT_OPTION;ERR_BUDGET_DECISION;ERR_CONTEXT_INTERPRETATION","5","Ringkasan Promo, Transaksi, dan Keputusan","Pilihan paling hemat adalah pilihan dengan total akhir paling kecil. Jika jumlah barang berbeda, bandingkan harga per unit.","Kamu beberapa kali salah pada promo, transaksi, paket hemat, harga per unit, atau keputusan belanja. Ingat: promo hemat ditentukan dari total akhir, bukan tampilan diskonnya.","[""Membaca informasi promo"", ""Menghitung total akhir"", ""Membandingkan pilihan hemat"", ""Menghitung harga per unit"", ""Menentukan cukup/kurang anggaran""]","Pilihan paling hemat adalah pilihan dengan total akhir paling kecil. Jika jumlah barang berbeda, bandingkan harga per unit.","[""Harga setelah diskon = harga awal − diskon"", ""Harga setelah voucher = harga awal − voucher"", ""Total bayar = subtotal + PPN + layanan + ongkir"", ""Harga per unit = total harga ÷ jumlah unit"", ""Selisih = harga mahal − harga murah""]","[""Tulis semua pilihan"", ""Hitung harga setelah promo"", ""Tambahkan biaya akhir"", ""Jika paket berbeda jumlah, hitung harga per unit"", ""Bandingkan nilai akhir"", ""Simpulkan hemat/cukup/kurang""]","[{""title"": ""Banding diskon"", ""problem"": ""A Rp200.000 diskon 20%; B Rp170.000 tanpa diskon."", ""solution"": ""A Rp160.000, B Rp170.000; A hemat.""}, {""title"": ""Voucher dan ongkir"", ""problem"": ""Rp150.000 voucher Rp25.000 ongkir Rp10.000."", ""solution"": ""Total Rp135.000.""}, {""title"": ""Harga per unit"", ""problem"": ""A 5 minuman Rp70.000; B 3 minuman Rp45.000."", ""solution"": ""A Rp14.000/unit, B Rp15.000/unit; A hemat.""}, {""title"": ""Anggaran"", ""problem"": ""Uang Rp250.000, sepatu Rp300.000 diskon 20% ongkir Rp15.000."", ""solution"": ""Total Rp255.000; kurang Rp5.000.""}]","[""Memilih diskon terbesar tanpa hitung akhir"", ""Lupa ongkir"", ""Voucher ditambah"", ""Membandingkan harga total paket saja"", ""Salah membaca tabel transaksi"", ""Salah kesimpulan anggaran""]","[{""question"": ""A Rp200.000 diskon 20%, B Rp170.000 tanpa diskon. Mana hemat?"", ""options"": ""A Toko A | B Toko B | C Sama | D Tidak dapat ditentukan"", ""answer"": ""A"", ""explanation"": ""A Rp160.000, B Rp170.000.""}, {""question"": ""Rp150.000 voucher Rp20.000 layanan Rp5.000. Total?"", ""options"": ""A Rp125.000 | B Rp130.000 | C Rp135.000 | D Rp175.000"", ""answer"": ""C"", ""explanation"": ""150.000 − 20.000 + 5.000 = 135.000.""}, {""question"": ""A 6 pulpen Rp48.000, B 10 pulpen Rp75.000. Mana hemat/unit?"", ""options"": ""A Paket A | B Paket B | C Sama | D Tidak dapat ditentukan"", ""answer"": ""B"", ""explanation"": ""A Rp8.000, B Rp7.500.""}]","# Ringkasan Materi: Promo, Transaksi, dan Keputusan
+
+**material_id:** M1F
+**content_variant:** SHORT
+**material_type:** MAIN
+**cakupan lantai:** Lantai 41–50
+**indikator terkait:** I1,I2,I3,I4
+
+## Kenapa kamu diarahkan ke materi ini?
+Kamu beberapa kali salah pada promo, transaksi, paket hemat, harga per unit, atau keputusan belanja. Ingat: promo hemat ditentukan dari total akhir, bukan tampilan diskonnya.
+
+## Tujuan belajar
+- Membaca informasi promo
+- Menghitung total akhir
+- Membandingkan pilihan hemat
+- Menghitung harga per unit
+- Menentukan cukup/kurang anggaran
+
+## Konsep inti
+Pilihan paling hemat adalah pilihan dengan total akhir paling kecil. Jika jumlah barang berbeda, bandingkan harga per unit.
+
+## Rumus penting
+- Harga setelah diskon = harga awal − diskon
+- Harga setelah voucher = harga awal − voucher
+- Total bayar = subtotal + PPN + layanan + ongkir
+- Harga per unit = total harga ÷ jumlah unit
+- Selisih = harga mahal − harga murah
+
+## Langkah cepat
+1. Tulis semua pilihan
+2. Hitung harga setelah promo
+3. Tambahkan biaya akhir
+4. Jika paket berbeda jumlah, hitung harga per unit
+5. Bandingkan nilai akhir
+6. Simpulkan hemat/cukup/kurang
+
+## Contoh pembahasan
+### Banding diskon
+**Soal/konteks:** A Rp200.000 diskon 20%; B Rp170.000 tanpa diskon.
+**Penyelesaian:** A Rp160.000, B Rp170.000; A hemat.
+
+### Voucher dan ongkir
+**Soal/konteks:** Rp150.000 voucher Rp25.000 ongkir Rp10.000.
+**Penyelesaian:** Total Rp135.000.
+
+### Harga per unit
+**Soal/konteks:** A 5 minuman Rp70.000; B 3 minuman Rp45.000.
+**Penyelesaian:** A Rp14.000/unit, B Rp15.000/unit; A hemat.
+
+### Anggaran
+**Soal/konteks:** Uang Rp250.000, sepatu Rp300.000 diskon 20% ongkir Rp15.000.
+**Penyelesaian:** Total Rp255.000; kurang Rp5.000.
+
+## Kesalahan yang harus dihindari
+- Memilih diskon terbesar tanpa hitung akhir
+- Lupa ongkir
+- Voucher ditambah
+- Membandingkan harga total paket saja
+- Salah membaca tabel transaksi
+- Salah kesimpulan anggaran
+
+## Checkpoint
+### Checkpoint 1
+A Rp200.000 diskon 20%, B Rp170.000 tanpa diskon. Mana hemat?
+A Toko A | B Toko B | C Sama | D Tidak dapat ditentukan
+**Jawaban:** A
+**Pembahasan:** A Rp160.000, B Rp170.000.
+
+### Checkpoint 2
+Rp150.000 voucher Rp20.000 layanan Rp5.000. Total?
+A Rp125.000 | B Rp130.000 | C Rp135.000 | D Rp175.000
+**Jawaban:** C
+**Pembahasan:** 150.000 − 20.000 + 5.000 = 135.000.
+
+### Checkpoint 3
+A 6 pulpen Rp48.000, B 10 pulpen Rp75.000. Mana hemat/unit?
+A Paket A | B Paket B | C Sama | D Tidak dapat ditentukan
+**Jawaban:** B
+**Pembahasan:** A Rp8.000, B Rp7.500.
+
+## Syarat kembali ke latihan
+- Siswa sudah membaca materi ini.
+- Siswa sudah mengerjakan checkpoint.
+- Siswa sudah melihat pembahasan checkpoint.
+- Siswa memahami kesalahan utama sebelum kembali ke Bank Soal Latihan.
+
+## Pesan Wajib Belajar
+Wajib Belajar Dulu. Kamu beberapa kali salah pada soal Promo, Transaksi, dan Keputusan. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan.","Wajib Belajar Dulu. Kamu beberapa kali salah pada soal Promo, Transaksi, dan Keputusan. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan.","TRUE"
+"M1F-FULL","M1F","Promo, Transaksi, dan Keputusan","MAIN","FULL","41","50","I1,I2,I3,I4","R1,R2,R3","ERR_COMPARE_PROMO;ERR_DISCOUNT_VS_FLAT;ERR_FORGET_SHIPPING;ERR_SERVICE_BASE;ERR_TAX_BASE;ERR_OPERATION_ORDER;ERR_TABLE_TOTAL;ERR_TABLE_DISCOUNT;ERR_UNIT_PRICE;ERR_COMPARE_PAYMENT_OPTION;ERR_BUDGET_DECISION;ERR_CONTEXT_INTERPRETATION","10","Materi Lengkap Promo, Transaksi, dan Keputusan","M1F menggabungkan semua materi aritmetika sosial. Keputusan harus dibuat berdasarkan perhitungan akhir yang sesuai konteks: total bayar, harga per unit, selisih hemat, atau sisa/kekurangan uang.","Materi lengkap ini dipakai untuk soal integratif: promo, tabel transaksi, PPN, layanan, ongkir, harga per unit, opsi pembayaran, dan anggaran.","[""Membaca promo"", ""Membedakan diskon, voucher, ongkir, PPN, layanan"", ""Menghitung harga akhir"", ""Membandingkan promo"", ""Membandingkan diskon persen dan potongan langsung"", ""Menghitung tabel transaksi"", ""Menghitung harga per unit"", ""Menentukan paket hemat"", ""Menentukan cukup/kurang anggaran"", ""Mengambil keputusan numerik""]","M1F menggabungkan semua materi aritmetika sosial. Keputusan harus dibuat berdasarkan perhitungan akhir yang sesuai konteks: total bayar, harga per unit, selisih hemat, atau sisa/kekurangan uang.","[""Besar diskon = persen × harga awal"", ""Subtotal = harga awal − diskon/voucher"", ""Total bayar = subtotal + PPN + layanan + ongkir"", ""Harga per unit = total akhir ÷ jumlah unit"", ""Sisa = uang tersedia − total bayar"", ""Kekurangan = total bayar − uang tersedia""]","[""Baca konteks dan pertanyaan"", ""Hitung subtotal setiap pilihan"", ""Tambahkan biaya tambahan"", ""Hitung harga per unit jika jumlah berbeda"", ""Hitung total tabel per baris jika ada"", ""Bandingkan hasil sesuai pertanyaan"", ""Simpulkan dengan selisih""]","[{""title"": ""Banding dua harga akhir"", ""problem"": ""A Rp100.000 diskon 10%, B Rp95.000."", ""solution"": ""A Rp90.000, B Rp95.000; A hemat.""}, {""title"": ""Diskon vs potongan"", ""problem"": ""Rp200.000: diskon 10% atau potongan Rp25.000."", ""solution"": ""Diskon Rp20.000, potongan Rp25.000; potongan hemat.""}, {""title"": ""Promo ongkir"", ""problem"": ""A Rp300.000 diskon 25% ongkir Rp20.000; B Rp260.000 diskon 10% ongkir Rp10.000."", ""solution"": ""A Rp245.000, B Rp244.000; B hemat Rp1.000.""}, {""title"": ""Tabel transaksi"", ""problem"": ""2 botol @35.000, 1 tempat makan 45.000, 3 sendok @5.000."", ""solution"": ""Total Rp130.000.""}, {""title"": ""Harga unit"", ""problem"": ""A 6 pulpen Rp48.000, B 10 pulpen Rp75.000."", ""solution"": ""A Rp8.000, B Rp7.500; B hemat.""}, {""title"": ""PPN dan ongkir"", ""problem"": ""Rp400.000 diskon 20%, PPN 11%, ongkir Rp20.000."", ""solution"": ""Subtotal Rp320.000, PPN Rp35.200, total Rp375.200.""}, {""title"": ""Anggaran"", ""problem"": ""Uang Rp500.000; barang Rp600.000 diskon 30%, layanan 2%, ongkir Rp15.000."", ""solution"": ""Total Rp443.400, sisa Rp56.600.""}]","[""Diskon terbesar langsung dipilih"", ""Voucher dianggap biaya"", ""Ongkir dilupakan"", ""Paket dibandingkan dari totalnya saja"", ""Jumlah barang dalam tabel tidak dikalikan"", ""Salah urutan operasi"", ""Salah kesimpulan cukup/kurang""]","[{""question"": ""A Rp300.000 diskon 25% ongkir Rp20.000; B Rp260.000 diskon 10% ongkir Rp10.000. Mana hemat?"", ""options"": ""A A hemat Rp1.000 | B B hemat Rp1.000 | C A hemat Rp5.000 | D Sama"", ""answer"": ""B"", ""explanation"": ""A Rp245.000, B Rp244.000.""}, {""question"": ""Rp320.000: diskon 12,5% atau potongan Rp45.000. Mana hemat?"", ""options"": ""A Diskon hemat Rp5.000 | B Potongan hemat Rp5.000 | C Sama | D Potongan hemat Rp15.000"", ""answer"": ""B"", ""explanation"": ""Diskon Rp40.000, potongan Rp45.000.""}, {""question"": ""2 tas @Rp120.000 diskon 20%, 3 dompet @Rp50.000 diskon 10%. Total?"", ""options"": ""A Rp327.000 | B Rp337.000 | C Rp350.000 | D Rp390.000"", ""answer"": ""A"", ""explanation"": ""Tas Rp192.000, dompet Rp135.000, total Rp327.000.""}, {""question"": ""A 8 produk Rp160.000 diskon 10%, B 6 produk Rp108.000. Kesimpulan?"", ""options"": ""A A hemat Rp2.000/unit | B B hemat Rp2.000/unit | C Sama | D A hemat Rp1.000/unit"", ""answer"": ""C"", ""explanation"": ""Keduanya Rp18.000/unit.""}, {""question"": ""Uang Rp500.000; barang Rp600.000 diskon 30%, layanan 2%, ongkir Rp15.000. Kesimpulan?"", ""options"": ""A cukup sisa Rp56.600 | B cukup sisa Rp46.600 | C kurang Rp43.400 | D tepat cukup"", ""answer"": ""A"", ""explanation"": ""Total Rp443.400, sisa Rp56.600.""}]","# Materi Lengkap: Promo, Transaksi, dan Keputusan
+
+**material_id:** M1F
+**content_variant:** FULL
+**material_type:** MAIN
+**cakupan lantai:** Lantai 41–50
+**indikator terkait:** I1,I2,I3,I4
+
+## Kenapa kamu diarahkan ke materi ini?
+Materi lengkap ini dipakai untuk soal integratif: promo, tabel transaksi, PPN, layanan, ongkir, harga per unit, opsi pembayaran, dan anggaran.
+
+## Tujuan belajar
+- Membaca promo
+- Membedakan diskon, voucher, ongkir, PPN, layanan
+- Menghitung harga akhir
+- Membandingkan promo
+- Membandingkan diskon persen dan potongan langsung
+- Menghitung tabel transaksi
+- Menghitung harga per unit
+- Menentukan paket hemat
+- Menentukan cukup/kurang anggaran
+- Mengambil keputusan numerik
+
+## Konsep inti
+M1F menggabungkan semua materi aritmetika sosial. Keputusan harus dibuat berdasarkan perhitungan akhir yang sesuai konteks: total bayar, harga per unit, selisih hemat, atau sisa/kekurangan uang.
+
+## Rumus penting
+- Besar diskon = persen × harga awal
+- Subtotal = harga awal − diskon/voucher
+- Total bayar = subtotal + PPN + layanan + ongkir
+- Harga per unit = total akhir ÷ jumlah unit
+- Sisa = uang tersedia − total bayar
+- Kekurangan = total bayar − uang tersedia
+
+## Langkah cepat
+1. Baca konteks dan pertanyaan
+2. Hitung subtotal setiap pilihan
+3. Tambahkan biaya tambahan
+4. Hitung harga per unit jika jumlah berbeda
+5. Hitung total tabel per baris jika ada
+6. Bandingkan hasil sesuai pertanyaan
+7. Simpulkan dengan selisih
+
+## Contoh pembahasan
+### Banding dua harga akhir
+**Soal/konteks:** A Rp100.000 diskon 10%, B Rp95.000.
+**Penyelesaian:** A Rp90.000, B Rp95.000; A hemat.
+
+### Diskon vs potongan
+**Soal/konteks:** Rp200.000: diskon 10% atau potongan Rp25.000.
+**Penyelesaian:** Diskon Rp20.000, potongan Rp25.000; potongan hemat.
+
+### Promo ongkir
+**Soal/konteks:** A Rp300.000 diskon 25% ongkir Rp20.000; B Rp260.000 diskon 10% ongkir Rp10.000.
+**Penyelesaian:** A Rp245.000, B Rp244.000; B hemat Rp1.000.
+
+### Tabel transaksi
+**Soal/konteks:** 2 botol @35.000, 1 tempat makan 45.000, 3 sendok @5.000.
+**Penyelesaian:** Total Rp130.000.
+
+### Harga unit
+**Soal/konteks:** A 6 pulpen Rp48.000, B 10 pulpen Rp75.000.
+**Penyelesaian:** A Rp8.000, B Rp7.500; B hemat.
+
+### PPN dan ongkir
+**Soal/konteks:** Rp400.000 diskon 20%, PPN 11%, ongkir Rp20.000.
+**Penyelesaian:** Subtotal Rp320.000, PPN Rp35.200, total Rp375.200.
+
+### Anggaran
+**Soal/konteks:** Uang Rp500.000; barang Rp600.000 diskon 30%, layanan 2%, ongkir Rp15.000.
+**Penyelesaian:** Total Rp443.400, sisa Rp56.600.
+
+## Kesalahan yang harus dihindari
+- Diskon terbesar langsung dipilih
+- Voucher dianggap biaya
+- Ongkir dilupakan
+- Paket dibandingkan dari totalnya saja
+- Jumlah barang dalam tabel tidak dikalikan
+- Salah urutan operasi
+- Salah kesimpulan cukup/kurang
+
+## Checkpoint
+### Checkpoint 1
+A Rp300.000 diskon 25% ongkir Rp20.000; B Rp260.000 diskon 10% ongkir Rp10.000. Mana hemat?
+A A hemat Rp1.000 | B B hemat Rp1.000 | C A hemat Rp5.000 | D Sama
+**Jawaban:** B
+**Pembahasan:** A Rp245.000, B Rp244.000.
+
+### Checkpoint 2
+Rp320.000: diskon 12,5% atau potongan Rp45.000. Mana hemat?
+A Diskon hemat Rp5.000 | B Potongan hemat Rp5.000 | C Sama | D Potongan hemat Rp15.000
+**Jawaban:** B
+**Pembahasan:** Diskon Rp40.000, potongan Rp45.000.
+
+### Checkpoint 3
+2 tas @Rp120.000 diskon 20%, 3 dompet @Rp50.000 diskon 10%. Total?
+A Rp327.000 | B Rp337.000 | C Rp350.000 | D Rp390.000
+**Jawaban:** A
+**Pembahasan:** Tas Rp192.000, dompet Rp135.000, total Rp327.000.
+
+### Checkpoint 4
+A 8 produk Rp160.000 diskon 10%, B 6 produk Rp108.000. Kesimpulan?
+A A hemat Rp2.000/unit | B B hemat Rp2.000/unit | C Sama | D A hemat Rp1.000/unit
+**Jawaban:** C
+**Pembahasan:** Keduanya Rp18.000/unit.
+
+### Checkpoint 5
+Uang Rp500.000; barang Rp600.000 diskon 30%, layanan 2%, ongkir Rp15.000. Kesimpulan?
+A cukup sisa Rp56.600 | B cukup sisa Rp46.600 | C kurang Rp43.400 | D tepat cukup
+**Jawaban:** A
+**Pembahasan:** Total Rp443.400, sisa Rp56.600.
+
+## Syarat kembali ke latihan
+- Siswa sudah membaca materi ini.
+- Siswa sudah mengerjakan checkpoint.
+- Siswa sudah melihat pembahasan checkpoint.
+- Siswa memahami kesalahan utama sebelum kembali ke Bank Soal Latihan.
+
+## Pesan Wajib Belajar
+Wajib Belajar Dulu. Kamu beberapa kali salah pada soal Promo, Transaksi, dan Keputusan. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan.","Wajib Belajar Dulu. Kamu beberapa kali salah pada soal Promo, Transaksi, dan Keputusan. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan.","TRUE"
+"R1-SHORT","R1","Operasi Persen Dasar","REMEDIAL","SHORT","","","I1,I2,I3","","ERR_PERCENT_CONVERSION;ERR_DECIMAL_PERCENT;ERR_DISCOUNT_BASE;ERR_TAX_BASE;ERR_SERVICE_BASE;ERR_PROFIT_BASE;ERR_LOSS_BASE;ERR_PERCENT_TARE;ERR_DISCOUNT_VS_FLAT;ERR_COMPARE_PROMO","3","Ringkasan Operasi Persen Dasar","Persen berarti per seratus. 20% = 20/100 = 0,20. Nilai persen bergantung pada bilangan dasarnya.","Kamu beberapa kali salah pada operasi persen. R1 menguatkan cara mengubah persen dan menghitung persen dari bilangan.","[""Memahami persen sebagai per seratus"", ""Mengubah persen ke desimal/pecahan"", ""Menghitung persen dari bilangan"", ""Menghitung persen umum""]","Persen berarti per seratus. 20% = 20/100 = 0,20. Nilai persen bergantung pada bilangan dasarnya.","[""Nilai persen = persen × bilangan dasar"", ""p% = p/100"", ""10% = 1/10; 25% = 1/4; 50% = 1/2; 12,5% = 1/8""]","[""Baca persen"", ""Ubah ke desimal/pecahan"", ""Kalikan dengan bilangan dasar"", ""Cek kewajaran hasil""]","[{""title"": ""20%"", ""problem"": ""20% dari Rp150.000."", ""solution"": ""0,20 × Rp150.000 = Rp30.000.""}, {""title"": ""25%"", ""problem"": ""25% dari Rp80.000."", ""solution"": ""1/4 × Rp80.000 = Rp20.000.""}, {""title"": ""2%"", ""problem"": ""2% dari Rp300.000."", ""solution"": ""0,02 × Rp300.000 = Rp6.000.""}]","[""20% dianggap 20"", ""Lupa membagi 100"", ""2,5% dianggap 0,25"", ""Basis angka salah"", ""Tidak cek kewajaran""]","[{""question"": ""10% dari Rp200.000?"", ""options"": ""A Rp2.000 | B Rp20.000 | C Rp100.000 | D Rp220.000"", ""answer"": ""B"", ""explanation"": ""0,10 × 200.000 = 20.000.""}, {""question"": ""25% dari Rp80.000?"", ""options"": ""A Rp10.000 | B Rp20.000 | C Rp25.000 | D Rp60.000"", ""answer"": ""B"", ""explanation"": ""80.000 ÷ 4 = 20.000.""}, {""question"": ""2,5% dari Rp400.000?"", ""options"": ""A Rp1.000 | B Rp10.000 | C Rp25.000 | D Rp100.000"", ""answer"": ""B"", ""explanation"": ""0,025 × 400.000 = 10.000.""}]","# Ringkasan Materi: Operasi Persen Dasar
+
+**material_id:** R1
+**content_variant:** SHORT
+**material_type:** REMEDIAL
+**cakupan lantai:** -
+**indikator terkait:** I1,I2,I3
+
+## Kenapa kamu diarahkan ke materi ini?
+Kamu beberapa kali salah pada operasi persen. R1 menguatkan cara mengubah persen dan menghitung persen dari bilangan.
+
+## Tujuan belajar
+- Memahami persen sebagai per seratus
+- Mengubah persen ke desimal/pecahan
+- Menghitung persen dari bilangan
+- Menghitung persen umum
+
+## Konsep inti
+Persen berarti per seratus. 20% = 20/100 = 0,20. Nilai persen bergantung pada bilangan dasarnya.
+
+## Rumus penting
+- Nilai persen = persen × bilangan dasar
+- p% = p/100
+- 10% = 1/10; 25% = 1/4; 50% = 1/2; 12,5% = 1/8
+
+## Langkah cepat
+1. Baca persen
+2. Ubah ke desimal/pecahan
+3. Kalikan dengan bilangan dasar
+4. Cek kewajaran hasil
+
+## Contoh pembahasan
+### 20%
+**Soal/konteks:** 20% dari Rp150.000.
+**Penyelesaian:** 0,20 × Rp150.000 = Rp30.000.
+
+### 25%
+**Soal/konteks:** 25% dari Rp80.000.
+**Penyelesaian:** 1/4 × Rp80.000 = Rp20.000.
+
+### 2%
+**Soal/konteks:** 2% dari Rp300.000.
+**Penyelesaian:** 0,02 × Rp300.000 = Rp6.000.
+
+## Kesalahan yang harus dihindari
+- 20% dianggap 20
+- Lupa membagi 100
+- 2,5% dianggap 0,25
+- Basis angka salah
+- Tidak cek kewajaran
+
+## Checkpoint
+### Checkpoint 1
+10% dari Rp200.000?
+A Rp2.000 | B Rp20.000 | C Rp100.000 | D Rp220.000
+**Jawaban:** B
+**Pembahasan:** 0,10 × 200.000 = 20.000.
+
+### Checkpoint 2
+25% dari Rp80.000?
+A Rp10.000 | B Rp20.000 | C Rp25.000 | D Rp60.000
+**Jawaban:** B
+**Pembahasan:** 80.000 ÷ 4 = 20.000.
+
+### Checkpoint 3
+2,5% dari Rp400.000?
+A Rp1.000 | B Rp10.000 | C Rp25.000 | D Rp100.000
+**Jawaban:** B
+**Pembahasan:** 0,025 × 400.000 = 10.000.
+
+## Syarat kembali ke latihan
+- Siswa sudah membaca materi ini.
+- Siswa sudah mengerjakan checkpoint.
+- Siswa sudah melihat pembahasan checkpoint.
+- Siswa memahami kesalahan utama sebelum kembali ke Bank Soal Latihan.
+
+## Pesan Wajib Belajar
+Wajib Belajar Dulu. Kamu perlu memperkuat materi prasyarat Operasi Persen Dasar. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan utama.","Wajib Belajar Dulu. Kamu perlu memperkuat materi prasyarat Operasi Persen Dasar. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan utama.","TRUE"
+"R1-FULL","R1","Operasi Persen Dasar","REMEDIAL","FULL","","","I1,I2,I3","","ERR_PERCENT_CONVERSION;ERR_DECIMAL_PERCENT;ERR_DISCOUNT_BASE;ERR_TAX_BASE;ERR_SERVICE_BASE;ERR_PROFIT_BASE;ERR_LOSS_BASE;ERR_PERCENT_TARE;ERR_DISCOUNT_VS_FLAT;ERR_COMPARE_PROMO","7","Materi Lengkap Operasi Persen Dasar","Persen adalah per seratus. Dalam aritmetika sosial, bilangan dasar harus tepat: diskon dari harga awal, PPN dari subtotal, persen untung/rugi dari modal, bunga dari modal awal, tara persen dari bruto.","Materi lengkap R1 dipakai saat siswa masih salah pada persen diskon, PPN, layanan, bunga, persen untung/rugi, atau persen tara.","[""Menjelaskan arti persen"", ""Mengubah persen ke pecahan/desimal"", ""Menghitung persen umum"", ""Menggunakan persen dalam diskon, PPN, untung/rugi, bunga, tara"", ""Menentukan bilangan dasar"", ""Mengecek kewajaran""]","Persen adalah per seratus. Dalam aritmetika sosial, bilangan dasar harus tepat: diskon dari harga awal, PPN dari subtotal, persen untung/rugi dari modal, bunga dari modal awal, tara persen dari bruto.","[""p% = p/100"", ""Nilai persen = persen × bilangan dasar"", ""Persentase untung = untung ÷ modal × 100%"", ""Persentase rugi = rugi ÷ modal × 100%""]","[""Ubah persen ke desimal/pecahan"", ""Tentukan bilangan dasar"", ""Kalikan persen dengan dasar"", ""Gunakan hasil sesuai konteks"", ""Cek apakah hasil masuk akal""]","[{""title"": ""10%"", ""problem"": ""10% dari Rp300.000."", ""solution"": ""Rp30.000.""}, {""title"": ""25%"", ""problem"": ""25% dari Rp240.000."", ""solution"": ""Rp60.000.""}, {""title"": ""12,5%"", ""problem"": ""12,5% dari Rp320.000."", ""solution"": ""Rp40.000.""}, {""title"": ""Diskon"", ""problem"": ""Rp250.000 diskon 20%."", ""solution"": ""Diskon Rp50.000.""}, {""title"": ""PPN"", ""problem"": ""Subtotal Rp240.000 PPN 11%."", ""solution"": ""PPN Rp26.400.""}, {""title"": ""Untung"", ""problem"": ""Modal Rp200.000, untung Rp50.000."", ""solution"": ""Persentase untung 25%.""}, {""title"": ""Bunga"", ""problem"": ""Rp2.000.000 bunga 6% setahun 6 bulan."", ""solution"": ""Bunga Rp60.000.""}, {""title"": ""Tara"", ""problem"": ""Bruto 8 kg tara 5%."", ""solution"": ""Tara 0,4 kg, neto 7,6 kg.""}]","[""Persen tidak dibagi 100"", ""Persen desimal salah"", ""Bilangan dasar salah"", ""Nilai 25% dianggap selalu Rp25.000"", ""Tidak cek kewajaran""]","[{""question"": ""20% dari Rp150.000?"", ""options"": ""A Rp15.000 | B Rp20.000 | C Rp30.000 | D Rp120.000"", ""answer"": ""C"", ""explanation"": ""0,20 × 150.000 = 30.000.""}, {""question"": ""12,5% dari Rp320.000?"", ""options"": ""A Rp20.000 | B Rp32.000 | C Rp40.000 | D Rp80.000"", ""answer"": ""C"", ""explanation"": ""320.000 ÷ 8 = 40.000.""}, {""question"": ""2,5% dari Rp400.000?"", ""options"": ""A Rp1.000 | B Rp10.000 | C Rp25.000 | D Rp100.000"", ""answer"": ""B"", ""explanation"": ""0,025 × 400.000 = 10.000.""}, {""question"": ""Rp250.000 diskon 20%. Besar diskon?"", ""options"": ""A Rp25.000 | B Rp40.000 | C Rp50.000 | D Rp200.000"", ""answer"": ""C"", ""explanation"": ""0,20 × 250.000 = 50.000.""}, {""question"": ""Modal Rp200.000 untung Rp50.000. Persentase?"", ""options"": ""A 20% | B 25% | C 30% | D 50%"", ""answer"": ""B"", ""explanation"": ""50.000 ÷ 200.000 × 100% = 25%.""}]","# Materi Lengkap: Operasi Persen Dasar
+
+**material_id:** R1
+**content_variant:** FULL
+**material_type:** REMEDIAL
+**cakupan lantai:** -
+**indikator terkait:** I1,I2,I3
+
+## Kenapa kamu diarahkan ke materi ini?
+Materi lengkap R1 dipakai saat siswa masih salah pada persen diskon, PPN, layanan, bunga, persen untung/rugi, atau persen tara.
+
+## Tujuan belajar
+- Menjelaskan arti persen
+- Mengubah persen ke pecahan/desimal
+- Menghitung persen umum
+- Menggunakan persen dalam diskon, PPN, untung/rugi, bunga, tara
+- Menentukan bilangan dasar
+- Mengecek kewajaran
+
+## Konsep inti
+Persen adalah per seratus. Dalam aritmetika sosial, bilangan dasar harus tepat: diskon dari harga awal, PPN dari subtotal, persen untung/rugi dari modal, bunga dari modal awal, tara persen dari bruto.
+
+## Rumus penting
+- p% = p/100
+- Nilai persen = persen × bilangan dasar
+- Persentase untung = untung ÷ modal × 100%
+- Persentase rugi = rugi ÷ modal × 100%
+
+## Langkah cepat
+1. Ubah persen ke desimal/pecahan
+2. Tentukan bilangan dasar
+3. Kalikan persen dengan dasar
+4. Gunakan hasil sesuai konteks
+5. Cek apakah hasil masuk akal
+
+## Contoh pembahasan
+### 10%
+**Soal/konteks:** 10% dari Rp300.000.
+**Penyelesaian:** Rp30.000.
+
+### 25%
+**Soal/konteks:** 25% dari Rp240.000.
+**Penyelesaian:** Rp60.000.
+
+### 12,5%
+**Soal/konteks:** 12,5% dari Rp320.000.
+**Penyelesaian:** Rp40.000.
+
+### Diskon
+**Soal/konteks:** Rp250.000 diskon 20%.
+**Penyelesaian:** Diskon Rp50.000.
+
+### PPN
+**Soal/konteks:** Subtotal Rp240.000 PPN 11%.
+**Penyelesaian:** PPN Rp26.400.
+
+### Untung
+**Soal/konteks:** Modal Rp200.000, untung Rp50.000.
+**Penyelesaian:** Persentase untung 25%.
+
+### Bunga
+**Soal/konteks:** Rp2.000.000 bunga 6% setahun 6 bulan.
+**Penyelesaian:** Bunga Rp60.000.
+
+### Tara
+**Soal/konteks:** Bruto 8 kg tara 5%.
+**Penyelesaian:** Tara 0,4 kg, neto 7,6 kg.
+
+## Kesalahan yang harus dihindari
+- Persen tidak dibagi 100
+- Persen desimal salah
+- Bilangan dasar salah
+- Nilai 25% dianggap selalu Rp25.000
+- Tidak cek kewajaran
+
+## Checkpoint
+### Checkpoint 1
+20% dari Rp150.000?
+A Rp15.000 | B Rp20.000 | C Rp30.000 | D Rp120.000
+**Jawaban:** C
+**Pembahasan:** 0,20 × 150.000 = 30.000.
+
+### Checkpoint 2
+12,5% dari Rp320.000?
+A Rp20.000 | B Rp32.000 | C Rp40.000 | D Rp80.000
+**Jawaban:** C
+**Pembahasan:** 320.000 ÷ 8 = 40.000.
+
+### Checkpoint 3
+2,5% dari Rp400.000?
+A Rp1.000 | B Rp10.000 | C Rp25.000 | D Rp100.000
+**Jawaban:** B
+**Pembahasan:** 0,025 × 400.000 = 10.000.
+
+### Checkpoint 4
+Rp250.000 diskon 20%. Besar diskon?
+A Rp25.000 | B Rp40.000 | C Rp50.000 | D Rp200.000
+**Jawaban:** C
+**Pembahasan:** 0,20 × 250.000 = 50.000.
+
+### Checkpoint 5
+Modal Rp200.000 untung Rp50.000. Persentase?
+A 20% | B 25% | C 30% | D 50%
+**Jawaban:** B
+**Pembahasan:** 50.000 ÷ 200.000 × 100% = 25%.
+
+## Syarat kembali ke latihan
+- Siswa sudah membaca materi ini.
+- Siswa sudah mengerjakan checkpoint.
+- Siswa sudah melihat pembahasan checkpoint.
+- Siswa memahami kesalahan utama sebelum kembali ke Bank Soal Latihan.
+
+## Pesan Wajib Belajar
+Wajib Belajar Dulu. Kamu perlu memperkuat materi prasyarat Operasi Persen Dasar. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan utama.","Wajib Belajar Dulu. Kamu perlu memperkuat materi prasyarat Operasi Persen Dasar. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan utama.","TRUE"
+"R2-SHORT","R2","Total Bayar dan Operasi Rupiah","REMEDIAL","SHORT","","","I1,I2,I3,I4","R1,R3","ERR_FINAL_AMOUNT_FORMULA;ERR_FORGET_SHIPPING;ERR_VOUCHER_ORDER;ERR_OPERATION_ORDER;ERR_TABLE_TOTAL;ERR_BUDGET_DECISION;ERR_PROFIT_FORMULA;ERR_LOSS_FORMULA;ERR_ADDITIONAL_COST_MODAL;ERR_NET_FROM_GROSS_TARE;ERR_GROSS_FROM_NET_TARE;ERR_TARE_FROM_GROSS_NET;ERR_CONTEXT_INTERPRETATION","3","Ringkasan Total Bayar dan Operasi Rupiah","Potongan mengurangi total. Biaya tambahan menambah total. Total akhir harus dihitung sampai semua komponen masuk.","Kamu beberapa kali salah pada total bayar, voucher, ongkir, sisa uang, atau operasi rupiah. R2 menguatkan tambah-kurang rupiah.","[""Membedakan potongan dan tambahan"", ""Menghitung total bayar sederhana"", ""Menghitung tabel belanja"", ""Menghitung sisa/kekurangan uang""]","Potongan mengurangi total. Biaya tambahan menambah total. Total akhir harus dihitung sampai semua komponen masuk.","[""Total item = jumlah × harga satuan"", ""Total bayar = harga barang − potongan + biaya tambahan"", ""Sisa uang = uang tersedia − total bayar"", ""Kekurangan = total bayar − uang tersedia""]","[""Tandai komponen tambah/kurang"", ""Kalikan jumlah barang jika ada"", ""Kurangi voucher/potongan"", ""Tambahkan ongkir/biaya"", ""Bandingkan total dengan uang tersedia""]","[{""title"": ""Voucher dan ongkir"", ""problem"": ""Harga Rp150.000 voucher Rp20.000 ongkir Rp10.000."", ""solution"": ""Total Rp140.000.""}, {""title"": ""Tabel belanja"", ""problem"": ""3 pensil @4.000 dan 2 penghapus @3.000."", ""solution"": ""Total Rp18.000.""}, {""title"": ""Sisa uang"", ""problem"": ""Uang Rp100.000, barang Rp85.000, ongkir Rp10.000."", ""solution"": ""Total Rp95.000, sisa Rp5.000.""}]","[""Voucher ditambahkan"", ""Ongkir dilupakan"", ""Jumlah barang tidak dikalikan"", ""Sisa/kekurangan dibalik"", ""Berhenti di subtotal""]","[{""question"": ""Rp150.000 voucher Rp20.000 ongkir Rp10.000. Total?"", ""options"": ""A Rp120.000 | B Rp130.000 | C Rp140.000 | D Rp180.000"", ""answer"": ""C"", ""explanation"": ""150.000 − 20.000 + 10.000 = 140.000.""}, {""question"": ""3 buku @Rp12.000 dan 2 pulpen @Rp4.000. Total?"", ""options"": ""A Rp36.000 | B Rp40.000 | C Rp44.000 | D Rp52.000"", ""answer"": ""C"", ""explanation"": ""36.000 + 8.000 = 44.000.""}, {""question"": ""Uang Rp200.000, total bayar Rp185.000. Sisa?"", ""options"": ""A Rp5.000 | B Rp10.000 | C Rp15.000 | D Rp25.000"", ""answer"": ""C"", ""explanation"": ""200.000 − 185.000 = 15.000.""}]","# Ringkasan Materi: Total Bayar dan Operasi Rupiah
+
+**material_id:** R2
+**content_variant:** SHORT
+**material_type:** REMEDIAL
+**cakupan lantai:** -
+**indikator terkait:** I1,I2,I3,I4
+
+## Kenapa kamu diarahkan ke materi ini?
+Kamu beberapa kali salah pada total bayar, voucher, ongkir, sisa uang, atau operasi rupiah. R2 menguatkan tambah-kurang rupiah.
+
+## Tujuan belajar
+- Membedakan potongan dan tambahan
+- Menghitung total bayar sederhana
+- Menghitung tabel belanja
+- Menghitung sisa/kekurangan uang
+
+## Konsep inti
+Potongan mengurangi total. Biaya tambahan menambah total. Total akhir harus dihitung sampai semua komponen masuk.
+
+## Rumus penting
+- Total item = jumlah × harga satuan
+- Total bayar = harga barang − potongan + biaya tambahan
+- Sisa uang = uang tersedia − total bayar
+- Kekurangan = total bayar − uang tersedia
+
+## Langkah cepat
+1. Tandai komponen tambah/kurang
+2. Kalikan jumlah barang jika ada
+3. Kurangi voucher/potongan
+4. Tambahkan ongkir/biaya
+5. Bandingkan total dengan uang tersedia
+
+## Contoh pembahasan
+### Voucher dan ongkir
+**Soal/konteks:** Harga Rp150.000 voucher Rp20.000 ongkir Rp10.000.
+**Penyelesaian:** Total Rp140.000.
+
+### Tabel belanja
+**Soal/konteks:** 3 pensil @4.000 dan 2 penghapus @3.000.
+**Penyelesaian:** Total Rp18.000.
+
+### Sisa uang
+**Soal/konteks:** Uang Rp100.000, barang Rp85.000, ongkir Rp10.000.
+**Penyelesaian:** Total Rp95.000, sisa Rp5.000.
+
+## Kesalahan yang harus dihindari
+- Voucher ditambahkan
+- Ongkir dilupakan
+- Jumlah barang tidak dikalikan
+- Sisa/kekurangan dibalik
+- Berhenti di subtotal
+
+## Checkpoint
+### Checkpoint 1
+Rp150.000 voucher Rp20.000 ongkir Rp10.000. Total?
+A Rp120.000 | B Rp130.000 | C Rp140.000 | D Rp180.000
+**Jawaban:** C
+**Pembahasan:** 150.000 − 20.000 + 10.000 = 140.000.
+
+### Checkpoint 2
+3 buku @Rp12.000 dan 2 pulpen @Rp4.000. Total?
+A Rp36.000 | B Rp40.000 | C Rp44.000 | D Rp52.000
+**Jawaban:** C
+**Pembahasan:** 36.000 + 8.000 = 44.000.
+
+### Checkpoint 3
+Uang Rp200.000, total bayar Rp185.000. Sisa?
+A Rp5.000 | B Rp10.000 | C Rp15.000 | D Rp25.000
+**Jawaban:** C
+**Pembahasan:** 200.000 − 185.000 = 15.000.
+
+## Syarat kembali ke latihan
+- Siswa sudah membaca materi ini.
+- Siswa sudah mengerjakan checkpoint.
+- Siswa sudah melihat pembahasan checkpoint.
+- Siswa memahami kesalahan utama sebelum kembali ke Bank Soal Latihan.
+
+## Pesan Wajib Belajar
+Wajib Belajar Dulu. Kamu perlu memperkuat materi prasyarat Total Bayar dan Operasi Rupiah. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan utama.","Wajib Belajar Dulu. Kamu perlu memperkuat materi prasyarat Total Bayar dan Operasi Rupiah. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan utama.","TRUE"
+"R2-FULL","R2","Total Bayar dan Operasi Rupiah","REMEDIAL","FULL","","","I1,I2,I3,I4","R1,R3","ERR_FINAL_AMOUNT_FORMULA;ERR_FORGET_SHIPPING;ERR_VOUCHER_ORDER;ERR_OPERATION_ORDER;ERR_TABLE_TOTAL;ERR_BUDGET_DECISION;ERR_PROFIT_FORMULA;ERR_LOSS_FORMULA;ERR_ADDITIONAL_COST_MODAL;ERR_NET_FROM_GROSS_TARE;ERR_GROSS_FROM_NET_TARE;ERR_TARE_FROM_GROSS_NET;ERR_CONTEXT_INTERPRETATION","7","Materi Lengkap Total Bayar dan Operasi Rupiah","Soal aritmetika sosial membutuhkan ketelitian operasi rupiah: tentukan dulu apakah angka harus ditambah, dikurang, dikali, atau dibandingkan.","Materi lengkap R2 dipakai saat siswa masih salah pada operasi multi-komponen, modal total, jumlah akhir tabungan/pinjaman, tabel transaksi, atau keputusan cukup/kurang.","[""Membedakan komponen tambah/kurang"", ""Menghitung total belanja"", ""Menghitung total bayar setelah potongan/tambahan"", ""Menghitung modal total"", ""Menghitung jumlah akhir"", ""Menghitung sisa/kekurangan"", ""Membaca tabel transaksi""]","Soal aritmetika sosial membutuhkan ketelitian operasi rupiah: tentukan dulu apakah angka harus ditambah, dikurang, dikali, atau dibandingkan.","[""Total item = jumlah × harga satuan"", ""Total belanja = jumlah semua item"", ""Total bayar = harga awal − potongan + biaya tambahan"", ""Modal total = harga beli + biaya tambahan"", ""Jumlah akhir = modal + tambahan"", ""Sisa = uang − total"", ""Kekurangan = total − uang""]","[""Baca semua angka"", ""Tandai +, −, ×"", ""Hitung total tiap item"", ""Buat subtotal"", ""Kurangi potongan"", ""Tambahkan biaya"", ""Bandingkan dengan uang tersedia jika ada""]","[{""title"": ""Total belanja"", ""problem"": ""2 buku @Rp10.000 dan pulpen Rp5.000."", ""solution"": ""Total Rp25.000.""}, {""title"": ""Voucher ongkir"", ""problem"": ""Harga Rp150.000 voucher Rp20.000 ongkir Rp10.000."", ""solution"": ""Total Rp140.000.""}, {""title"": ""Tabel transaksi"", ""problem"": ""3 buku @12.000, 2 pulpen @4.000, 1 map 6.000."", ""solution"": ""Total Rp50.000.""}, {""title"": ""Kekurangan uang"", ""problem"": ""Uang Rp200.000, barang Rp180.000 ongkir Rp25.000."", ""solution"": ""Total Rp205.000, kurang Rp5.000.""}, {""title"": ""Modal total"", ""problem"": ""Beli Rp250.000, kemasan Rp30.000, jual Rp315.000."", ""solution"": ""Modal Rp280.000, untung Rp35.000.""}, {""title"": ""Tabungan akhir"", ""problem"": ""Modal Rp2.000.000, bunga Rp60.000."", ""solution"": ""Jumlah akhir Rp2.060.000.""}, {""title"": ""Pinjaman"", ""problem"": ""Pinjaman Rp1.200.000, bunga Rp120.000."", ""solution"": ""Total pengembalian Rp1.320.000.""}]","[""Voucher ditambah"", ""Ongkir tidak masuk"", ""Jumlah barang tidak dikali"", ""Sisa uang dibalik"", ""Kekurangan dibalik"", ""Biaya tambahan tidak masuk modal"", ""Berhenti di subtotal"", ""Kesimpulan salah""]","[{""question"": ""Rp200.000 voucher Rp50.000 ongkir Rp15.000. Total?"", ""options"": ""A Rp135.000 | B Rp150.000 | C Rp165.000 | D Rp265.000"", ""answer"": ""C"", ""explanation"": ""200.000 − 50.000 + 15.000 = 165.000.""}, {""question"": ""2 kaos @75.000, 1 topi 40.000, 5 stiker @6.000. Total?"", ""options"": ""A Rp190.000 | B Rp200.000 | C Rp220.000 | D Rp250.000"", ""answer"": ""C"", ""explanation"": ""150.000 + 40.000 + 30.000 = 220.000.""}, {""question"": ""Uang Rp300.000, total bayar Rp286.400. Sisa?"", ""options"": ""A Rp3.600 | B Rp13.600 | C Rp26.400 | D Rp86.400"", ""answer"": ""B"", ""explanation"": ""300.000 − 286.400 = 13.600.""}, {""question"": ""Beli Rp250.000, kemasan Rp30.000, jual Rp315.000. Untung sebenarnya?"", ""options"": ""A Rp35.000 | B Rp45.000 | C Rp65.000 | D Rp95.000"", ""answer"": ""A"", ""explanation"": ""Modal Rp280.000, untung Rp35.000.""}, {""question"": ""Pinjaman Rp1.200.000 bunga Rp120.000. Total pengembalian?"", ""options"": ""A Rp1.080.000 | B Rp1.200.000 | C Rp1.320.000 | D Rp1.440.000"", ""answer"": ""C"", ""explanation"": ""1.200.000 + 120.000 = 1.320.000.""}]","# Materi Lengkap: Total Bayar dan Operasi Rupiah
+
+**material_id:** R2
+**content_variant:** FULL
+**material_type:** REMEDIAL
+**cakupan lantai:** -
+**indikator terkait:** I1,I2,I3,I4
+
+## Kenapa kamu diarahkan ke materi ini?
+Materi lengkap R2 dipakai saat siswa masih salah pada operasi multi-komponen, modal total, jumlah akhir tabungan/pinjaman, tabel transaksi, atau keputusan cukup/kurang.
+
+## Tujuan belajar
+- Membedakan komponen tambah/kurang
+- Menghitung total belanja
+- Menghitung total bayar setelah potongan/tambahan
+- Menghitung modal total
+- Menghitung jumlah akhir
+- Menghitung sisa/kekurangan
+- Membaca tabel transaksi
+
+## Konsep inti
+Soal aritmetika sosial membutuhkan ketelitian operasi rupiah: tentukan dulu apakah angka harus ditambah, dikurang, dikali, atau dibandingkan.
+
+## Rumus penting
+- Total item = jumlah × harga satuan
+- Total belanja = jumlah semua item
+- Total bayar = harga awal − potongan + biaya tambahan
+- Modal total = harga beli + biaya tambahan
+- Jumlah akhir = modal + tambahan
+- Sisa = uang − total
+- Kekurangan = total − uang
+
+## Langkah cepat
+1. Baca semua angka
+2. Tandai +, −, ×
+3. Hitung total tiap item
+4. Buat subtotal
+5. Kurangi potongan
+6. Tambahkan biaya
+7. Bandingkan dengan uang tersedia jika ada
+
+## Contoh pembahasan
+### Total belanja
+**Soal/konteks:** 2 buku @Rp10.000 dan pulpen Rp5.000.
+**Penyelesaian:** Total Rp25.000.
+
+### Voucher ongkir
+**Soal/konteks:** Harga Rp150.000 voucher Rp20.000 ongkir Rp10.000.
+**Penyelesaian:** Total Rp140.000.
+
+### Tabel transaksi
+**Soal/konteks:** 3 buku @12.000, 2 pulpen @4.000, 1 map 6.000.
+**Penyelesaian:** Total Rp50.000.
+
+### Kekurangan uang
+**Soal/konteks:** Uang Rp200.000, barang Rp180.000 ongkir Rp25.000.
+**Penyelesaian:** Total Rp205.000, kurang Rp5.000.
+
+### Modal total
+**Soal/konteks:** Beli Rp250.000, kemasan Rp30.000, jual Rp315.000.
+**Penyelesaian:** Modal Rp280.000, untung Rp35.000.
+
+### Tabungan akhir
+**Soal/konteks:** Modal Rp2.000.000, bunga Rp60.000.
+**Penyelesaian:** Jumlah akhir Rp2.060.000.
+
+### Pinjaman
+**Soal/konteks:** Pinjaman Rp1.200.000, bunga Rp120.000.
+**Penyelesaian:** Total pengembalian Rp1.320.000.
+
+## Kesalahan yang harus dihindari
+- Voucher ditambah
+- Ongkir tidak masuk
+- Jumlah barang tidak dikali
+- Sisa uang dibalik
+- Kekurangan dibalik
+- Biaya tambahan tidak masuk modal
+- Berhenti di subtotal
+- Kesimpulan salah
+
+## Checkpoint
+### Checkpoint 1
+Rp200.000 voucher Rp50.000 ongkir Rp15.000. Total?
+A Rp135.000 | B Rp150.000 | C Rp165.000 | D Rp265.000
+**Jawaban:** C
+**Pembahasan:** 200.000 − 50.000 + 15.000 = 165.000.
+
+### Checkpoint 2
+2 kaos @75.000, 1 topi 40.000, 5 stiker @6.000. Total?
+A Rp190.000 | B Rp200.000 | C Rp220.000 | D Rp250.000
+**Jawaban:** C
+**Pembahasan:** 150.000 + 40.000 + 30.000 = 220.000.
+
+### Checkpoint 3
+Uang Rp300.000, total bayar Rp286.400. Sisa?
+A Rp3.600 | B Rp13.600 | C Rp26.400 | D Rp86.400
+**Jawaban:** B
+**Pembahasan:** 300.000 − 286.400 = 13.600.
+
+### Checkpoint 4
+Beli Rp250.000, kemasan Rp30.000, jual Rp315.000. Untung sebenarnya?
+A Rp35.000 | B Rp45.000 | C Rp65.000 | D Rp95.000
+**Jawaban:** A
+**Pembahasan:** Modal Rp280.000, untung Rp35.000.
+
+### Checkpoint 5
+Pinjaman Rp1.200.000 bunga Rp120.000. Total pengembalian?
+A Rp1.080.000 | B Rp1.200.000 | C Rp1.320.000 | D Rp1.440.000
+**Jawaban:** C
+**Pembahasan:** 1.200.000 + 120.000 = 1.320.000.
+
+## Syarat kembali ke latihan
+- Siswa sudah membaca materi ini.
+- Siswa sudah mengerjakan checkpoint.
+- Siswa sudah melihat pembahasan checkpoint.
+- Siswa memahami kesalahan utama sebelum kembali ke Bank Soal Latihan.
+
+## Pesan Wajib Belajar
+Wajib Belajar Dulu. Kamu perlu memperkuat materi prasyarat Total Bayar dan Operasi Rupiah. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan utama.","Wajib Belajar Dulu. Kamu perlu memperkuat materi prasyarat Total Bayar dan Operasi Rupiah. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan utama.","TRUE"
+"R3-SHORT","R3","Pembagian dan Harga per Unit","REMEDIAL","SHORT","","","I1,I2,I3,I4","R1,R2","ERR_UNIT_PRICE;ERR_UNIT_PRICE_OR_SHARE;ERR_COMPARE_UNIT_PRICE;ERR_PACKAGE_COMPARISON;ERR_DIVISION_OPERATION;ERR_NETO_SHARE;ERR_TARGET_UNIT_PRICE;ERR_CONTEXT_INTERPRETATION;ERR_TABLE_TOTAL;ERR_OPERATION_ORDER","3","Ringkasan Pembagian dan Harga per Unit","Harga per unit adalah harga untuk satu barang. Paket paling hemat adalah paket dengan harga per unit paling kecil.","Kamu beberapa kali salah pada harga per unit, paket hemat, pembagian isi, atau membandingkan paket berbeda jumlah. R3 menguatkan pembagian total menjadi nilai per satuan.","[""Memahami harga per unit"", ""Menghitung harga per barang"", ""Menghitung isi per kantong"", ""Membandingkan paket hemat""]","Harga per unit adalah harga untuk satu barang. Paket paling hemat adalah paket dengan harga per unit paling kecil.","[""Harga per unit = total harga ÷ jumlah unit"", ""Isi per kantong = total isi ÷ jumlah kantong"", ""Total harga = harga per unit × jumlah unit""]","[""Tulis total harga/isi"", ""Tulis jumlah unit"", ""Bagi total dengan jumlah unit"", ""Bandingkan harga per unit"", ""Pilih yang paling kecil""]","[{""title"": ""Harga per barang"", ""problem"": ""4 barang Rp60.000."", ""solution"": ""Rp15.000 per barang.""}, {""title"": ""Paket hemat"", ""problem"": ""A 5 minuman Rp70.000, B 3 minuman Rp45.000."", ""solution"": ""A Rp14.000/unit, B Rp15.000/unit; A hemat.""}, {""title"": ""Isi per kantong"", ""problem"": ""6.600 gram dibagi 12 kantong."", ""solution"": ""550 gram per kantong.""}]","[""Membandingkan harga total saja"", ""Lupa membagi total"", ""Membagi dengan angka salah"", ""Paket besar dianggap selalu hemat"", ""Satuan salah""]","[{""question"": ""4 barang Rp60.000. Harga per barang?"", ""options"": ""A Rp10.000 | B Rp15.000 | C Rp20.000 | D Rp24.000"", ""answer"": ""B"", ""explanation"": ""60.000 ÷ 4 = 15.000.""}, {""question"": ""A 5 barang Rp70.000, B 3 barang Rp45.000. Mana hemat/unit?"", ""options"": ""A Paket A | B Paket B | C Sama | D Tidak dapat ditentukan"", ""answer"": ""A"", ""explanation"": ""A Rp14.000/unit, B Rp15.000/unit.""}, {""question"": ""Neto 6.600 gram dibagi 12 kantong. Isi tiap kantong?"", ""options"": ""A 500g | B 550g | C 600g | D 650g"", ""answer"": ""B"", ""explanation"": ""6.600 ÷ 12 = 550 gram.""}]","# Ringkasan Materi: Pembagian dan Harga per Unit
+
+**material_id:** R3
+**content_variant:** SHORT
+**material_type:** REMEDIAL
+**cakupan lantai:** -
+**indikator terkait:** I1,I2,I3,I4
+
+## Kenapa kamu diarahkan ke materi ini?
+Kamu beberapa kali salah pada harga per unit, paket hemat, pembagian isi, atau membandingkan paket berbeda jumlah. R3 menguatkan pembagian total menjadi nilai per satuan.
+
+## Tujuan belajar
+- Memahami harga per unit
+- Menghitung harga per barang
+- Menghitung isi per kantong
+- Membandingkan paket hemat
+
+## Konsep inti
+Harga per unit adalah harga untuk satu barang. Paket paling hemat adalah paket dengan harga per unit paling kecil.
+
+## Rumus penting
+- Harga per unit = total harga ÷ jumlah unit
+- Isi per kantong = total isi ÷ jumlah kantong
+- Total harga = harga per unit × jumlah unit
+
+## Langkah cepat
+1. Tulis total harga/isi
+2. Tulis jumlah unit
+3. Bagi total dengan jumlah unit
+4. Bandingkan harga per unit
+5. Pilih yang paling kecil
+
+## Contoh pembahasan
+### Harga per barang
+**Soal/konteks:** 4 barang Rp60.000.
+**Penyelesaian:** Rp15.000 per barang.
+
+### Paket hemat
+**Soal/konteks:** A 5 minuman Rp70.000, B 3 minuman Rp45.000.
+**Penyelesaian:** A Rp14.000/unit, B Rp15.000/unit; A hemat.
+
+### Isi per kantong
+**Soal/konteks:** 6.600 gram dibagi 12 kantong.
+**Penyelesaian:** 550 gram per kantong.
+
+## Kesalahan yang harus dihindari
+- Membandingkan harga total saja
+- Lupa membagi total
+- Membagi dengan angka salah
+- Paket besar dianggap selalu hemat
+- Satuan salah
+
+## Checkpoint
+### Checkpoint 1
+4 barang Rp60.000. Harga per barang?
+A Rp10.000 | B Rp15.000 | C Rp20.000 | D Rp24.000
+**Jawaban:** B
+**Pembahasan:** 60.000 ÷ 4 = 15.000.
+
+### Checkpoint 2
+A 5 barang Rp70.000, B 3 barang Rp45.000. Mana hemat/unit?
+A Paket A | B Paket B | C Sama | D Tidak dapat ditentukan
+**Jawaban:** A
+**Pembahasan:** A Rp14.000/unit, B Rp15.000/unit.
+
+### Checkpoint 3
+Neto 6.600 gram dibagi 12 kantong. Isi tiap kantong?
+A 500g | B 550g | C 600g | D 650g
+**Jawaban:** B
+**Pembahasan:** 6.600 ÷ 12 = 550 gram.
+
+## Syarat kembali ke latihan
+- Siswa sudah membaca materi ini.
+- Siswa sudah mengerjakan checkpoint.
+- Siswa sudah melihat pembahasan checkpoint.
+- Siswa memahami kesalahan utama sebelum kembali ke Bank Soal Latihan.
+
+## Pesan Wajib Belajar
+Wajib Belajar Dulu. Kamu perlu memperkuat materi prasyarat Pembagian dan Harga per Unit. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan utama.","Wajib Belajar Dulu. Kamu perlu memperkuat materi prasyarat Pembagian dan Harga per Unit. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan utama.","TRUE"
+"R3-FULL","R3","Pembagian dan Harga per Unit","REMEDIAL","FULL","","","I1,I2,I3,I4","R1,R2","ERR_UNIT_PRICE;ERR_UNIT_PRICE_OR_SHARE;ERR_COMPARE_UNIT_PRICE;ERR_PACKAGE_COMPARISON;ERR_DIVISION_OPERATION;ERR_NETO_SHARE;ERR_TARGET_UNIT_PRICE;ERR_CONTEXT_INTERPRETATION;ERR_TABLE_TOTAL;ERR_OPERATION_ORDER","7","Materi Lengkap Pembagian dan Harga per Unit","Perbandingan yang adil harus menggunakan satuan yang sama. Jika paket berisi jumlah berbeda, samakan menjadi harga per satu barang. Jika isi dibagi rata, gunakan total isi dibagi jumlah bagian.","Materi lengkap R3 dipakai saat siswa masih salah membandingkan harga satuan, paket dengan ongkir/diskon, neto per kantong, atau harga jual per unit.","[""Menjelaskan harga per unit"", ""Menghitung harga per barang"", ""Menghitung isi per unit"", ""Membandingkan paket berbeda jumlah"", ""Menentukan paket hemat"", ""Menghitung harga jual per barang"", ""Menggunakan pembagian pada M1C, M1E, M1F""]","Perbandingan yang adil harus menggunakan satuan yang sama. Jika paket berisi jumlah berbeda, samakan menjadi harga per satu barang. Jika isi dibagi rata, gunakan total isi dibagi jumlah bagian.","[""Harga per unit = total harga ÷ jumlah unit"", ""Total harga = harga per unit × jumlah unit"", ""Isi per unit = total isi ÷ jumlah unit"", ""Selisih harga/unit = harga unit mahal − harga unit murah"", ""Modal per unit = modal total ÷ jumlah barang""]","[""Tentukan 'per apa' yang ditanya"", ""Hitung total akhir dulu jika ada promo/ongkir"", ""Bagi total dengan jumlah unit"", ""Lakukan untuk semua pilihan"", ""Bandingkan harga per unit"", ""Simpulkan hemat/sama/selisih""]","[{""title"": ""Harga per pulpen"", ""problem"": ""6 pulpen Rp48.000."", ""solution"": ""Rp8.000 per pulpen.""}, {""title"": ""Isi per kantong"", ""problem"": ""5 kg dibagi 10 kantong."", ""solution"": ""0,5 kg per kantong.""}, {""title"": ""Banding paket"", ""problem"": ""A 5 minuman Rp70.000, B 3 minuman Rp45.000."", ""solution"": ""A Rp14.000, B Rp15.000; A hemat.""}, {""title"": ""Harga sama"", ""problem"": ""A 4 roti Rp52.000, B 6 roti Rp78.000."", ""solution"": ""Keduanya Rp13.000 per roti.""}, {""title"": ""Setelah diskon"", ""problem"": ""A 8 botol Rp112.000 diskon 10%, B 6 botol Rp78.000."", ""solution"": ""A Rp12.600/botol, B Rp13.000/botol; A hemat.""}, {""title"": ""Ongkir"", ""problem"": ""A 12 barang Rp180.000 ongkir Rp12.000, B 10 barang Rp160.000 gratis ongkir."", ""solution"": ""Keduanya Rp16.000/unit.""}, {""title"": ""Neto per kantong"", ""problem"": ""Neto 19,1 kg dibagi 5 kantong."", ""solution"": ""3,82 kg per kantong.""}, {""title"": ""Harga jual/unit"", ""problem"": ""Total jual Rp168.000 untuk 40 barang."", ""solution"": ""Rp4.200 per barang.""}]","[""Harga total dibandingkan langsung"", ""Total harga tidak dibagi"", ""Pembagi bukan jumlah unit"", ""Paket besar dianggap pasti hemat"", ""Promo/ongkir tidak dihitung sebelum pembagian"", ""Satuan hasil salah"", ""Kesimpulan hemat salah""]","[{""question"": ""6 pulpen Rp48.000. Harga per pulpen?"", ""options"": ""A Rp6.000 | B Rp7.500 | C Rp8.000 | D Rp10.000"", ""answer"": ""C"", ""explanation"": ""48.000 ÷ 6 = 8.000.""}, {""question"": ""A 5 minuman Rp70.000, B 3 minuman Rp45.000. Mana hemat?"", ""options"": ""A Paket A | B Paket B | C Sama | D Tidak dapat ditentukan"", ""answer"": ""A"", ""explanation"": ""A Rp14.000, B Rp15.000.""}, {""question"": ""A 8 produk Rp160.000 diskon 10%, B 6 produk Rp108.000. Kesimpulan?"", ""options"": ""A A hemat Rp1.000/unit | B B hemat Rp1.000/unit | C Sama | D A hemat Rp2.000/unit"", ""answer"": ""C"", ""explanation"": ""Keduanya Rp18.000/unit.""}, {""question"": ""Neto 19,1 kg dibagi 5 kantong. Isi/kantong?"", ""options"": ""A 3,62 kg | B 3,72 kg | C 3,82 kg | D 4,00 kg"", ""answer"": ""C"", ""explanation"": ""19,1 ÷ 5 = 3,82 kg.""}, {""question"": ""A 5 produk Rp125.000 diskon 20%, B 4 produk Rp88.000. Mana hemat?"", ""options"": ""A A hemat Rp2.000/unit | B B hemat Rp2.000/unit | C Sama | D A hemat Rp5.000/unit"", ""answer"": ""A"", ""explanation"": ""A Rp20.000/unit, B Rp22.000/unit.""}]","# Materi Lengkap: Pembagian dan Harga per Unit
+
+**material_id:** R3
+**content_variant:** FULL
+**material_type:** REMEDIAL
+**cakupan lantai:** -
+**indikator terkait:** I1,I2,I3,I4
+
+## Kenapa kamu diarahkan ke materi ini?
+Materi lengkap R3 dipakai saat siswa masih salah membandingkan harga satuan, paket dengan ongkir/diskon, neto per kantong, atau harga jual per unit.
+
+## Tujuan belajar
+- Menjelaskan harga per unit
+- Menghitung harga per barang
+- Menghitung isi per unit
+- Membandingkan paket berbeda jumlah
+- Menentukan paket hemat
+- Menghitung harga jual per barang
+- Menggunakan pembagian pada M1C, M1E, M1F
+
+## Konsep inti
+Perbandingan yang adil harus menggunakan satuan yang sama. Jika paket berisi jumlah berbeda, samakan menjadi harga per satu barang. Jika isi dibagi rata, gunakan total isi dibagi jumlah bagian.
+
+## Rumus penting
+- Harga per unit = total harga ÷ jumlah unit
+- Total harga = harga per unit × jumlah unit
+- Isi per unit = total isi ÷ jumlah unit
+- Selisih harga/unit = harga unit mahal − harga unit murah
+- Modal per unit = modal total ÷ jumlah barang
+
+## Langkah cepat
+1. Tentukan 'per apa' yang ditanya
+2. Hitung total akhir dulu jika ada promo/ongkir
+3. Bagi total dengan jumlah unit
+4. Lakukan untuk semua pilihan
+5. Bandingkan harga per unit
+6. Simpulkan hemat/sama/selisih
+
+## Contoh pembahasan
+### Harga per pulpen
+**Soal/konteks:** 6 pulpen Rp48.000.
+**Penyelesaian:** Rp8.000 per pulpen.
+
+### Isi per kantong
+**Soal/konteks:** 5 kg dibagi 10 kantong.
+**Penyelesaian:** 0,5 kg per kantong.
+
+### Banding paket
+**Soal/konteks:** A 5 minuman Rp70.000, B 3 minuman Rp45.000.
+**Penyelesaian:** A Rp14.000, B Rp15.000; A hemat.
+
+### Harga sama
+**Soal/konteks:** A 4 roti Rp52.000, B 6 roti Rp78.000.
+**Penyelesaian:** Keduanya Rp13.000 per roti.
+
+### Setelah diskon
+**Soal/konteks:** A 8 botol Rp112.000 diskon 10%, B 6 botol Rp78.000.
+**Penyelesaian:** A Rp12.600/botol, B Rp13.000/botol; A hemat.
+
+### Ongkir
+**Soal/konteks:** A 12 barang Rp180.000 ongkir Rp12.000, B 10 barang Rp160.000 gratis ongkir.
+**Penyelesaian:** Keduanya Rp16.000/unit.
+
+### Neto per kantong
+**Soal/konteks:** Neto 19,1 kg dibagi 5 kantong.
+**Penyelesaian:** 3,82 kg per kantong.
+
+### Harga jual/unit
+**Soal/konteks:** Total jual Rp168.000 untuk 40 barang.
+**Penyelesaian:** Rp4.200 per barang.
+
+## Kesalahan yang harus dihindari
+- Harga total dibandingkan langsung
+- Total harga tidak dibagi
+- Pembagi bukan jumlah unit
+- Paket besar dianggap pasti hemat
+- Promo/ongkir tidak dihitung sebelum pembagian
+- Satuan hasil salah
+- Kesimpulan hemat salah
+
+## Checkpoint
+### Checkpoint 1
+6 pulpen Rp48.000. Harga per pulpen?
+A Rp6.000 | B Rp7.500 | C Rp8.000 | D Rp10.000
+**Jawaban:** C
+**Pembahasan:** 48.000 ÷ 6 = 8.000.
+
+### Checkpoint 2
+A 5 minuman Rp70.000, B 3 minuman Rp45.000. Mana hemat?
+A Paket A | B Paket B | C Sama | D Tidak dapat ditentukan
+**Jawaban:** A
+**Pembahasan:** A Rp14.000, B Rp15.000.
+
+### Checkpoint 3
+A 8 produk Rp160.000 diskon 10%, B 6 produk Rp108.000. Kesimpulan?
+A A hemat Rp1.000/unit | B B hemat Rp1.000/unit | C Sama | D A hemat Rp2.000/unit
+**Jawaban:** C
+**Pembahasan:** Keduanya Rp18.000/unit.
+
+### Checkpoint 4
+Neto 19,1 kg dibagi 5 kantong. Isi/kantong?
+A 3,62 kg | B 3,72 kg | C 3,82 kg | D 4,00 kg
+**Jawaban:** C
+**Pembahasan:** 19,1 ÷ 5 = 3,82 kg.
+
+### Checkpoint 5
+A 5 produk Rp125.000 diskon 20%, B 4 produk Rp88.000. Mana hemat?
+A A hemat Rp2.000/unit | B B hemat Rp2.000/unit | C Sama | D A hemat Rp5.000/unit
+**Jawaban:** A
+**Pembahasan:** A Rp20.000/unit, B Rp22.000/unit.
+
+## Syarat kembali ke latihan
+- Siswa sudah membaca materi ini.
+- Siswa sudah mengerjakan checkpoint.
+- Siswa sudah melihat pembahasan checkpoint.
+- Siswa memahami kesalahan utama sebelum kembali ke Bank Soal Latihan.
+
+## Pesan Wajib Belajar
+Wajib Belajar Dulu. Kamu perlu memperkuat materi prasyarat Pembagian dan Harga per Unit. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan utama.","Wajib Belajar Dulu. Kamu perlu memperkuat materi prasyarat Pembagian dan Harga per Unit. Pelajari materi ini, kerjakan checkpoint, lalu kembali ke latihan utama.","TRUE"

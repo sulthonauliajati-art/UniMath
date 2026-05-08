@@ -96,14 +96,42 @@ export const questions = sqliteTable('questions', {
   remedialMaterialId: text('remedial_material_id'),
 })
 
+// Material Contents — konten materi belajar (SHORT & FULL per material)
+export const materialContents = sqliteTable('material_contents', {
+  id: text('id').primaryKey(),                      // "M1A-SHORT", "R1-FULL"
+  materialId: text('material_id').notNull(),         // "M1A", "R1"
+  materialType: text('material_type'),               // "MAIN" | "REMEDIAL"
+  contentVariant: text('content_variant'),            // "SHORT" | "FULL"
+  displayTitle: text('display_title'),
+  shortDescription: text('short_description'),
+  whyRedirected: text('why_redirected'),
+  learningObjectives: text('learning_objectives'),    // JSON array string
+  conceptText: text('concept_text'),
+  formulas: text('formulas'),                         // JSON array string
+  steps: text('steps'),                               // JSON array string
+  examples: text('examples'),                         // JSON array string
+  commonMistakes: text('common_mistakes'),             // JSON array string
+  checkpointItems: text('checkpoint_items'),           // JSON array string
+  bodyMarkdown: text('body_markdown'),                 // Full markdown content
+  wajibBelajarMessage: text('wajib_belajar_message'),
+  triggerCommonErrors: text('trigger_common_errors'),  // semicolon-separated
+  relatedFloorStart: integer('related_floor_start'),
+  relatedFloorEnd: integer('related_floor_end'),
+  relatedIndicators: text('related_indicators'),       // comma-separated
+  relatedRemedialIds: text('related_remedial_ids'),    // comma-separated
+  estimatedReadingMinutes: integer('estimated_reading_minutes'),
+  isActive: integer('is_active', { mode: 'boolean' }).default(true),
+})
+
 // Practice Sessions
 export const practiceSessions = sqliteTable('practice_sessions', {
   id: text('id').primaryKey(),
   studentUserId: text('student_user_id').notNull().references(() => users.id),
   materialId: text('material_id').notNull().references(() => materials.id),
-  floor: integer('floor').notNull().default(0),
-  wrongCount: integer('wrong_count').notNull().default(0),
-  currentStreak: integer('current_streak').notNull().default(0),
+  floor: integer('floor').notNull().default(1),
+  consecutiveWrong: integer('consecutive_wrong').notNull().default(0), // salah berturut-turut lintas soal
+  currentDifficulty: integer('current_difficulty').notNull().default(2), // 1=Mudah, 2=Sedang, 3=Sulit. Selalu mulai di 2
+  currentQuestionId: text('current_question_id'), // ID soal yang sedang aktif
   startedAt: text('started_at').notNull(),
   endedAt: text('ended_at'),
   status: text('status', { enum: ['ACTIVE', 'COMPLETED', 'ABANDONED', 'REMEDIAL_REQUIRED'] })
@@ -119,7 +147,8 @@ export const practiceAttempts = sqliteTable('practice_attempts', {
   questionId: text('question_id').notNull().references(() => questions.id),
   answer: text('answer', { enum: ['A', 'B', 'C', 'D'] }).notNull(),
   isCorrect: integer('is_correct', { mode: 'boolean' }).notNull(),
-  usedHintLevel: integer('used_hint_level').default(0),
+  hintCountAtAnswer: integer('hint_count_at_answer').default(0), // jumlah hint yang sudah dilihat saat menjawab
+  difficultyAtAnswer: integer('difficulty_at_answer').notNull(), // tingkat kesulitan saat menjawab
   isRemedialSession: integer('is_remedial_session', { mode: 'boolean' }).default(false),
   responseMs: integer('response_ms').notNull(),
   createdAt: text('created_at').notNull(),
