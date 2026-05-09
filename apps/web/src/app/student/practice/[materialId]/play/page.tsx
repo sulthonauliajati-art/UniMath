@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import confetti from 'canvas-confetti'
 import { TowerBackground, GlassCard } from '@/components/ui'
 import { useAuth } from '@/lib/auth/context'
-import { Question } from '@/lib/types'
 
 interface QuestionForClient {
   id: string

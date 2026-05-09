@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -25,6 +25,33 @@ interface Material {
   checkpointAnswer: string | null
 }
 
+interface CheckpointItem {
+  question: string
+  options: string
+  answer: string
+  explanation: string
+}
+
+interface MaterialContent {
+  id: string
+  materialId: string
+  materialType: string | null
+  contentVariant: string | null
+  displayTitle: string | null
+  shortDescription: string | null
+  whyRedirected: string | null
+  learningObjectives: string[] | null
+  conceptText: string | null
+  formulas: string[] | null
+  steps: string[] | null
+  examples: { title: string; problem: string; solution: string }[] | null
+  commonMistakes: string[] | null
+  checkpointItems: CheckpointItem[] | null
+  bodyMarkdown: string | null
+  wajibBelajarMessage: string | null
+  estimatedReadingMinutes: number | null
+}
+
 export default function MaterialDetailPage() {
   const params = useParams()
   const materialId = params.materialId as string
@@ -32,11 +59,14 @@ export default function MaterialDetailPage() {
   const { user, token, isLoading } = useAuth()
   const [activeTab, setActiveTab] = useState<'ringkasan' | 'lengkap' | 'video'>('ringkasan')
   const [material, setMaterial] = useState<Material | null>(null)
+  const [shortContent, setShortContent] = useState<MaterialContent | null>(null)
+  const [fullContent, setFullContent] = useState<MaterialContent | null>(null)
   const [loading, setLoading] = useState(true)
   const [fromGameOver, setFromGameOver] = useState(false)
   const [canContinue, setCanContinue] = useState(true)
   const [countdown, setCountdown] = useState(0)
-  const [showCheckpointAnswer, setShowCheckpointAnswer] = useState(false)
+  const [checkpointAnswers, setCheckpointAnswers] = useState<Record<number, string>>({})
+  const [checkpointRevealed, setCheckpointRevealed] = useState<Record<number, boolean>>({})
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'STUDENT')) {
@@ -45,7 +75,6 @@ export default function MaterialDetailPage() {
   }, [user, isLoading, router])
 
   useEffect(() => {
-    // Check if coming from game over
     const studyData = sessionStorage.getItem('studyMaterial')
     if (studyData) {
       const data = JSON.parse(studyData)
@@ -53,7 +82,6 @@ export default function MaterialDetailPage() {
         setFromGameOver(true)
         setCanContinue(false)
         setCountdown(15)
-        // Mark that student has viewed the material
         sessionStorage.setItem('materialStudied_' + materialId, 'true')
       }
     }
@@ -62,9 +90,7 @@ export default function MaterialDetailPage() {
   useEffect(() => {
     let timer: NodeJS.Timeout
     if (!canContinue && countdown > 0) {
-      timer = setTimeout(() => {
-        setCountdown(prev => prev - 1)
-      }, 1000)
+      timer = setTimeout(() => setCountdown(prev => prev - 1), 1000)
     } else if (!canContinue && countdown === 0) {
       setCanContinue(true)
     }
@@ -72,17 +98,32 @@ export default function MaterialDetailPage() {
   }, [countdown, canContinue])
 
   useEffect(() => {
-    fetchMaterial()
+    fetchAll()
   }, [materialId, token])
 
-  const fetchMaterial = async () => {
+  const fetchAll = async () => {
     try {
-      const res = await fetch(`/api/student/materials/${materialId}`, {
+      // Fetch material info
+      const matRes = await fetch(`/api/student/materials/${materialId}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       })
-      if (res.ok) {
-        const data = await res.json()
+      if (matRes.ok) {
+        const data = await matRes.json()
         setMaterial(data.material)
+      }
+
+      // Fetch SHORT content
+      const shortRes = await fetch(`/api/student/materials/${materialId}/content?variant=SHORT`)
+      if (shortRes.ok) {
+        const data = await shortRes.json()
+        setShortContent(data.content)
+      }
+
+      // Fetch FULL content
+      const fullRes = await fetch(`/api/student/materials/${materialId}/content?variant=FULL`)
+      if (fullRes.ok) {
+        const data = await fullRes.json()
+        setFullContent(data.content)
       }
     } catch (error) {
       console.error('Failed to fetch material:', error)
@@ -93,7 +134,6 @@ export default function MaterialDetailPage() {
 
   const handleBackToPractice = () => {
     if (!canContinue) return
-    // Clear the study requirement
     sessionStorage.removeItem('studyMaterial')
     router.push('/student/practice')
   }
@@ -101,7 +141,7 @@ export default function MaterialDetailPage() {
   if (isLoading || !user || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-uni-bg">
-        <div className="text-white">Loading...</div>
+        <div className="text-white/80 text-sm animate-pulse">Memuat materi…</div>
       </div>
     )
   }
@@ -114,100 +154,150 @@ export default function MaterialDetailPage() {
     )
   }
 
-  // Extract Google Drive embed URL
+  // Choose which content to show based on active tab
+  const currentContent = activeTab === 'lengkap' ? fullContent : shortContent
+
+  // Helper: render markdown-like text into sections
+  const renderBodyMarkdown = (md: string) => {
+    const lines = md.split('\n')
+    const elements: React.ReactNode[] = []
+
+    lines.forEach((line, i) => {
+      const trimmed = line.trim()
+      if (!trimmed) {
+        elements.push(<div key={i} className="h-2" />)
+      } else if (trimmed.startsWith('# ')) {
+        elements.push(<h2 key={i} className="text-xl font-bold text-cyan-300 mt-5 mb-2">{trimmed.slice(2)}</h2>)
+      } else if (trimmed.startsWith('## ')) {
+        elements.push(<h3 key={i} className="text-lg font-bold text-cyan-400 mt-4 mb-2">{trimmed.slice(3)}</h3>)
+      } else if (trimmed.startsWith('### ')) {
+        elements.push(<h4 key={i} className="text-base font-semibold text-teal-300 mt-3 mb-1">{trimmed.slice(4)}</h4>)
+      } else if (trimmed.startsWith('- ')) {
+        elements.push(
+          <div key={i} className="flex items-start gap-2 ml-3 mb-1">
+            <span className="text-cyan-400 mt-1 text-xs">●</span>
+            <span className="text-slate-200 text-sm leading-relaxed">{renderInlineFormatting(trimmed.slice(2))}</span>
+          </div>
+        )
+      } else if (/^\d+\.\s/.test(trimmed)) {
+        const num = trimmed.match(/^(\d+)\./)?.[1]
+        const text = trimmed.replace(/^\d+\.\s*/, '')
+        elements.push(
+          <div key={i} className="flex items-start gap-2 ml-3 mb-1">
+            <span className="text-cyan-400 font-semibold text-sm min-w-[1.5rem]">{num}.</span>
+            <span className="text-slate-200 text-sm leading-relaxed">{renderInlineFormatting(text)}</span>
+          </div>
+        )
+      } else {
+        elements.push(<p key={i} className="text-slate-200 text-sm leading-relaxed mb-1">{renderInlineFormatting(trimmed)}</p>)
+      }
+    })
+
+    return <div>{elements}</div>
+  }
+
+  // Bold/italic inline formatting
+  const renderInlineFormatting = (text: string) => {
+    const parts = text.split(/(\*\*[^*]+\*\*)/g)
+    return parts.map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={i} className="text-white font-semibold">{part.slice(2, -2)}</strong>
+      }
+      return <span key={i}>{part}</span>
+    })
+  }
+
+  // Render checkpoint items as interactive quiz
+  const renderCheckpoints = (items: CheckpointItem[]) => {
+    return (
+      <div className="space-y-4">
+        {items.map((item, idx) => {
+          const options = item.options.split('|').map(o => o.trim())
+          const selected = checkpointAnswers[idx]
+          const revealed = checkpointRevealed[idx]
+          const isCorrect = selected === item.answer
+
+          return (
+            <GlassCard key={idx} className="p-4">
+              <p className="text-white font-medium text-sm mb-3">
+                <span className="text-cyan-400 font-bold mr-1">{idx + 1}.</span> {item.question}
+              </p>
+              <div className="grid grid-cols-2 gap-2 mb-2">
+                {options.map((opt) => {
+                  const letter = opt.charAt(0)
+                  const isSelected = selected === letter
+                  const isAnswer = revealed && letter === item.answer
+
+                  let btnClass = 'p-2 rounded-lg text-xs text-left transition-all border '
+                  if (revealed) {
+                    if (isAnswer) btnClass += 'bg-emerald-500/20 border-emerald-400/60 text-emerald-300'
+                    else if (isSelected && !isCorrect) btnClass += 'bg-red-500/20 border-red-400/60 text-red-300'
+                    else btnClass += 'bg-slate-800/50 border-slate-600/30 text-slate-400'
+                  } else if (isSelected) {
+                    btnClass += 'bg-cyan-500/20 border-cyan-400/60 text-cyan-300'
+                  } else {
+                    btnClass += 'bg-slate-800/50 border-slate-600/30 text-slate-300 hover:border-slate-500'
+                  }
+
+                  return (
+                    <button
+                      key={letter}
+                      onClick={() => {
+                        if (!revealed) setCheckpointAnswers(prev => ({ ...prev, [idx]: letter }))
+                      }}
+                      className={btnClass}
+                      disabled={revealed}
+                    >
+                      {opt}
+                    </button>
+                  )
+                })}
+              </div>
+              {selected && !revealed && (
+                <button
+                  onClick={() => setCheckpointRevealed(prev => ({ ...prev, [idx]: true }))}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/30 transition-all"
+                >
+                  Cek Jawaban
+                </button>
+              )}
+              <AnimatePresence>
+                {revealed && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    className={`mt-2 p-2 rounded-lg text-xs ${isCorrect ? 'bg-emerald-500/10 text-emerald-300' : 'bg-red-500/10 text-red-300'}`}
+                  >
+                    {isCorrect ? '✅ Benar!' : `❌ Salah. Jawaban: ${item.answer}`}
+                    {item.explanation && (
+                      <p className="text-slate-300 mt-1">💡 {item.explanation}</p>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </GlassCard>
+          )
+        })}
+      </div>
+    )
+  }
+
+  // Google Drive & YouTube helpers
   const getGoogleDriveEmbedUrl = (url: string | null) => {
     if (!url) return null
     const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/)
-    if (match) {
-      return `https://drive.google.com/file/d/${match[1]}/preview`
-    }
-    return url
+    return match ? `https://drive.google.com/file/d/${match[1]}/preview` : url
   }
-
-  // Extract YouTube embed URL
   const getYouTubeEmbedUrl = (url: string | null) => {
     if (!url) return null
     const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/)
-    if (match) {
-      return `https://www.youtube.com/embed/${match[1]}`
-    }
-    if (url.includes('youtube.com/embed/')) {
-      return url
-    }
-    return url
-  }
-
-  // Parse learning objectives from JSON
-  const parseLearningObjectives = (): string[] => {
-    if (!material.learningObjectives) return []
-    try {
-      return JSON.parse(material.learningObjectives)
-    } catch {
-      return material.learningObjectives.split('\n').filter(Boolean)
-    }
-  }
-
-  // Parse commonMistakes into list items
-  const parseCommonMistakes = (): string[] => {
-    if (!material.commonMistakes) return []
-    return material.commonMistakes
-      .split('\n')
-      .map(line => line.replace(/^-\s*/, '').trim())
-      .filter(Boolean)
-  }
-
-  // Render summaryContent with basic formatting
-  const renderFormattedText = (text: string) => {
-    const paragraphs = text.split('\n\n')
-    return paragraphs.map((para, pIdx) => {
-      const lines = para.split('\n')
-      return (
-        <div key={pIdx} className="mb-4 last:mb-0">
-          {lines.map((line, lIdx) => {
-            const trimmed = line.trim()
-            if (!trimmed) return null
-
-            // Bullet points
-            if (trimmed.startsWith('- ')) {
-              return (
-                <div key={lIdx} className="flex items-start gap-2 ml-2 mb-1">
-                  <span className="text-cyan-400 mt-1 text-xs">●</span>
-                  <span className="text-slate-200 text-sm sm:text-base leading-relaxed">{trimmed.slice(2)}</span>
-                </div>
-              )
-            }
-
-            // Numbered items
-            if (/^\d+\.\s/.test(trimmed)) {
-              return (
-                <div key={lIdx} className="flex items-start gap-2 ml-2 mb-1">
-                  <span className="text-cyan-400 font-semibold text-sm min-w-[1.2rem]">{trimmed.match(/^\d+/)?.[0]}.</span>
-                  <span className="text-slate-200 text-sm sm:text-base leading-relaxed">{trimmed.replace(/^\d+\.\s*/, '')}</span>
-                </div>
-              )
-            }
-
-            // Section headers (lines ending with :)
-            if (trimmed.endsWith(':') && trimmed.length < 60 && !trimmed.includes('=')) {
-              return (
-                <h4 key={lIdx} className="text-cyan-300 font-semibold text-sm sm:text-base mt-3 mb-1">{trimmed}</h4>
-              )
-            }
-
-            // Regular text
-            return (
-              <p key={lIdx} className="text-slate-200 text-sm sm:text-base leading-relaxed mb-1">{trimmed}</p>
-            )
-          })}
-        </div>
-      )
-    })
+    if (match) return `https://www.youtube.com/embed/${match[1]}`
+    return url.includes('youtube.com/embed/') ? url : url
   }
 
   const fullEmbedUrl = getGoogleDriveEmbedUrl(material.fullUrl)
   const videoEmbedUrl = getYouTubeEmbedUrl(material.videoUrl)
-  const objectives = parseLearningObjectives()
-  const mistakes = parseCommonMistakes()
+  const hasRichContent = !!(shortContent || fullContent)
 
   return (
     <main className="relative min-h-screen overflow-hidden">
@@ -226,17 +316,24 @@ export default function MaterialDetailPage() {
           )}
         </div>
 
-        {/* Material Title */}
+        {/* Title */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-4 sm:mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-white mb-1 sm:mb-2">{material.title}</h1>
-          {material.shortDescription && (
-            <p className="text-text-secondary text-sm sm:text-base">{material.shortDescription}</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-white mb-1 sm:mb-2">
+            {currentContent?.displayTitle || material.title}
+          </h1>
+          {(currentContent?.shortDescription || material.shortDescription) && (
+            <p className="text-text-secondary text-sm sm:text-base">
+              {currentContent?.shortDescription || material.shortDescription}
+            </p>
+          )}
+          {currentContent?.estimatedReadingMinutes && (
+            <p className="text-slate-500 text-xs mt-1">⏱️ ~{currentContent.estimatedReadingMinutes} menit baca</p>
           )}
         </motion.div>
 
-        {/* Remedial Alert (only when coming from game over) */}
+        {/* Wajib Belajar Alert */}
         <AnimatePresence>
-          {fromGameOver && material.remedialText && (
+          {fromGameOver && (currentContent?.wajibBelajarMessage || currentContent?.whyRedirected) && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
@@ -246,173 +343,89 @@ export default function MaterialDetailPage() {
               <GlassCard className="p-4 sm:p-5 border-l-4 border-orange-400" style={{ borderLeftColor: '#fb923c' }}>
                 <div className="flex items-start gap-2 mb-2">
                   <span className="text-xl">📖</span>
-                  <h3 className="text-orange-300 font-semibold text-sm sm:text-base">Catatan Remedial</h3>
+                  <h3 className="text-orange-300 font-semibold text-sm sm:text-base">
+                    {currentContent?.wajibBelajarMessage || 'Wajib Belajar Dulu'}
+                  </h3>
                 </div>
-                <div className="text-slate-300 text-sm sm:text-base leading-relaxed whitespace-pre-line">
-                  {material.remedialText}
-                </div>
+                {currentContent?.whyRedirected && (
+                  <p className="text-slate-300 text-sm leading-relaxed">{currentContent.whyRedirected}</p>
+                )}
               </GlassCard>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Tab Navigation */}
+        {/* Tabs */}
         <div className="flex gap-1 sm:gap-2 mb-4 sm:mb-6 p-1 bg-uni-bg-secondary/50 rounded-xl overflow-x-auto">
           <button
-            onClick={() => setActiveTab('ringkasan')}
-            className={`flex-1 min-w-[80px] py-2 px-2 sm:px-4 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
-              activeTab === 'ringkasan' ? 'bg-uni-primary text-white' : 'text-text-secondary hover:text-white'
-            }`}
+            onClick={() => { setActiveTab('ringkasan'); setCheckpointAnswers({}); setCheckpointRevealed({}) }}
+            className={`flex-1 min-w-[80px] py-2 px-2 sm:px-4 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'ringkasan' ? 'bg-uni-primary text-white' : 'text-text-secondary hover:text-white'}`}
           >
             📄 <span className="hidden sm:inline">Ringkasan</span><span className="sm:hidden">Ringkas</span>
           </button>
           <button
-            onClick={() => setActiveTab('lengkap')}
-            className={`flex-1 min-w-[80px] py-2 px-2 sm:px-4 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
-              activeTab === 'lengkap' ? 'bg-uni-primary text-white' : 'text-text-secondary hover:text-white'
-            }`}
+            onClick={() => { setActiveTab('lengkap'); setCheckpointAnswers({}); setCheckpointRevealed({}) }}
+            className={`flex-1 min-w-[80px] py-2 px-2 sm:px-4 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'lengkap' ? 'bg-uni-primary text-white' : 'text-text-secondary hover:text-white'}`}
           >
             📖 Lengkap
           </button>
           <button
             onClick={() => setActiveTab('video')}
-            className={`flex-1 min-w-[80px] py-2 px-2 sm:px-4 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
-              activeTab === 'video' ? 'bg-uni-primary text-white' : 'text-text-secondary hover:text-white'
-            }`}
+            className={`flex-1 min-w-[80px] py-2 px-2 sm:px-4 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'video' ? 'bg-uni-primary text-white' : 'text-text-secondary hover:text-white'}`}
           >
             🎬 Video
           </button>
         </div>
 
         {/* Content */}
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          {/* === TAB RINGKASAN === */}
-          {activeTab === 'ringkasan' && (
-            <div className="space-y-4 sm:space-y-6">
-              {/* Learning Objectives */}
-              {objectives.length > 0 && (
-                <GlassCard className="p-4 sm:p-6">
-                  <h3 className="text-cyan-400 font-bold text-sm sm:text-base mb-3 flex items-center gap-2">
-                    🎯 Tujuan Pembelajaran
-                  </h3>
-                  <ul className="space-y-2">
-                    {objectives.map((obj, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <span className="text-emerald-400 mt-0.5 text-xs">✓</span>
-                        <span className="text-slate-200 text-sm sm:text-base leading-relaxed">{obj}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </GlassCard>
-              )}
+        <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
 
-              {/* Summary Content */}
-              {material.summaryContent ? (
+          {/* === RINGKASAN / LENGKAP TAB === */}
+          {(activeTab === 'ringkasan' || activeTab === 'lengkap') && (
+            <div className="space-y-4 sm:space-y-6">
+
+              {/* Body Markdown — the main rich content */}
+              {currentContent?.bodyMarkdown ? (
                 <GlassCard className="p-4 sm:p-6">
-                  <h3 className="text-cyan-400 font-bold text-sm sm:text-base mb-3 flex items-center gap-2">
-                    📝 Ringkasan Materi
-                  </h3>
-                  <div>{renderFormattedText(material.summaryContent)}</div>
+                  {renderBodyMarkdown(currentContent.bodyMarkdown)}
                 </GlassCard>
-              ) : material.summaryUrl ? (
+              ) : activeTab === 'ringkasan' && material.summaryContent ? (
+                /* Fallback: old summaryContent from materials table */
+                <GlassCard className="p-4 sm:p-6">
+                  <h3 className="text-cyan-400 font-bold text-sm sm:text-base mb-3">📝 Ringkasan Materi</h3>
+                  <div className="text-slate-200 text-sm leading-relaxed whitespace-pre-line">{material.summaryContent}</div>
+                </GlassCard>
+              ) : activeTab === 'lengkap' && fullEmbedUrl ? (
+                /* Fallback: Google Drive PDF embed */
                 <GlassCard className="p-3 sm:p-6">
                   <div className="aspect-[3/4] sm:aspect-[4/3] w-full">
-                    <iframe
-                      src={getGoogleDriveEmbedUrl(material.summaryUrl)!}
-                      className="w-full h-full rounded-lg"
-                      allow="autoplay"
-                      allowFullScreen
-                    />
+                    <iframe src={fullEmbedUrl} className="w-full h-full rounded-lg" allow="autoplay" allowFullScreen />
                   </div>
                 </GlassCard>
               ) : (
                 <GlassCard className="p-3 sm:p-6">
                   <div className="text-center py-8 sm:py-12">
-                    <div className="text-4xl sm:text-6xl mb-3 sm:mb-4">📄</div>
-                    <p className="text-text-secondary text-sm sm:text-base">Ringkasan materi belum tersedia</p>
+                    <div className="text-4xl sm:text-6xl mb-3 sm:mb-4">{activeTab === 'ringkasan' ? '📄' : '📖'}</div>
+                    <p className="text-text-secondary text-sm sm:text-base">
+                      {activeTab === 'ringkasan' ? 'Ringkasan materi belum tersedia' : 'Materi lengkap belum tersedia'}
+                    </p>
                   </div>
                 </GlassCard>
               )}
 
-              {/* Common Mistakes */}
-              {mistakes.length > 0 && (
-                <GlassCard className="p-4 sm:p-6">
-                  <h3 className="text-amber-400 font-bold text-sm sm:text-base mb-3 flex items-center gap-2">
-                    ⚠️ Kesalahan Umum
-                  </h3>
-                  <ul className="space-y-2">
-                    {mistakes.map((mistake, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <span className="text-amber-400 mt-0.5 text-xs">⚡</span>
-                        <span className="text-slate-300 text-sm sm:text-base leading-relaxed">{mistake}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </GlassCard>
-              )}
-
-              {/* Checkpoint */}
-              {material.checkpointQuestion && (
-                <GlassCard className="p-4 sm:p-6">
+              {/* Checkpoint Section */}
+              {currentContent?.checkpointItems && currentContent.checkpointItems.length > 0 && (
+                <div>
                   <h3 className="text-emerald-400 font-bold text-sm sm:text-base mb-3 flex items-center gap-2">
-                    ✅ Checkpoint
+                    ✅ Checkpoint — Uji Pemahamanmu
                   </h3>
-                  <p className="text-slate-200 text-sm sm:text-base leading-relaxed mb-4">
-                    {material.checkpointQuestion}
-                  </p>
-                  <button
-                    onClick={() => setShowCheckpointAnswer(!showCheckpointAnswer)}
-                    className="px-4 py-2 rounded-lg text-sm font-medium transition-all bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30"
-                  >
-                    {showCheckpointAnswer ? '🙈 Sembunyikan Jawaban' : '👀 Lihat Jawaban'}
-                  </button>
-                  <AnimatePresence>
-                    {showCheckpointAnswer && material.checkpointAnswer && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="mt-3 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg"
-                      >
-                        <p className="text-emerald-300 font-semibold text-sm sm:text-base">
-                          💡 {material.checkpointAnswer}
-                        </p>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </GlassCard>
+                  {renderCheckpoints(currentContent.checkpointItems)}
+                </div>
               )}
             </div>
           )}
 
-          {/* === TAB LENGKAP === */}
-          {activeTab === 'lengkap' && (
-            <GlassCard className="p-3 sm:p-6">
-              {fullEmbedUrl ? (
-                <div className="aspect-[3/4] sm:aspect-[4/3] w-full">
-                  <iframe
-                    src={fullEmbedUrl}
-                    className="w-full h-full rounded-lg"
-                    allow="autoplay"
-                    allowFullScreen
-                  />
-                </div>
-              ) : (
-                <div className="text-center py-8 sm:py-12">
-                  <div className="text-4xl sm:text-6xl mb-3 sm:mb-4">📖</div>
-                  <p className="text-text-secondary text-sm sm:text-base">Materi lengkap belum tersedia</p>
-                  <p className="text-text-secondary text-xs mt-2">PDF materi akan ditambahkan nanti</p>
-                </div>
-              )}
-            </GlassCard>
-          )}
-
-          {/* === TAB VIDEO === */}
+          {/* === VIDEO TAB === */}
           {activeTab === 'video' && (
             <GlassCard className="p-3 sm:p-6">
               {videoEmbedUrl ? (
@@ -441,20 +454,20 @@ export default function MaterialDetailPage() {
         </motion.div>
 
         {/* Back to Practice Button */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="mt-6">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="mt-6 mb-8">
           <button
             className={`w-full py-3 rounded-lg font-bold text-center transition-all ${
-              canContinue 
-                ? 'bg-uni-primary text-white shadow-[0_0_15px_rgba(6,182,212,0.5)] hover:bg-uni-primary/90' 
+              canContinue
+                ? 'bg-uni-primary text-white shadow-[0_0_15px_rgba(6,182,212,0.5)] hover:bg-uni-primary/90'
                 : 'bg-slate-700/50 text-slate-400 cursor-not-allowed border border-slate-600'
             }`}
             onClick={handleBackToPractice}
             disabled={!canContinue}
           >
-            {fromGameOver 
-              ? canContinue 
-                ? '🚀 Lanjut Latihan' 
-                : `⏳ Pelajari materi... (${countdown}s)` 
+            {fromGameOver
+              ? canContinue
+                ? '🚀 Lanjut Latihan'
+                : `⏳ Pelajari materi... (${countdown}s)`
               : '🚀 Kembali Latihan'}
           </button>
         </motion.div>
