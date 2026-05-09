@@ -89,6 +89,19 @@ const remedialMeta: Record<string, { title: string; order: number }> = {
   'R3': { title: '[Remedial] Pembagian & Harga Per Unit', order: 93 },
 }
 
+// Order mapping for main materials M1A-M1F (Aritmatika Sosial Kelas 10 SMA)
+const mainMaterialOrder: Record<string, number> = {
+  M1A: 1,
+  M1B: 2,
+  M1C: 3,
+  M1D: 4,
+  M1E: 5,
+  M1F: 6,
+}
+
+// All materials in the CSV are targeted at Kelas 10 SMA (Aritmatika Sosial)
+const TARGET_GRADE = '10'
+
 /**
  * CSV column mapping (0-indexed):
  *  0: content_id              → id
@@ -163,22 +176,36 @@ async function main() {
   const uniqueMaterials = Array.from(new Set(dataRows.map((row) => row[1]?.trim()).filter(Boolean)))
   
   for (const matId of uniqueMaterials) {
+    const csvTitle = dataRows.find((r) => r[1]?.trim() === matId)?.[2]?.trim()
+    const meta = remedialMeta[matId]
+    const resolvedTitle = meta?.title || csvTitle || matId
+    const resolvedOrder = meta?.order ?? mainMaterialOrder[matId] ?? 99
+
     const existing = await db.query.materials.findFirst({
       where: eq(schema.materials.id, matId),
     })
 
     if (!existing) {
-      const meta = remedialMeta[matId]
-      const title = meta?.title || dataRows.find(r => r[1]?.trim() === matId)?.[2]?.trim() || matId
-      const order = meta?.order || 99
-      console.log(`   ⚡ Membuat material: ${matId} → "${title}"`)
+      console.log(`   ⚡ Membuat material: ${matId} → "${resolvedTitle}" (Kelas ${TARGET_GRADE})`)
       await db.insert(schema.materials).values({
         id: matId,
-        title,
-        order,
+        title: resolvedTitle,
+        order: resolvedOrder,
+        grade: TARGET_GRADE,
+        isActive: true,
+        createdAt: new Date().toISOString(),
       })
     } else {
-      console.log(`   ✓ Material sudah ada: ${matId}`)
+      // Normalize existing material: title from CSV, grade to SMA 10, correct order.
+      await db
+        .update(schema.materials)
+        .set({
+          title: resolvedTitle,
+          grade: TARGET_GRADE,
+          order: resolvedOrder,
+        })
+        .where(eq(schema.materials.id, matId))
+      console.log(`   ✓ Material diperbarui: ${matId} → "${resolvedTitle}" (Kelas ${TARGET_GRADE})`)
     }
   }
 
