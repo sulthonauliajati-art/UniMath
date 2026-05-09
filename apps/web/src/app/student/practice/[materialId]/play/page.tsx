@@ -52,6 +52,7 @@ export default function GamePlayPage() {
   const [gameState, setGameState] = useState<GameState | null>(null)
   const [, setRobotState] = useState<'idle' | 'climbing' | 'celebrating'>('idle')
   const [showWrongFeedback, setShowWrongFeedback] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'STUDENT')) {
@@ -131,6 +132,7 @@ export default function GamePlayPage() {
     if (!gameState || !gameState.selectedAnswer || gameState.isSubmitting) return
 
     setGameState((prev) => (prev ? { ...prev, isSubmitting: true } : null))
+    setSubmitError(null)
 
     try {
       const res = await fetch('/api/practice/answer', {
@@ -143,6 +145,13 @@ export default function GamePlayPage() {
         }),
       })
       const data = await res.json()
+
+      // Handle API error
+      if (!res.ok || data.error) {
+        setSubmitError(data.error?.message || 'Gagal mengirim jawaban. Coba lagi.')
+        setGameState((prev) => (prev ? { ...prev, isSubmitting: false } : null))
+        return
+      }
 
       if (data.isCorrect) {
         // ─── CORRECT ───
@@ -240,6 +249,7 @@ export default function GamePlayPage() {
       }
     } catch (error) {
       console.error('Failed to submit answer:', error)
+      setSubmitError('Terjadi kesalahan jaringan. Coba lagi.')
       setGameState((prev) => (prev ? { ...prev, isSubmitting: false } : null))
     }
   }
@@ -477,6 +487,15 @@ export default function GamePlayPage() {
                 <span className="text-[10px] text-red-300/70 ml-1.5">
                   {gameState.consecutiveWrong}/3 salah berturut
                 </span>
+              </div>
+            )}
+
+            {/* Error feedback */}
+            {submitError && (
+              <div className="mb-3 p-2.5 rounded-xl border border-red-400/50 bg-red-500/10 text-red-300 text-sm text-center flex items-center justify-center gap-2">
+                <span>⚠️</span>
+                <span>{submitError}</span>
+                <button onClick={() => setSubmitError(null)} className="text-red-300/60 hover:text-white text-xs ml-1">✕</button>
               </div>
             )}
 

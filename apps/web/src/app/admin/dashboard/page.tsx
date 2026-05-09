@@ -18,6 +18,11 @@ export default function AdminDashboardPage() {
     }
   }, [user, isLoading, router])
 
+  const handleLogout = async () => {
+    await logout()
+    router.push('/admin/login')
+  }
+
   if (isLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-uni-bg">
@@ -44,7 +49,7 @@ export default function AdminDashboardPage() {
             <p className="text-text-secondary">Selamat datang, {user.name}</p>
           </div>
           <button
-            onClick={logout}
+            onClick={handleLogout}
             className="text-text-secondary hover:text-white transition-colors"
           >
             Logout

@@ -6,17 +6,16 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { TowerBackground, GlassCard } from '@/components/ui'
 import { useAuth } from '@/lib/auth/context'
-import { mockMaterials } from '@/data/mock/seed'
 
 export default function PracticeStartPage() {
   const params = useParams()
   const materialId = params.materialId as string
   const router = useRouter()
   const { user, isLoading } = useAuth()
-  const [mode, setMode] = useState<'pretest' | 'posttest'>('pretest')
   const [loading, setLoading] = useState(false)
-
-  const material = mockMaterials.find((m) => m.id === materialId)
+  const [materialTitle, setMaterialTitle] = useState('Latihan')
+  const [fetchingTitle, setFetchingTitle] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'STUDENT')) {
@@ -24,30 +23,67 @@ export default function PracticeStartPage() {
     }
   }, [user, isLoading, router])
 
-  const handleStart = async () => {
+  // Fetch material title from API instead of mock data
+  useEffect(() => {
+    async function fetchMaterial() {
+      try {
+        const res = await fetch(`/api/student/materials`)
+        if (res.ok) {
+          const data = await res.json()
+          const found = data.materials?.find((m: { id: string; title: string }) => m.id === materialId)
+          if (found) {
+            setMaterialTitle(found.title)
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch material title:', err)
+      } finally {
+        setFetchingTitle(false)
+      }
+    }
+    if (materialId) {
+      fetchMaterial()
+    }
+  }, [materialId])
+
+  const handleStartPractice = async () => {
     setLoading(true)
+    setError('')
     try {
       const res = await fetch('/api/practice/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ materialId, mode }),
+        body: JSON.stringify({ materialId }),
       })
       const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.error?.message || 'Gagal memulai latihan. Coba lagi.')
+        return
+      }
+
       if (data.sessionId) {
         sessionStorage.setItem(
           'practiceSession',
           JSON.stringify({
             ...data,
-            materialName: material?.title || 'Matematika',
+            materialName: materialTitle,
           })
         )
         router.push(`/student/practice/${materialId}/play`)
+      } else {
+        setError('Session tidak valid. Coba lagi.')
       }
-    } catch (error) {
-      console.error('Failed to start practice:', error)
+    } catch (err) {
+      console.error('Failed to start practice:', err)
+      setError('Terjadi kesalahan jaringan. Coba lagi.')
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleStartTest = (testType: 'PRETEST' | 'POSTTEST') => {
+    router.push(`/student/test/${materialId}/${testType}`)
   }
 
   if (isLoading || !user) {
@@ -99,41 +135,62 @@ export default function PracticeStartPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
             >
-              {material?.title || 'Latihan'}
+              {fetchingTitle ? '...' : materialTitle}
             </motion.h1>
             <p className="text-slate-300 text-sm sm:text-base mb-6">
               Bantu robot naik gedung dengan menjawab soal!
             </p>
 
-            {/* Mode toggle */}
-            <div className="flex gap-1.5 mb-6 p-1.5 bg-black/40 border border-cyan-500/20 rounded-xl">
-              {(['pretest', 'posttest'] as const).map((m) => (
-                <button
-                  key={m}
-                  onClick={() => setMode(m)}
-                  className={[
-                    'flex-1 py-2.5 rounded-lg text-sm font-bold transition-all',
-                    mode === m
-                      ? 'bg-gradient-to-r from-cyan-400 to-cyan-300 text-slate-900 shadow-[0_0_16px_-4px_rgba(6,182,212,0.8)]'
-                      : 'text-slate-300 hover:text-white hover:bg-white/5',
-                  ].join(' ')}
-                >
-                  {m === 'pretest' ? 'Pre-test' : 'Post-test'}
-                </button>
-              ))}
-            </div>
+            {/* Error message */}
+            {error && (
+              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-300 text-sm">
+                {error}
+              </div>
+            )}
 
+            {/* Practice Button - Primary CTA */}
             <button
-              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-cyan-400 to-emerald-400 text-slate-900 font-bold text-base shadow-[0_0_24px_-4px_rgba(6,182,212,0.8)] hover:shadow-[0_0_32px_-4px_rgba(6,182,212,1)] disabled:opacity-60 disabled:cursor-not-allowed transition-shadow"
-              onClick={handleStart}
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-cyan-400 to-emerald-400 text-slate-900 font-bold text-base shadow-[0_0_24px_-4px_rgba(6,182,212,0.8)] hover:shadow-[0_0_32px_-4px_rgba(6,182,212,1)] disabled:opacity-60 disabled:cursor-not-allowed transition-shadow mb-4"
+              onClick={handleStartPractice}
               disabled={loading}
             >
-              {loading ? 'Menyiapkan…' : '🚀 Mulai Latihan'}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Menyiapkan…
+                </span>
+              ) : '🚀 Mulai Latihan'}
             </button>
+
+            {/* Divider */}
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex-1 h-px bg-white/10" />
+              <span className="text-xs text-slate-400 uppercase tracking-wider">atau</span>
+              <div className="flex-1 h-px bg-white/10" />
+            </div>
+
+            {/* Pre-test / Post-test Buttons */}
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              <button
+                onClick={() => handleStartTest('PRETEST')}
+                className="py-2.5 rounded-xl bg-black/40 border border-amber-400/40 text-amber-300 font-semibold text-sm hover:bg-amber-500/10 hover:border-amber-400/60 transition-all"
+              >
+                📝 Pre-Test
+              </button>
+              <button
+                onClick={() => handleStartTest('POSTTEST')}
+                className="py-2.5 rounded-xl bg-black/40 border border-emerald-400/40 text-emerald-300 font-semibold text-sm hover:bg-emerald-500/10 hover:border-emerald-400/60 transition-all"
+              >
+                📋 Post-Test
+              </button>
+            </div>
 
             <Link
               href="/student/materials"
-              className="block mt-4 text-slate-400 hover:text-white text-xs sm:text-sm transition-colors"
+              className="block mt-2 text-slate-400 hover:text-white text-xs sm:text-sm transition-colors"
             >
               ← Kembali ke Daftar Materi
             </Link>

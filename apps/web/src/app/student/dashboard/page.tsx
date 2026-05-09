@@ -111,12 +111,12 @@ export default function StudentDashboard() {
              <div className="text-white font-semibold text-sm">{user.name}</div>
              <div className="text-uni-primary text-xs">Siswa Aktif</div>
           </div>
-          <div className="w-10 h-10 rounded-full border border-uni-primary bg-gradient-to-br from-[#1E293B] to-[#0F172A] flex items-center justify-center shadow-[0_0_10px_rgba(0,229,255,0.2)] overflow-hidden">
+          <Link href="/student/profile" className="w-10 h-10 rounded-full border border-uni-primary bg-gradient-to-br from-[#1E293B] to-[#0F172A] flex items-center justify-center shadow-[0_0_10px_rgba(0,229,255,0.2)] overflow-hidden hover:shadow-[0_0_15px_rgba(0,229,255,0.4)] transition-shadow" title="Profil Anda">
              <span className="text-xl">🤖</span>
-          </div>
+          </Link>
           <button
-            onClick={() => {
-               logout()
+            onClick={async () => {
+               await logout()
                router.push('/student/login')
             }}
             className="ml-2 text-text-muted hover:text-white transition-colors"
