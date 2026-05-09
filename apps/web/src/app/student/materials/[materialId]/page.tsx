@@ -303,6 +303,18 @@ export default function MaterialDetailPage() {
     <main className="relative min-h-screen overflow-hidden">
       <StarryBackground />
 
+      {/* ── STICKY CONTINUE-TO-PRACTICE BAR (Wajib Belajar) ─────────
+           Appears ONLY when the student arrives here via the
+           "3 consecutive wrong" redirect. Sits above the header so
+           the countdown is visible immediately without scrolling. */}
+      {fromGameOver && (
+        <StickyContinueBar
+          canContinue={canContinue}
+          countdown={countdown}
+          onContinue={handleBackToPractice}
+        />
+      )}
+
       <div className="relative z-10 p-4 sm:p-6 max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between gap-2 mb-4 sm:mb-6">
@@ -453,25 +465,119 @@ export default function MaterialDetailPage() {
           )}
         </motion.div>
 
-        {/* Back to Practice Button */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="mt-6 mb-8">
-          <button
-            className={`w-full py-3 rounded-lg font-bold text-center transition-all ${
-              canContinue
-                ? 'bg-uni-primary text-white shadow-[0_0_15px_rgba(6,182,212,0.5)] hover:bg-uni-primary/90'
-                : 'bg-slate-700/50 text-slate-400 cursor-not-allowed border border-slate-600'
-            }`}
-            onClick={handleBackToPractice}
-            disabled={!canContinue}
-          >
-            {fromGameOver
-              ? canContinue
-                ? '🚀 Lanjut Latihan'
-                : `⏳ Pelajari materi... (${countdown}s)`
-              : '🚀 Kembali Latihan'}
-          </button>
-        </motion.div>
+        {/* Back to Practice Button — only shown when NOT in "Wajib Belajar"
+            mode. In Wajib Belajar mode, the sticky bar above the page already
+            shows the countdown + continue button, so we avoid duplication. */}
+        {!fromGameOver && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="mt-6 mb-8">
+            <button
+              className="w-full py-3 rounded-lg font-bold text-center transition-all bg-uni-primary text-white shadow-[0_0_15px_rgba(6,182,212,0.5)] hover:bg-uni-primary/90"
+              onClick={handleBackToPractice}
+            >
+              🚀 Kembali Latihan
+            </button>
+          </motion.div>
+        )}
       </div>
     </main>
+  )
+}
+
+/* ───────────────────────────────────────────────────────────────────
+ * StickyContinueBar
+ *
+ * Prominent, sticky "Lanjut Latihan" banner displayed at the very top
+ * of the material page when the student is redirected here after 3
+ * consecutive wrong answers ("Wajib Belajar"). Shows a live countdown
+ * with a progress bar so the timer is always visible — students don't
+ * need to scroll to discover when they can resume practice.
+ * ──────────────────────────────────────────────────────────────── */
+function StickyContinueBar({
+  canContinue,
+  countdown,
+  onContinue,
+}: {
+  canContinue: boolean
+  countdown: number
+  onContinue: () => void
+}) {
+  // Visual progress that fills up as the timer counts down (0 → 100%).
+  // Assumes a 15-second initial countdown (matches useEffect in parent).
+  const TOTAL_COOLDOWN = 15
+  const elapsed = TOTAL_COOLDOWN - countdown
+  const progressPct = Math.max(
+    0,
+    Math.min(100, (elapsed / TOTAL_COOLDOWN) * 100)
+  )
+
+  return (
+    <div className="sticky top-0 z-40 w-full">
+      <motion.div
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.35, ease: 'easeOut' }}
+        className="backdrop-blur-xl bg-[rgba(7,17,36,0.88)] border-b border-cyan-400/30 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)]"
+      >
+        <div className="max-w-4xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-3">
+          {/* Left-side status copy */}
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.15em] text-orange-300/90 font-semibold">
+              📚 Wajib Belajar
+            </p>
+            <p className="text-white text-xs sm:text-sm leading-tight mt-0.5 line-clamp-1">
+              {canContinue
+                ? 'Kamu sudah bisa lanjut latihan.'
+                : `Pelajari materi dulu… tombol aktif dalam ${countdown}s`}
+            </p>
+          </div>
+
+          {/* Action button — changes appearance based on state */}
+          <button
+            onClick={onContinue}
+            disabled={!canContinue}
+            className={[
+              'shrink-0 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 transition-all relative overflow-hidden',
+              canContinue
+                ? 'bg-gradient-to-r from-emerald-400 to-cyan-400 text-slate-900 shadow-[0_0_20px_-4px_rgba(16,185,129,0.8)] hover:shadow-[0_0_28px_-4px_rgba(16,185,129,1)] active:scale-95'
+                : 'bg-slate-700/60 text-slate-300 border border-slate-500/40 cursor-not-allowed',
+            ].join(' ')}
+          >
+            {canContinue ? (
+              <>
+                <span>🚀</span>
+                <span>Lanjut Latihan</span>
+              </>
+            ) : (
+              <>
+                <svg
+                  className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin-slow"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <circle cx="12" cy="12" r="10" opacity="0.3" />
+                  <path d="M12 6v6l4 2" strokeLinecap="round" />
+                </svg>
+                <span className="tabular-nums">{countdown}s</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Fine progress bar beneath the bar while cooldown is active */}
+        {!canContinue && (
+          <div className="h-[3px] w-full bg-black/50">
+            <motion.div
+              className="h-full bg-gradient-to-r from-orange-400 via-amber-300 to-cyan-300"
+              initial={{ width: 0 }}
+              animate={{ width: `${progressPct}%` }}
+              transition={{ duration: 0.4, ease: 'linear' }}
+              style={{ boxShadow: '0 0 10px rgba(251,191,36,0.6)' }}
+            />
+          </div>
+        )}
+      </motion.div>
+    </div>
   )
 }

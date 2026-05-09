@@ -259,11 +259,18 @@ export async function POST(request: NextRequest) {
       })
       .where(eq(practiceSessions.id, sessionId))
 
-    // Determine which hint to show FROM THE QUESTION JUST ANSWERED WRONG
-    // consecutiveWrong==1 → show hint1, consecutiveWrong==2 → show hint2
-    const previousHint =
-      newConsecutiveWrong === 1 ? question.hint1 :
-      newConsecutiveWrong === 2 ? question.hint2 : null
+    // Determine which hint to show FOR THE QUESTION THE STUDENT IS ABOUT TO SEE.
+    // The hint tier escalates with consecutive wrongs so a struggling student
+    // gets progressively more scaffold on each new attempt:
+    //   consecutiveWrong==1 → nextQ.hint1
+    //   consecutiveWrong==2 → nextQ.hint2
+    const currentHint = nextQ
+      ? newConsecutiveWrong === 1
+        ? nextQ.hint1
+        : newConsecutiveWrong === 2
+          ? nextQ.hint2
+          : null
+      : null
 
     return NextResponse.json({
       isCorrect: false,
@@ -272,7 +279,7 @@ export async function POST(request: NextRequest) {
       currentDifficulty: nextQ ? nextQ.difficulty : nextDifficulty,
       difficultyLabel: DIFFICULTY_LABELS[nextQ ? nextQ.difficulty : nextDifficulty] || 'Sedang',
       nextQuestion: nextQ ? formatQuestionForClient(nextQ) : null,
-      previousHint, // hint from the OLD question to display as banner
+      currentHint, // hint from the CURRENTLY displayed (next) question
     })
   } catch (error) {
     console.error('Answer error:', error)

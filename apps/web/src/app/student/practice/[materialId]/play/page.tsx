@@ -32,7 +32,7 @@ interface GameState {
   showCorrectModal: boolean
   showMustStudyModal: boolean
   isSubmitting: boolean
-  previousHint: string | null
+  currentHint: string | null
   stats: { floorsClimbed: number; correctAnswers: number; totalAttempts: number }
 }
 
@@ -77,7 +77,7 @@ export default function GamePlayPage() {
           showCorrectModal: false,
           showMustStudyModal: false,
           isSubmitting: false,
-          previousHint: null,
+          currentHint: null,
           stats: data.stats || { floorsClimbed: 0, correctAnswers: 0, totalAttempts: 0 },
         })
       } else {
@@ -99,7 +99,7 @@ export default function GamePlayPage() {
               showCorrectModal: false,
               showMustStudyModal: false,
               isSubmitting: false,
-              previousHint: null,
+              currentHint: null,
               stats: data.stats,
             })
           } else {
@@ -164,7 +164,7 @@ export default function GamePlayPage() {
                 ...prev,
                 showCorrectModal: true,
                 isSubmitting: false,
-                previousHint: null,
+                currentHint: null,
                 stats: {
                   ...prev.stats,
                   floorsClimbed: prev.stats.floorsClimbed + 1,
@@ -191,7 +191,7 @@ export default function GamePlayPage() {
                       question: data.nextQuestion,
                       selectedAnswer: null,
                       showCorrectModal: false,
-                      previousHint: null,
+                      currentHint: null,
                     }
                   : null
               )
@@ -224,7 +224,7 @@ export default function GamePlayPage() {
                   selectedAnswer: null,
                   isSubmitting: false,
                   showMustStudyModal: true,
-                  previousHint: null,
+                  currentHint: null,
                   stats: { ...prev.stats, totalAttempts: prev.stats.totalAttempts + 1 },
                 }
               : null
@@ -241,7 +241,7 @@ export default function GamePlayPage() {
               question: data.nextQuestion || prev.question,
               selectedAnswer: null,
               isSubmitting: false,
-              previousHint: data.previousHint || null,
+              currentHint: data.currentHint || null,
               stats: { ...prev.stats, totalAttempts: prev.stats.totalAttempts + 1 },
             }
           })
@@ -394,9 +394,9 @@ export default function GamePlayPage() {
           transition={{ duration: 0.45, ease: 'easeOut' }}
           className="w-full max-w-md"
         >
-          {/* ── HINT BANNER (from previous wrong question) ─────── */}
+          {/* ── HINT BANNER (for the current question) ─────────── */}
           <AnimatePresence>
-            {gameState.previousHint && (
+            {gameState.currentHint && (
               <motion.div
                 initial={{ opacity: 0, y: -10, height: 0 }}
                 animate={{ opacity: 1, y: 0, height: 'auto' }}
@@ -407,15 +407,15 @@ export default function GamePlayPage() {
                   <span className="text-lg">💡</span>
                   <div className="flex-1">
                     <p className="text-[10px] uppercase tracking-[0.15em] text-amber-300/80 font-semibold mb-1">
-                      Petunjuk dari soal sebelumnya
+                      Petunjuk
                     </p>
                     <p className="text-sm text-slate-100/90 leading-snug">
-                      {gameState.previousHint}
+                      {gameState.currentHint}
                     </p>
                   </div>
                   <button
                     onClick={() =>
-                      setGameState((prev) => (prev ? { ...prev, previousHint: null } : null))
+                      setGameState((prev) => (prev ? { ...prev, currentHint: null } : null))
                     }
                     className="text-amber-300/60 hover:text-white text-xs mt-0.5"
                   >

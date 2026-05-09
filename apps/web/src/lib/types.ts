@@ -159,7 +159,7 @@ export interface AnswerResponse {
   currentDifficulty: number
   difficultyLabel: string
   nextQuestion?: Question
-  previousHint?: string // hint dari soal yang baru dijawab salah
+  currentHint?: string // hint untuk soal yang akan ditampilkan berikutnya
   mustStudy?: boolean
   explanation?: string
 }
