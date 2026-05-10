@@ -209,3 +209,24 @@ button, a {
 .animate-shake {
   animation: shake 0.5s ease-in-out;
 }
+
+/* Respect user motion preferences (WCAG 2.1 SC 2.3.3).
+   Disable non-essential animations + drop canvas-based star rendering
+   to a static background so low-powered devices aren't taxed either. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-twinkle,
+  .animate-pulse-glow,
+  .animate-float,
+  .animate-shake {
+    animation: none !important;
+  }
+}

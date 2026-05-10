@@ -21,6 +21,12 @@ export function StarryBackground({
     const canvas = canvasRef.current
     if (!canvas) return
 
+    // Respect prefers-reduced-motion: render a single static star field
+    // and skip the animation loop entirely.
+    const reducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
@@ -41,6 +47,19 @@ export function StarryBackground({
         opacity: Math.random() * 0.8 + 0.2,
         speed: Math.random() * 0.5 + 0.1,
       })
+    }
+
+    // Static single-paint when reduced motion is requested
+    if (reducedMotion) {
+      ctx.fillStyle = '#040914'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      stars.forEach((star) => {
+        ctx.beginPath()
+        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`
+        ctx.fill()
+      })
+      return () => window.removeEventListener('resize', resizeCanvas)
     }
 
     // Animation loop

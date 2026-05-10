@@ -1,60 +1,91 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+type Role = 'STUDENT' | 'TEACHER' | 'ADMIN'
+
+/**
+ * Maps a role to the dashboard URL the user should land on.
+ */
+const DASHBOARD_FOR_ROLE: Record<Role, string> = {
+  ADMIN: '/admin/dashboard',
+  TEACHER: '/teacher/dashboard',
+  STUDENT: '/student/dashboard',
+}
+
+/**
+ * Paths that don't require auth — must come BEFORE any role-based routes.
+ * Anything else under /admin, /teacher, /student is protected.
+ */
+const PUBLIC_PATHS = new Set<string>([
+  '/admin/login',
+  '/teacher/login',
+  '/teacher/register',
+  '/teacher/forgot-password',
+  '/teacher/reset-password',
+  '/student/login',
+])
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const userCookie = request.cookies.get('user')
   const tokenCookie = request.cookies.get('token')
 
-  let user = null
+  let user: { role?: Role } | null = null
   if (userCookie?.value) {
     try {
       user = JSON.parse(userCookie.value)
-    } catch (e) {
-      // ignore
+    } catch {
+      user = null
     }
   }
 
-  // Paths to protect (excluding login and api routes)
-  const isAdminPath = pathname.startsWith('/admin') && !pathname.includes('/login')
-  const isTeacherPath = pathname.startsWith('/teacher') && !pathname.includes('/login')
-  const isStudentPath = pathname.startsWith('/student') && !pathname.includes('/login')
-  
-  // Login paths
-  const isAdminLogin = pathname === '/admin/login'
-  const isTeacherLogin = pathname === '/teacher/login'
-  const isStudentLogin = pathname === '/student/login'
+  const isAuthenticated = !!(user && user.role && tokenCookie?.value)
 
-  // If trying to access protected paths without auth or wrong role
-  if (isAdminPath) {
-    if (!tokenCookie || !user || user.role !== 'ADMIN') {
-      return NextResponse.redirect(new URL('/admin/login', request.url))
+  // ── Login/public pages for unauthenticated users ────────────────────
+  if (PUBLIC_PATHS.has(pathname)) {
+    // If already logged in with a valid role, kick them to their own
+    // dashboard so they can't re-login as a different role accidentally.
+    if (isAuthenticated && user?.role) {
+      return NextResponse.redirect(
+        new URL(DASHBOARD_FOR_ROLE[user.role], request.url)
+      )
     }
+    return NextResponse.next()
   }
 
-  if (isTeacherPath) {
-    if (!tokenCookie || !user || user.role !== 'TEACHER') {
-      return NextResponse.redirect(new URL('/teacher/login', request.url))
-    }
+  // ── Protected paths by prefix ───────────────────────────────────────
+  const isAdminPath = pathname.startsWith('/admin')
+  const isTeacherPath = pathname.startsWith('/teacher')
+  const isStudentPath = pathname.startsWith('/student')
+
+  if (!isAdminPath && !isTeacherPath && !isStudentPath) {
+    return NextResponse.next()
   }
 
-  if (isStudentPath) {
-    if (!tokenCookie || !user || user.role !== 'STUDENT') {
-      return NextResponse.redirect(new URL('/student/login', request.url))
-    }
+  const requiredRole: Role = isAdminPath
+    ? 'ADMIN'
+    : isTeacherPath
+      ? 'TEACHER'
+      : 'STUDENT'
+
+  // Not authenticated → send to the corresponding login page
+  if (!isAuthenticated) {
+    const loginUrl = isAdminPath
+      ? '/admin/login'
+      : isTeacherPath
+        ? '/teacher/login'
+        : '/student/login'
+    return NextResponse.redirect(new URL(loginUrl, request.url))
   }
 
-  // If authenticated user tries to access login page, redirect to dashboard
-  if (user && tokenCookie) {
-    if (isAdminLogin && user.role === 'ADMIN') {
-      return NextResponse.redirect(new URL('/admin/dashboard', request.url))
-    }
-    if (isTeacherLogin && user.role === 'TEACHER') {
-      return NextResponse.redirect(new URL('/teacher/dashboard', request.url))
-    }
-    if (isStudentLogin && user.role === 'STUDENT') {
-      return NextResponse.redirect(new URL('/student/dashboard', request.url))
-    }
+  // Authenticated but wrong role → send to their own dashboard.
+  // This is safer than a hard 403 for typical misnavigation, but API routes
+  // themselves (under /api) independently enforce authorization, so data
+  // cannot leak even if someone bypasses this client redirect.
+  if (user?.role && user.role !== requiredRole) {
+    return NextResponse.redirect(
+      new URL(DASHBOARD_FOR_ROLE[user.role], request.url)
+    )
   }
 
   return NextResponse.next()
@@ -62,8 +93,9 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    // Protect all role-scoped pages except Next.js internals
     '/admin/:path*',
     '/teacher/:path*',
-    '/student/:path*'
+    '/student/:path*',
   ],
 }

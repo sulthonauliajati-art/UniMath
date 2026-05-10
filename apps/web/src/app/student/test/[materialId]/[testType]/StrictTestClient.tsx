@@ -182,7 +182,6 @@ export default function StrictTestClient({
   }
 
   const handleAutoFinish = async () => {
-    alert('Waktu habis! Tes akan diselesaikan secara otomatis.')
     // Flush current
     const currentQ = questions[currentIndex]
     if (currentQ) {
@@ -254,9 +253,24 @@ export default function StrictTestClient({
 
   if (questions.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0a1a]">
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0a1a] p-4">
         <StarryBackground />
-        <div className="relative z-10 text-white text-xl">Tidak ada soal untuk tes ini.</div>
+        <GlassCard className="p-8 text-center max-w-md relative z-10">
+          <div className="text-5xl mb-3">📝</div>
+          <h2 className="text-xl text-white font-bold mb-2">
+            Soal {testType === 'PRETEST' ? 'Pre-test' : 'Post-test'} Belum Tersedia
+          </h2>
+          <p className="text-text-secondary text-sm mb-6">
+            Materi <b>{materialTitle}</b> belum memiliki soal {testType.toLowerCase()}. Hubungi guru
+            atau admin untuk meminta akses.
+          </p>
+          <button
+            onClick={() => router.push('/student/dashboard')}
+            className="px-6 py-2 bg-uni-primary rounded-xl text-white font-semibold hover:bg-uni-primary/80 transition-colors"
+          >
+            Kembali ke Dashboard
+          </button>
+        </GlassCard>
       </div>
     )
   }

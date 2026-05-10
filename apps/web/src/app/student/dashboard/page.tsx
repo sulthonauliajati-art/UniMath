@@ -257,6 +257,29 @@ export default function StudentDashboard() {
            </Link>
         </div>
 
+        {/* Test Mode Navigation (Pretest/Posttest) */}
+        <div className="grid grid-cols-2 gap-4 w-full relative z-20 mt-4">
+           <Link href="/student/test?type=pretest">
+              <GlassCard hover className="p-4 flex flex-col items-center justify-center text-center h-full glass-strong">
+                 <div className="w-12 h-12 bg-uni-bg/50 rounded-full border border-uni-accent/30 flex items-center justify-center mb-3 text-2xl shadow-[inset_0_0_10px_rgba(0,119,255,0.2)]">
+                    📝
+                 </div>
+                 <h3 className="text-sm font-bold text-white mb-1">Pre-test</h3>
+                 <p className="text-[10px] text-text-secondary">Uji pemahaman awal</p>
+              </GlassCard>
+           </Link>
+
+           <Link href="/student/test?type=posttest">
+              <GlassCard hover className="p-4 flex flex-col items-center justify-center text-center h-full glass-strong">
+                 <div className="w-12 h-12 bg-uni-bg/50 rounded-full border border-uni-success/30 flex items-center justify-center mb-3 text-2xl shadow-[inset_0_0_10px_rgba(16,185,129,0.2)]">
+                    ✅
+                 </div>
+                 <h3 className="text-sm font-bold text-white mb-1">Post-test</h3>
+                 <p className="text-[10px] text-text-secondary">Ukur peningkatan</p>
+              </GlassCard>
+           </Link>
+        </div>
+
         {/* Help Button Floating Bottom Left */}
         <button
            onClick={() => { setOnboardingStep(0); setShowOnboarding(true) }}
