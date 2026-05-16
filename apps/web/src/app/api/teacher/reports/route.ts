@@ -137,6 +137,7 @@ export async function GET(request: NextRequest) {
             : 0
 
         return {
+          id: student?.id || studentId,
           name: student?.name || 'Unknown',
           floors: stats?.totalFloors || 0,
           accuracy: studentAccuracy,

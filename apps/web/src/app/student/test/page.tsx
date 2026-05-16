@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
@@ -23,7 +23,7 @@ interface MaterialRow {
   description: string | null
 }
 
-export default function StudentTestLandingPage() {
+function StudentTestLandingContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user, token, isLoading } = useAuth()
@@ -154,6 +154,14 @@ export default function StudentTestLandingPage() {
         )}
       </div>
     </main>
+  )
+}
+
+export default function StudentTestLandingPage() {
+  return (
+    <Suspense fallback={<LoadingScreen />}>
+      <StudentTestLandingContent />
+    </Suspense>
   )
 }
 

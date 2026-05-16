@@ -183,7 +183,7 @@ export default function StudentLoginPage() {
         >
           <GlassCard className="p-6 sm:p-8">
             {/* Header */}
-            <div className="text-center mb-6 sm:mb-8">
+            <div className="text-center mb-4 sm:mb-6">
               <h1 className="text-xl sm:text-2xl font-bold text-white mb-1 sm:mb-2">
                 {step === 'register' ? 'Daftar Siswa' : 'Login Siswa'}
               </h1>
@@ -195,6 +195,21 @@ export default function StudentLoginPage() {
                 {step === 'not-found' && 'NISN belum terdaftar'}
               </p>
             </div>
+
+            {/* Inline Help Banner — only visible on NISN step */}
+            {step === 'nisn' && (
+              <div className="mb-5 p-3 rounded-xl bg-uni-accent/5 border border-uni-accent/20">
+                <div className="flex items-start gap-2">
+                  <svg className="w-4 h-4 text-uni-accent flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div className="text-xs text-text-secondary leading-relaxed">
+                    <span className="text-uni-accent font-medium">Sudah didaftarkan guru?</span> Cukup masukkan NISN saja. 
+                    <span className="text-white/60">Belum punya akun? Kamu bisa daftar sendiri di langkah berikutnya.</span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <AnimatePresence mode="wait">
               {/* Step 1: NISN */}

@@ -23,6 +23,25 @@ interface MaterialProgress {
   progress: number
 }
 
+interface IndicatorStat { indicator: string; label: string; correct: number; total: number; accuracy: number }
+interface DifficultyStat { difficulty: number; label: string; correct: number; total: number; accuracy: number }
+interface MaterialStat { materialId: string; title: string; correct: number; total: number; accuracy: number }
+
+interface ReportData {
+  ready: boolean
+  totalFloors: number
+  minFloors?: number
+  floorsNeeded?: number
+  totalAttempts?: number
+  overallAccuracy?: number
+  byIndicator?: IndicatorStat[]
+  byDifficulty?: DifficultyStat[]
+  byMaterial?: MaterialStat[]
+  strengths?: string[]
+  weaknesses?: string[]
+  recommendations?: string[]
+}
+
 export default function StudentProfile() {
   const router = useRouter()
   const { user, token, isLoading, updateUser } = useAuth()
@@ -32,6 +51,7 @@ export default function StudentProfile() {
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState('')
   const [saving, setSaving] = useState(false)
+  const [report, setReport] = useState<ReportData | null>(null)
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'STUDENT')) {
@@ -52,6 +72,15 @@ export default function StudentProfile() {
         if (data.stats) {
           setStats(data.stats)
           setMaterialProgress(data.materialProgress || [])
+        }
+
+        // Fetch performance report
+        const reportRes = await fetch('/api/student/report', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (reportRes.ok) {
+          const reportData = await reportRes.json()
+          setReport(reportData)
         }
       } catch (error) {
         console.error('Failed to fetch stats:', error)
@@ -277,6 +306,134 @@ export default function StudentProfile() {
                  <div className="text-3xl mb-2">📝</div>
                  <p className="text-text-secondary text-sm">Belum ada progress materi.</p>
                  <p className="text-text-secondary text-xs mt-1">Mulai latihan untuk melihat progress!</p>
+              </div>
+            )}
+          </GlassCard>
+        </motion.div>
+
+        {/* ── Performance Analysis Report ────────────────────── */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+          <GlassCard className="p-6 sm:p-8 glass-strong border-white/5">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xl">📊</span>
+              <h3 className="text-base sm:text-lg font-bold text-white">Analisis Performa</h3>
+            </div>
+            <p className="text-xs text-text-secondary/70 mb-6 border-b border-white/5 pb-4">
+              Keunggulan dan kelemahan berdasarkan riwayat latihan
+            </p>
+
+            {!report ? (
+              <div className="text-center text-text-secondary py-4 text-sm">Memuat analisis...</div>
+            ) : !report.ready ? (
+              /* Not enough data yet */
+              <div className="text-center py-6">
+                <div className="text-4xl mb-3">🔒</div>
+                <p className="text-white font-semibold mb-2">Analisis Belum Tersedia</p>
+                <p className="text-text-secondary text-sm mb-4">
+                  Selesaikan minimal <span className="text-cyan-300 font-bold">{report.minFloors || 15} lantai</span> untuk membuka analisis performa.
+                </p>
+                <div className="max-w-xs mx-auto">
+                  <div className="flex justify-between text-xs mb-1.5">
+                    <span className="text-text-secondary">Progress</span>
+                    <span className="text-cyan-300 font-semibold">{report.totalFloors} / {report.minFloors || 15}</span>
+                  </div>
+                  <ProgressBar value={Math.round((report.totalFloors / (report.minFloors || 15)) * 100)} size="sm" />
+                  <p className="text-text-muted text-xs mt-2">{report.floorsNeeded} lantai lagi!</p>
+                </div>
+              </div>
+            ) : (
+              /* Full report */
+              <div className="space-y-6">
+                {/* Overall accuracy badge */}
+                <div className="text-center p-4 rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-400/20">
+                  <div className="text-3xl font-bold text-cyan-300 drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]">{report.overallAccuracy}%</div>
+                  <div className="text-xs text-text-secondary uppercase tracking-wider mt-1">Akurasi Keseluruhan</div>
+                </div>
+
+                {/* Strengths */}
+                <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-400/20">
+                  <h4 className="text-emerald-300 font-semibold text-sm flex items-center gap-2 mb-3">
+                    <span>💪</span> Keunggulan
+                  </h4>
+                  <ul className="space-y-1.5">
+                    {report.strengths?.map((s, i) => (
+                      <li key={i} className="text-sm text-slate-300 flex items-start gap-2">
+                        <span className="text-emerald-400 mt-0.5 text-xs">✓</span>
+                        <span>{s}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Weaknesses */}
+                <div className="p-4 rounded-xl bg-orange-500/5 border border-orange-400/20">
+                  <h4 className="text-orange-300 font-semibold text-sm flex items-center gap-2 mb-3">
+                    <span>⚠️</span> Perlu Diperkuat
+                  </h4>
+                  <ul className="space-y-1.5">
+                    {report.weaknesses?.map((w, i) => (
+                      <li key={i} className="text-sm text-slate-300 flex items-start gap-2">
+                        <span className="text-orange-400 mt-0.5 text-xs">●</span>
+                        <span>{w}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* By Indicator */}
+                {report.byIndicator && report.byIndicator.length > 0 && (
+                  <div>
+                    <h4 className="text-white font-semibold text-sm mb-3 flex items-center gap-2">
+                      <span>🎯</span> Akurasi per Indikator
+                    </h4>
+                    <div className="space-y-3">
+                      {report.byIndicator.map((ind) => (
+                        <div key={ind.indicator}>
+                          <div className="flex justify-between text-xs mb-1">
+                            <span className="text-slate-300">{ind.label} ({ind.indicator})</span>
+                            <span className={`font-bold ${ind.accuracy >= 75 ? 'text-emerald-300' : ind.accuracy < 50 ? 'text-orange-300' : 'text-cyan-300'}`}>{ind.accuracy}%</span>
+                          </div>
+                          <ProgressBar value={ind.accuracy} size="sm" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* By Difficulty */}
+                {report.byDifficulty && report.byDifficulty.length > 0 && (
+                  <div>
+                    <h4 className="text-white font-semibold text-sm mb-3 flex items-center gap-2">
+                      <span>⚡</span> Akurasi per Tingkat Kesulitan
+                    </h4>
+                    <div className="space-y-3">
+                      {report.byDifficulty.map((d) => (
+                        <div key={d.difficulty}>
+                          <div className="flex justify-between text-xs mb-1">
+                            <span className="text-slate-300">{d.label}</span>
+                            <span className={`font-bold ${d.accuracy >= 75 ? 'text-emerald-300' : d.accuracy < 50 ? 'text-orange-300' : 'text-cyan-300'}`}>{d.accuracy}%</span>
+                          </div>
+                          <ProgressBar value={d.accuracy} size="sm" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Recommendations */}
+                <div className="p-4 rounded-xl bg-cyan-500/5 border border-cyan-400/20">
+                  <h4 className="text-cyan-300 font-semibold text-sm flex items-center gap-2 mb-3">
+                    <span>💡</span> Rekomendasi
+                  </h4>
+                  <ul className="space-y-1.5">
+                    {report.recommendations?.map((r, i) => (
+                      <li key={i} className="text-sm text-slate-300 flex items-start gap-2">
+                        <span className="text-cyan-400 mt-0.5 text-xs">→</span>
+                        <span>{r}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             )}
           </GlassCard>

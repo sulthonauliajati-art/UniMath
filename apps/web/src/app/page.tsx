@@ -1,10 +1,13 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { StarryBackground, TowerBackground, RobotMascot, GlassCard } from '@/components/ui'
 
 export default function LandingPage() {
+  const [showGuide, setShowGuide] = useState(false)
+
   return (
     <main className="relative min-h-[100dvh] bg-uni-bg overflow-hidden flex flex-col">
       <StarryBackground density="high" />
@@ -50,9 +53,96 @@ export default function LandingPage() {
               <div className="h-px w-12 bg-uni-primary/50" />
             </div>
 
-            <p className="text-text-secondary text-sm sm:text-base leading-relaxed mb-10 max-w-sm mx-auto">
+            <p className="text-text-secondary text-sm sm:text-base leading-relaxed mb-6 max-w-sm mx-auto">
               Platform latihan numerasi interaktif untuk pembelajaran yang <span className="text-uni-primary font-medium">lebih menarik.</span>
             </p>
+
+            {/* ── How to Login Guide ─────────────────────────── */}
+            <div className="mb-6">
+              <button
+                onClick={() => setShowGuide(!showGuide)}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-uni-accent/10 border border-uni-accent/30 text-uni-accent text-sm font-medium hover:bg-uni-accent/20 transition-all"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {showGuide ? 'Tutup Panduan' : 'Bagaimana cara login?'}
+                <motion.svg
+                  animate={{ rotate: showGuide ? 180 : 0 }}
+                  className="w-3.5 h-3.5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </motion.svg>
+              </button>
+
+              <AnimatePresence>
+                {showGuide && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mt-4 text-left space-y-3">
+                      {/* Step 1 */}
+                      <div className="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
+                        <div className="w-7 h-7 rounded-full bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <span className="text-cyan-300 font-bold text-xs">1</span>
+                        </div>
+                        <div>
+                          <p className="text-white font-semibold text-sm">Masukkan NISN</p>
+                          <p className="text-text-secondary text-xs leading-relaxed">
+                            Jika guru sudah mendaftarkan kamu, cukup masukkan NISN dan buat password baru.
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Step 2 */}
+                      <div className="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
+                        <div className="w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <span className="text-emerald-300 font-bold text-xs">2</span>
+                        </div>
+                        <div>
+                          <p className="text-white font-semibold text-sm">Sudah Punya Akun?</p>
+                          <p className="text-text-secondary text-xs leading-relaxed">
+                            Langsung masukkan NISN lalu password yang sudah dibuat sebelumnya.
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Step 3 */}
+                      <div className="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
+                        <div className="w-7 h-7 rounded-full bg-amber-500/20 border border-amber-400/40 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <span className="text-amber-300 font-bold text-xs">3</span>
+                        </div>
+                        <div>
+                          <p className="text-white font-semibold text-sm">Belum Terdaftar?</p>
+                          <p className="text-text-secondary text-xs leading-relaxed">
+                            Kamu bisa daftar sendiri! Masukkan NISN → sistem akan tahu kamu belum terdaftar → klik &quot;Daftar Sekarang&quot;.
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Guru info */}
+                      <div className="flex items-start gap-3 p-3 rounded-xl bg-emerald-500/5 border border-emerald-400/20">
+                        <span className="text-lg mt-0.5">👨‍🏫</span>
+                        <div>
+                          <p className="text-emerald-300 font-semibold text-sm">Guru?</p>
+                          <p className="text-text-secondary text-xs leading-relaxed">
+                            Klik &quot;Login Guru&quot; lalu masukkan email dan password yang diberikan admin.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             {/* Buttons Layout - Side by Side on larger screens, stacked on small */}
             <div className="flex flex-col sm:flex-row items-center gap-4 mb-8">

@@ -404,7 +404,9 @@ export default function GamePlayPage() {
                 className="mb-3"
               >
                 <div className="flex gap-2 items-start p-3 rounded-xl border border-amber-400/50 bg-amber-500/10 backdrop-blur-sm">
-                  <span className="text-lg">💡</span>
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-400/20 border-2 border-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.5)] animate-pulse-slow flex-shrink-0 mt-0.5">
+                    <span className="text-amber-300 font-bold text-base leading-none">?</span>
+                  </span>
                   <div className="flex-1">
                     <p className="text-[10px] uppercase tracking-[0.15em] text-amber-300/80 font-semibold mb-1">
                       Petunjuk
