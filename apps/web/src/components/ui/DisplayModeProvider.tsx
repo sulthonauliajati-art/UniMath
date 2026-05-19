@@ -42,12 +42,14 @@ export function DisplayModeProvider({ children }: { children: React.ReactNode })
     setInitialized(true)
   }, [])
 
-  // Persist
+  // Persist + apply to DOM
   useEffect(() => {
     if (initialized) {
       try {
         localStorage.setItem(STORAGE_KEY, displayMode)
       } catch { /* ignore */ }
+      // Apply data attribute to html for CSS targeting
+      document.documentElement.setAttribute('data-display-mode', displayMode)
     }
   }, [displayMode, initialized])
 

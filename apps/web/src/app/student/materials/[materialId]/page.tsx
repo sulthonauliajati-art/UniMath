@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -64,9 +64,11 @@ export default function MaterialDetailPage() {
   const [loading, setLoading] = useState(true)
   const [fromGameOver, setFromGameOver] = useState(false)
   const [canContinue, setCanContinue] = useState(true)
-  const [countdown, setCountdown] = useState(0)
+  const [scrollProgress, setScrollProgress] = useState(0)
+  const [showBottomPopup, setShowBottomPopup] = useState(false)
   const [checkpointAnswers, setCheckpointAnswers] = useState<Record<number, string>>({})
   const [checkpointRevealed, setCheckpointRevealed] = useState<Record<number, boolean>>({})
+  const contentRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'STUDENT')) {
@@ -81,21 +83,41 @@ export default function MaterialDetailPage() {
       if (data.materialId === materialId) {
         setFromGameOver(true)
         setCanContinue(false)
-        setCountdown(15)
         sessionStorage.setItem('materialStudied_' + materialId, 'true')
       }
     }
   }, [materialId])
 
-  useEffect(() => {
-    let timer: NodeJS.Timeout
-    if (!canContinue && countdown > 0) {
-      timer = setTimeout(() => setCountdown(prev => prev - 1), 1000)
-    } else if (!canContinue && countdown === 0) {
+  // ── Scroll-based progress tracking ──
+  // Listens to window scroll and calculates how far down the page the
+  // student has scrolled. When they reach ~95% of the content, we unlock
+  // the "Lanjut Latihan" button and show a floating popup at the bottom.
+  const handleScroll = useCallback(() => {
+    if (!fromGameOver || canContinue) return
+
+    const scrollTop = window.scrollY || document.documentElement.scrollTop
+    const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight
+
+    if (docHeight <= 0) return
+
+    const progress = Math.min(100, Math.round((scrollTop / docHeight) * 100))
+    setScrollProgress(progress)
+
+    // Unlock when user has scrolled to ~95% of the page
+    if (progress >= 95) {
       setCanContinue(true)
+      setShowBottomPopup(true)
     }
-    return () => clearTimeout(timer)
-  }, [countdown, canContinue])
+  }, [fromGameOver, canContinue])
+
+  useEffect(() => {
+    if (fromGameOver && !canContinue) {
+      window.addEventListener('scroll', handleScroll, { passive: true })
+      // Initial check (content might be short enough to not need scrolling)
+      handleScroll()
+      return () => window.removeEventListener('scroll', handleScroll)
+    }
+  }, [fromGameOver, canContinue, handleScroll])
 
   useEffect(() => {
     fetchAll()
@@ -310,12 +332,12 @@ export default function MaterialDetailPage() {
       {fromGameOver && (
         <StickyContinueBar
           canContinue={canContinue}
-          countdown={countdown}
+          scrollProgress={scrollProgress}
           onContinue={handleBackToPractice}
         />
       )}
 
-      <div className="relative z-10 p-4 sm:p-6 max-w-4xl mx-auto">
+      <div ref={contentRef} className="relative z-10 p-4 sm:p-6 max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between gap-2 mb-4 sm:mb-6">
           <Link href="/student/materials" className="text-text-secondary hover:text-white text-sm sm:text-base">
@@ -479,6 +501,39 @@ export default function MaterialDetailPage() {
           </motion.div>
         )}
       </div>
+
+      {/* ── FLOATING BOTTOM POPUP — appears when scroll unlocks in Wajib Belajar ── */}
+      <AnimatePresence>
+        {fromGameOver && showBottomPopup && (
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+            className="fixed bottom-0 left-0 right-0 z-50 safe-bottom"
+          >
+            <div className="backdrop-blur-xl bg-[rgba(4,9,20,0.92)] border-t border-emerald-400/40 shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.8),0_-4px_20px_-4px_rgba(16,185,129,0.3)]">
+              <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-emerald-300 font-semibold text-sm sm:text-base flex items-center gap-2">
+                    ✅ Materi sudah dibaca!
+                  </p>
+                  <p className="text-slate-400 text-xs sm:text-sm mt-0.5">
+                    Kamu sudah scroll sampai bawah. Siap lanjut latihan?
+                  </p>
+                </div>
+                <button
+                  onClick={handleBackToPractice}
+                  className="shrink-0 px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl font-bold text-sm sm:text-base bg-gradient-to-r from-emerald-400 to-cyan-400 text-slate-900 shadow-[0_0_24px_-4px_rgba(16,185,129,0.8)] hover:shadow-[0_0_32px_-4px_rgba(16,185,129,1)] active:scale-95 transition-all flex items-center gap-2"
+                >
+                  <span>🚀</span>
+                  <span>Lanjut Latihan</span>
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   )
 }
@@ -488,28 +543,19 @@ export default function MaterialDetailPage() {
  *
  * Prominent, sticky "Lanjut Latihan" banner displayed at the very top
  * of the material page when the student is redirected here after 3
- * consecutive wrong answers ("Wajib Belajar"). Shows a live countdown
- * with a progress bar so the timer is always visible — students don't
- * need to scroll to discover when they can resume practice.
+ * consecutive wrong answers ("Wajib Belajar"). Shows a live scroll
+ * progress bar that fills as the student reads through the material.
+ * The button unlocks only after the student has scrolled to the bottom.
  * ──────────────────────────────────────────────────────────────── */
 function StickyContinueBar({
   canContinue,
-  countdown,
+  scrollProgress,
   onContinue,
 }: {
   canContinue: boolean
-  countdown: number
+  scrollProgress: number
   onContinue: () => void
 }) {
-  // Visual progress that fills up as the timer counts down (0 → 100%).
-  // Assumes a 15-second initial countdown (matches useEffect in parent).
-  const TOTAL_COOLDOWN = 15
-  const elapsed = TOTAL_COOLDOWN - countdown
-  const progressPct = Math.max(
-    0,
-    Math.min(100, (elapsed / TOTAL_COOLDOWN) * 100)
-  )
-
   return (
     <div className="sticky top-0 z-40 w-full">
       <motion.div
@@ -527,7 +573,7 @@ function StickyContinueBar({
             <p className="text-white text-xs sm:text-sm leading-tight mt-0.5 line-clamp-1">
               {canContinue
                 ? 'Kamu sudah bisa lanjut latihan.'
-                : `Pelajari materi dulu… tombol aktif dalam ${countdown}s`}
+                : `Scroll dan baca materi sampai bawah… ${scrollProgress}%`}
             </p>
           </div>
 
@@ -550,29 +596,27 @@ function StickyContinueBar({
             ) : (
               <>
                 <svg
-                  className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin-slow"
+                  className="w-3.5 h-3.5 sm:w-4 sm:h-4"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth={2}
                 >
-                  <circle cx="12" cy="12" r="10" opacity="0.3" />
-                  <path d="M12 6v6l4 2" strokeLinecap="round" />
+                  <path d="M12 5v14M5 12l7 7 7-7" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                <span className="tabular-nums">{countdown}s</span>
+                <span className="tabular-nums">{scrollProgress}%</span>
               </>
             )}
           </button>
         </div>
 
-        {/* Fine progress bar beneath the bar while cooldown is active */}
+        {/* Scroll progress bar beneath the bar */}
         {!canContinue && (
           <div className="h-[3px] w-full bg-black/50">
             <motion.div
               className="h-full bg-gradient-to-r from-orange-400 via-amber-300 to-cyan-300"
-              initial={{ width: 0 }}
-              animate={{ width: `${progressPct}%` }}
-              transition={{ duration: 0.4, ease: 'linear' }}
+              animate={{ width: `${scrollProgress}%` }}
+              transition={{ duration: 0.15, ease: 'linear' }}
               style={{ boxShadow: '0 0 10px rgba(251,191,36,0.6)' }}
             />
           </div>

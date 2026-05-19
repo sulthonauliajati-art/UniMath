@@ -81,6 +81,23 @@ html[data-font-size="large"] { --font-size-base: 18px; }
   animation: pulse-slow 2s ease-in-out infinite;
 }
 
+/* ── Display Mode Overrides ──────────────────────────────────── */
+/* Wide mode: expand common content containers to use more horizontal space */
+html[data-display-mode="wide"] .max-w-lg {
+  max-width: 64rem !important; /* max-w-xl → max-w-5xl */
+}
+html[data-display-mode="wide"] .max-w-md {
+  max-width: 48rem !important;
+}
+html[data-display-mode="wide"] .max-w-sm {
+  max-width: 36rem !important;
+}
+
+/* Mobile mode: dark side bars background when page is constrained */
+html[data-display-mode="mobile"] body {
+  background: #020408;
+}
+
 /* Safe area for mobile devices with notch */
 @supports (padding: env(safe-area-inset-bottom)) {
   .safe-bottom {
