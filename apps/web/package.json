@@ -15,6 +15,7 @@
     "db:import": "npx tsx src/lib/db/import-practice.ts",
     "db:import-master": "npx tsx src/lib/db/import-master-practice.ts",
     "db:import-content": "npx tsx src/lib/db/import-material-contents.ts",
+    "db:update-checkpoints": "npx tsx src/lib/db/update-checkpoints.ts",
     "db:seed-content": "npx tsx src/lib/db/seed-materials-content.ts",
     "db:generate-tests": "npx tsx src/lib/db/generate-test-questions.ts"
   },

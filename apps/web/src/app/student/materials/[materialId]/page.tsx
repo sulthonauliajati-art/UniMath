@@ -65,10 +65,18 @@ export default function MaterialDetailPage() {
   const [fromGameOver, setFromGameOver] = useState(false)
   const [canContinue, setCanContinue] = useState(true)
   const [scrollProgress, setScrollProgress] = useState(0)
-  const [showBottomPopup, setShowBottomPopup] = useState(false)
+  const [scrollDone, setScrollDone] = useState(false)
+  const [timerDone, setTimerDone] = useState(false)
+  const [timeLeft, setTimeLeft] = useState(0)
+  const [checkpointPassed, setCheckpointPassed] = useState(false)
+  const [correctCheckpoints, setCorrectCheckpoints] = useState(0)
+
   const [checkpointAnswers, setCheckpointAnswers] = useState<Record<number, string>>({})
   const [checkpointRevealed, setCheckpointRevealed] = useState<Record<number, boolean>>({})
   const contentRef = useRef<HTMLDivElement>(null)
+
+  const MIN_STUDY_SECONDS = 90
+  const REQUIRED_CORRECT = 2
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'STUDENT')) {
@@ -76,6 +84,7 @@ export default function MaterialDetailPage() {
     }
   }, [user, isLoading, router])
 
+  // ── Initialize Wajib Belajar mode ──
   useEffect(() => {
     const studyData = sessionStorage.getItem('studyMaterial')
     if (studyData) {
@@ -83,41 +92,61 @@ export default function MaterialDetailPage() {
       if (data.materialId === materialId) {
         setFromGameOver(true)
         setCanContinue(false)
+        setTimeLeft(MIN_STUDY_SECONDS)
         sessionStorage.setItem('materialStudied_' + materialId, 'true')
       }
     }
   }, [materialId])
 
-  // ── Scroll-based progress tracking ──
-  // Listens to window scroll and calculates how far down the page the
-  // student has scrolled. When they reach ~95% of the content, we unlock
-  // the "Lanjut Latihan" button and show a floating popup at the bottom.
-  const handleScroll = useCallback(() => {
+  // ── Countdown timer (90s default) ──
+  useEffect(() => {
+    if (!fromGameOver || timerDone || checkpointPassed) return
+    if (timeLeft <= 0) {
+      setTimerDone(true)
+      return
+    }
+    const t = setTimeout(() => setTimeLeft(prev => prev - 1), 1000)
+    return () => clearTimeout(t)
+  }, [fromGameOver, timerDone, checkpointPassed, timeLeft])
+
+  // ── Unlock logic: scrollDone AND (timerDone OR checkpointPassed) ──
+  useEffect(() => {
     if (!fromGameOver || canContinue) return
+    const timeCondition = timerDone || checkpointPassed
+    if (scrollDone && timeCondition) {
+      setCanContinue(true)
+    }
+  }, [fromGameOver, canContinue, scrollDone, timerDone, checkpointPassed])
+
+  // ── Scroll-based progress tracking ──
+  const handleScroll = useCallback(() => {
+    if (!fromGameOver || scrollDone) return
 
     const scrollTop = window.scrollY || document.documentElement.scrollTop
     const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight
 
-    if (docHeight <= 0) return
+    if (docHeight <= 0) {
+      setScrollDone(true)
+      setScrollProgress(100)
+      return
+    }
 
     const progress = Math.min(100, Math.round((scrollTop / docHeight) * 100))
     setScrollProgress(progress)
 
-    // Unlock when user has scrolled to ~95% of the page
     if (progress >= 95) {
-      setCanContinue(true)
-      setShowBottomPopup(true)
+      setScrollDone(true)
+      setScrollProgress(100)
     }
-  }, [fromGameOver, canContinue])
+  }, [fromGameOver, scrollDone])
 
   useEffect(() => {
-    if (fromGameOver && !canContinue) {
+    if (fromGameOver && !scrollDone) {
       window.addEventListener('scroll', handleScroll, { passive: true })
-      // Initial check (content might be short enough to not need scrolling)
       handleScroll()
       return () => window.removeEventListener('scroll', handleScroll)
     }
-  }, [fromGameOver, canContinue, handleScroll])
+  }, [fromGameOver, scrollDone, handleScroll])
 
   useEffect(() => {
     fetchAll()
@@ -277,7 +306,17 @@ export default function MaterialDetailPage() {
               </div>
               {selected && !revealed && (
                 <button
-                  onClick={() => setCheckpointRevealed(prev => ({ ...prev, [idx]: true }))}
+                  onClick={() => {
+                    setCheckpointRevealed(prev => ({ ...prev, [idx]: true }))
+                    // Track correct checkpoint answers for Wajib Belajar bypass
+                    if (selected === item.answer) {
+                      const newCount = correctCheckpoints + 1
+                      setCorrectCheckpoints(newCount)
+                      if (newCount >= REQUIRED_CORRECT) {
+                        setCheckpointPassed(true)
+                      }
+                    }
+                  }}
                   className="px-3 py-1.5 rounded-lg text-xs font-medium bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/30 transition-all"
                 >
                   Cek Jawaban
@@ -333,11 +372,17 @@ export default function MaterialDetailPage() {
         <StickyContinueBar
           canContinue={canContinue}
           scrollProgress={scrollProgress}
+          scrollDone={scrollDone}
+          timerDone={timerDone}
+          timeLeft={timeLeft}
+          checkpointPassed={checkpointPassed}
+          correctCheckpoints={correctCheckpoints}
+          requiredCorrect={REQUIRED_CORRECT}
           onContinue={handleBackToPractice}
         />
       )}
 
-      <div ref={contentRef} className="relative z-10 p-4 sm:p-6 max-w-4xl mx-auto">
+      <div ref={contentRef} className={`relative z-10 p-4 sm:p-6 max-w-4xl mx-auto ${fromGameOver ? 'pb-24' : ''}`}>
         {/* Header */}
         <div className="flex items-center justify-between gap-2 mb-4 sm:mb-6">
           <Link href="/student/materials" className="text-text-secondary hover:text-white text-sm sm:text-base">
@@ -502,38 +547,62 @@ export default function MaterialDetailPage() {
         )}
       </div>
 
-      {/* ── FLOATING BOTTOM POPUP — appears when scroll unlocks in Wajib Belajar ── */}
-      <AnimatePresence>
-        {fromGameOver && showBottomPopup && (
-          <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 z-50 safe-bottom"
-          >
-            <div className="backdrop-blur-xl bg-[rgba(4,9,20,0.92)] border-t border-emerald-400/40 shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.8),0_-4px_20px_-4px_rgba(16,185,129,0.3)]">
-              <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-3">
-                <div className="flex-1 min-w-0">
-                  <p className="text-emerald-300 font-semibold text-sm sm:text-base flex items-center gap-2">
-                    ✅ Materi sudah dibaca!
-                  </p>
-                  <p className="text-slate-400 text-xs sm:text-sm mt-0.5">
-                    Kamu sudah scroll sampai bawah. Siap lanjut latihan?
-                  </p>
+      {/* ── FIXED BOTTOM BAR — always visible in Wajib Belajar mode ── */}
+      {fromGameOver && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 safe-bottom">
+          <div className="backdrop-blur-xl bg-[rgba(4,9,20,0.95)] border-t border-white/10 shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.8)]">
+            <div className="max-w-4xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3 flex items-center gap-3">
+              {/* Status indicators */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3 sm:gap-4 text-[10px] sm:text-xs">
+                  {/* Scroll check */}
+                  <span className={scrollDone ? 'text-emerald-400' : 'text-slate-500'}>
+                    {scrollDone ? '✅' : '⬜'} Scroll
+                  </span>
+                  {/* Timer / Checkpoint check */}
+                  <span className={timerDone || checkpointPassed ? 'text-emerald-400' : 'text-slate-500'}>
+                    {timerDone || checkpointPassed ? '✅' : '⬜'}
+                    {checkpointPassed
+                      ? ` Checkpoint (${correctCheckpoints}/${REQUIRED_CORRECT})`
+                      : ` ${timeLeft > 0 ? `${timeLeft}s` : 'Timer'}`}
+                  </span>
                 </div>
-                <button
-                  onClick={handleBackToPractice}
-                  className="shrink-0 px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl font-bold text-sm sm:text-base bg-gradient-to-r from-emerald-400 to-cyan-400 text-slate-900 shadow-[0_0_24px_-4px_rgba(16,185,129,0.8)] hover:shadow-[0_0_32px_-4px_rgba(16,185,129,1)] active:scale-95 transition-all flex items-center gap-2"
-                >
-                  <span>🚀</span>
-                  <span>Lanjut Latihan</span>
-                </button>
+                {!canContinue && (
+                  <p className="text-slate-500 text-[10px] sm:text-xs mt-0.5 line-clamp-1">
+                    {!scrollDone
+                      ? 'Scroll sampai bawah untuk membaca materi'
+                      : 'Tunggu waktu habis atau jawab benar 2 soal checkpoint'}
+                  </p>
+                )}
               </div>
+
+              {/* Button */}
+              <button
+                onClick={handleBackToPractice}
+                disabled={!canContinue}
+                className={[
+                  'shrink-0 px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 transition-all',
+                  canContinue
+                    ? 'bg-gradient-to-r from-emerald-400 to-cyan-400 text-slate-900 shadow-[0_0_20px_-4px_rgba(16,185,129,0.8)] hover:shadow-[0_0_28px_-4px_rgba(16,185,129,1)] active:scale-95'
+                    : 'bg-slate-700/60 text-slate-400 border border-slate-600/40 cursor-not-allowed',
+                ].join(' ')}
+              >
+                {canContinue ? (
+                  <>
+                    <span>🚀</span>
+                    <span>Lanjut Latihan</span>
+                  </>
+                ) : (
+                  <>
+                    <span>🔒</span>
+                    <span className="hidden sm:inline">Terkunci</span>
+                  </>
+                )}
+              </button>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+        </div>
+      )}
     </main>
   )
 }
@@ -541,21 +610,43 @@ export default function MaterialDetailPage() {
 /* ───────────────────────────────────────────────────────────────────
  * StickyContinueBar
  *
- * Prominent, sticky "Lanjut Latihan" banner displayed at the very top
- * of the material page when the student is redirected here after 3
- * consecutive wrong answers ("Wajib Belajar"). Shows a live scroll
- * progress bar that fills as the student reads through the material.
- * The button unlocks only after the student has scrolled to the bottom.
+ * Compact sticky bar at the top showing dual-condition progress:
+ * 1. Scroll progress (percentage)
+ * 2. Timer countdown OR checkpoint status
  * ──────────────────────────────────────────────────────────────── */
 function StickyContinueBar({
   canContinue,
   scrollProgress,
+  scrollDone,
+  timerDone,
+  timeLeft,
+  checkpointPassed,
+  correctCheckpoints,
+  requiredCorrect,
   onContinue,
 }: {
   canContinue: boolean
   scrollProgress: number
+  scrollDone: boolean
+  timerDone: boolean
+  timeLeft: number
+  checkpointPassed: boolean
+  correctCheckpoints: number
+  requiredCorrect: number
   onContinue: () => void
 }) {
+  // Status message for the top bar
+  const getStatusText = () => {
+    if (canContinue) return 'Semua syarat terpenuhi! 🎉'
+    const parts: string[] = []
+    if (!scrollDone) parts.push(`Scroll ${scrollProgress}%`)
+    else parts.push('Scroll ✅')
+    if (checkpointPassed) parts.push(`Checkpoint ✅`)
+    else if (!timerDone) parts.push(`⏱ ${timeLeft}s`)
+    else parts.push('Timer ✅')
+    return parts.join(' · ')
+  }
+
   return (
     <div className="sticky top-0 z-40 w-full">
       <motion.div
@@ -564,54 +655,29 @@ function StickyContinueBar({
         transition={{ duration: 0.35, ease: 'easeOut' }}
         className="backdrop-blur-xl bg-[rgba(7,17,36,0.88)] border-b border-cyan-400/30 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)]"
       >
-        <div className="max-w-4xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-3">
-          {/* Left-side status copy */}
+        <div className="max-w-4xl mx-auto px-3 sm:px-6 py-2 sm:py-2.5 flex items-center gap-2 sm:gap-3">
           <div className="flex-1 min-w-0">
             <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.15em] text-orange-300/90 font-semibold">
               📚 Wajib Belajar
             </p>
-            <p className="text-white text-xs sm:text-sm leading-tight mt-0.5 line-clamp-1">
-              {canContinue
-                ? 'Kamu sudah bisa lanjut latihan.'
-                : `Scroll dan baca materi sampai bawah… ${scrollProgress}%`}
+            <p className="text-white text-xs sm:text-sm leading-tight mt-0.5 line-clamp-1 tabular-nums">
+              {getStatusText()}
             </p>
           </div>
 
-          {/* Action button — changes appearance based on state */}
-          <button
-            onClick={onContinue}
-            disabled={!canContinue}
-            className={[
-              'shrink-0 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 transition-all relative overflow-hidden',
-              canContinue
-                ? 'bg-gradient-to-r from-emerald-400 to-cyan-400 text-slate-900 shadow-[0_0_20px_-4px_rgba(16,185,129,0.8)] hover:shadow-[0_0_28px_-4px_rgba(16,185,129,1)] active:scale-95'
-                : 'bg-slate-700/60 text-slate-300 border border-slate-500/40 cursor-not-allowed',
-            ].join(' ')}
-          >
-            {canContinue ? (
-              <>
-                <span>🚀</span>
-                <span>Lanjut Latihan</span>
-              </>
-            ) : (
-              <>
-                <svg
-                  className="w-3.5 h-3.5 sm:w-4 sm:h-4"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path d="M12 5v14M5 12l7 7 7-7" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                <span className="tabular-nums">{scrollProgress}%</span>
-              </>
-            )}
-          </button>
+          {canContinue && (
+            <button
+              onClick={onContinue}
+              className="shrink-0 px-3 sm:px-5 py-1.5 sm:py-2 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-emerald-400 to-cyan-400 text-slate-900 shadow-[0_0_20px_-4px_rgba(16,185,129,0.8)] hover:shadow-[0_0_28px_-4px_rgba(16,185,129,1)] active:scale-95 transition-all flex items-center gap-1.5"
+            >
+              <span>🚀</span>
+              <span>Lanjut</span>
+            </button>
+          )}
         </div>
 
-        {/* Scroll progress bar beneath the bar */}
-        {!canContinue && (
+        {/* Scroll progress bar */}
+        {!scrollDone && (
           <div className="h-[3px] w-full bg-black/50">
             <motion.div
               className="h-full bg-gradient-to-r from-orange-400 via-amber-300 to-cyan-300"
