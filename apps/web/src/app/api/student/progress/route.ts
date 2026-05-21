@@ -14,10 +14,12 @@ export async function GET() {
 
   const user = JSON.parse(userCookie.value)
 
-  // Get total floors and sessions from database
-  const [sessionStats] = await db
+  // Get the student's HIGHEST floor ever reached (the single source of truth
+  // for "lantai saat ini"). This is the MAX(floor) across ALL sessions
+  // regardless of material, so progress is never lost.
+  const [floorStats] = await db
     .select({
-      totalFloors: sql<number>`COALESCE(SUM(floor - 1), 0)`,
+      highestFloor: sql<number>`COALESCE(MAX(floor), 1)`,
       totalSessions: sql<number>`count(*)`,
     })
     .from(practiceSessions)
@@ -27,14 +29,14 @@ export async function GET() {
   const [attemptStats] = await db
     .select({
       totalAttempts: sql<number>`count(*)`,
-      correctAttempts: sql<number>`sum(case when is_correct = 1 then 1 else 0 end)`,
+      correctAttempts: sql<number>`COALESCE(sum(case when is_correct = 1 then 1 else 0 end), 0)`,
     })
     .from(practiceAttempts)
     .innerJoin(practiceSessions, eq(practiceAttempts.sessionId, practiceSessions.id))
     .where(eq(practiceSessions.studentUserId, user.id))
 
-  const totalFloors = sessionStats?.totalFloors || 0
-  const totalSessions = sessionStats?.totalSessions || 0
+  const currentFloor = floorStats?.highestFloor || 1
+  const totalSessions = floorStats?.totalSessions || 0
   const totalAttempts = attemptStats?.totalAttempts || 0
   const correctAttempts = attemptStats?.correctAttempts || 0
   const accuracy = totalAttempts > 0 ? Math.round((correctAttempts / totalAttempts) * 100) : 0
@@ -49,18 +51,16 @@ export async function GET() {
   // Get all materials
   const allMaterials = await db.select().from(materials).orderBy(materials.order)
 
-  // Determine current material based on total floors climbed
-  const materialIndex = Math.min(Math.floor(totalFloors / 10), allMaterials.length - 1)
+  // Determine current material based on highest floor
+  // Every 10 floors = next material
+  const materialIndex = Math.min(Math.floor((currentFloor - 1) / 10), allMaterials.length - 1)
   const currentMaterial = allMaterials[materialIndex] || allMaterials[0]
-
-  // Current floor within the material (1-10)
-  const currentFloor = (totalFloors % 10) + 1
 
   return NextResponse.json({
     currentFloor,
-    totalFloors,
+    totalFloors: currentFloor, // alias for backward compat
     currentMaterial: currentMaterial?.title || 'Matematika',
-    currentMaterialId: currentMaterial?.id || 'M001',
+    currentMaterialId: currentMaterial?.id || 'M1A',
     accuracy,
     totalSessions,
     totalXP,

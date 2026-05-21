@@ -28,10 +28,11 @@ export async function GET(request: NextRequest) {
 
     const userId = tokenData.userId
 
-    // Get session stats
+    // Get session stats — use MAX(floor) as the single source of truth for
+    // the student's highest floor ever reached.
     const [sessionStats] = await db
       .select({
-        totalFloors: sql<number>`COALESCE(SUM(floor - 1), 0)`,
+        totalFloors: sql<number>`COALESCE(MAX(floor), 1)`,
         totalSessions: sql<number>`count(*)`,
       })
       .from(practiceSessions)
@@ -66,7 +67,7 @@ export async function GET(request: NextRequest) {
       allStudents.map(async (student) => {
         const [sStats] = await db
           .select({
-            totalFloors: sql<number>`COALESCE(SUM(floor - 1), 0)`,
+            totalFloors: sql<number>`COALESCE(MAX(floor), 1)`,
           })
           .from(practiceSessions)
           .where(eq(practiceSessions.studentUserId, student.id))
@@ -74,7 +75,7 @@ export async function GET(request: NextRequest) {
         return {
           id: student.id,
           points: student.points || 0,
-          totalFloors: sStats?.totalFloors || 0,
+          totalFloors: sStats?.totalFloors || 1,
         }
       })
     )
@@ -89,19 +90,19 @@ export async function GET(request: NextRequest) {
     // Get progress per material
     const materialProgress = await Promise.all(
       allMaterials.map(async (material) => {
-        // Get floors completed for this material
+        // Get highest floor for this material
         const [matStats] = await db
           .select({
-            floorsCompleted: sql<number>`COALESCE(SUM(floor - 1), 0)`,
+            highestFloor: sql<number>`COALESCE(MAX(floor), 1)`,
           })
           .from(practiceSessions)
           .where(
             sql`${practiceSessions.studentUserId} = ${userId} AND ${practiceSessions.materialId} = ${material.id}`
           )
 
-        // Progress is based on floors (10 floors = 100%)
-        const floorsCompleted = matStats?.floorsCompleted || 0
-        const progress = Math.min(Math.round((floorsCompleted / 10) * 100), 100)
+        // Progress is based on highest floor (10 floors = 100%)
+        const highestFloor = matStats?.highestFloor || 1
+        const progress = Math.min(Math.round(((highestFloor - 1) / 10) * 100), 100)
 
         return {
           id: material.id,

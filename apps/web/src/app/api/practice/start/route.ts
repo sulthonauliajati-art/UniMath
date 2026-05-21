@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { db } from '@/lib/db/client'
 import { questions, materials, practiceSessions, practiceAttempts } from '@/lib/db/schema'
-import { eq, and, or, desc, notInArray } from 'drizzle-orm'
+import { eq, and, or, desc, notInArray, sql } from 'drizzle-orm'
 
 const DIFFICULTY_LABELS: Record<number, string> = {
   1: 'Mudah',
@@ -200,7 +200,18 @@ export async function POST(request: NextRequest) {
 
     // ──────────────────────────────────────────────────────────────
     // NO ACTIVE SESSION — Create a brand new one
+    // Start from the student's HIGHEST floor ever reached (across ALL
+    // sessions and ALL materials) so progress is never lost.
     // ──────────────────────────────────────────────────────────────
+    const [highestFloorRow] = await db
+      .select({
+        maxFloor: sql<number>`COALESCE(MAX(floor), 1)`,
+      })
+      .from(practiceSessions)
+      .where(eq(practiceSessions.studentUserId, userId))
+
+    const startingFloor = highestFloorRow?.maxFloor || 1
+
     const startDifficulty = 2
     let availableQuestions = await db
       .select()
@@ -246,7 +257,7 @@ export async function POST(request: NextRequest) {
       id: sessionId,
       studentUserId: userId,
       materialId,
-      floor: 1,
+      floor: startingFloor,
       consecutiveWrong: 0,
       currentDifficulty: firstQuestion.difficulty,
       currentQuestionId: firstQuestion.id,
@@ -258,13 +269,13 @@ export async function POST(request: NextRequest) {
       sessionId,
       materialId,
       materialName: material?.title || 'Matematika',
-      floor: 1,
+      floor: startingFloor,
       consecutiveWrong: 0,
       currentDifficulty: firstQuestion.difficulty,
       difficultyLabel: DIFFICULTY_LABELS[firstQuestion.difficulty] || 'Sedang',
       mode: 'practice',
       question: formatQuestionForClient(firstQuestion),
-      stats: { floorsClimbed: 0, correctAnswers: 0, totalAttempts: 0 },
+      stats: { floorsClimbed: startingFloor - 1, correctAnswers: 0, totalAttempts: 0 },
     })
   } catch (error) {
     console.error('Start practice error:', error)
