@@ -133,6 +133,29 @@ export default function GamePlayPage() {
     initSession()
   }, [user, isLoading, router, materialId])
 
+  // Auto-save session state to sessionStorage on every gameState change
+  // This ensures progress is preserved even if the student navigates away
+  useEffect(() => {
+    if (gameState) {
+      sessionStorage.setItem(
+        'practiceSession',
+        JSON.stringify({
+          sessionId: gameState.sessionId,
+          floor: gameState.floor,
+          consecutiveWrong: gameState.consecutiveWrong,
+          currentDifficulty: gameState.currentDifficulty,
+          difficultyLabel: gameState.difficultyLabel,
+          question: gameState.question,
+          materialId: gameState.materialId,
+          materialName: gameState.materialName,
+          stats: gameState.stats,
+          streak: gameState.streak,
+          sessionXP: gameState.sessionXP,
+        })
+      )
+    }
+  }, [gameState])
+
   const fireConfetti = useCallback(() => {
     confetti({
       particleCount: 100,
