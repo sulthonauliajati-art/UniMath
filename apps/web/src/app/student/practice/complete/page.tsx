@@ -12,6 +12,8 @@ interface PracticeStats {
   floorsClimbed: number
   correctAnswers: number
   totalAttempts: number
+  sessionXP?: number
+  bestStreak?: number
   materialId?: string
   materialTitle?: string
 }
@@ -167,21 +169,26 @@ export default function PracticeCompletePage() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
-                className="grid grid-cols-3 gap-2.5 sm:gap-3 mb-6"
+                className="grid grid-cols-2 gap-2.5 sm:gap-3 mb-6"
               >
                 <StatPill
-                  value={stats.floorsClimbed}
-                  label="Lantai"
+                  value={`+${stats.sessionXP || 0}`}
+                  label="⭐ XP Earned"
+                  color="amber"
+                />
+                <StatPill
+                  value={stats.bestStreak || 0}
+                  label="🔥 Best Streak"
                   color="cyan"
                 />
                 <StatPill
                   value={stats.correctAnswers}
-                  label="Benar"
-                  color="cyan"
+                  label="✅ Benar"
+                  color="emerald"
                 />
                 <StatPill
                   value={`${accuracy}%`}
-                  label="Akurasi"
+                  label="📊 Akurasi"
                   color={
                     accuracy >= 70 ? 'emerald' : accuracy >= 50 ? 'amber' : 'red'
                   }

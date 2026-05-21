@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { db } from '@/lib/db/client'
-import { materials, practiceSessions, practiceAttempts } from '@/lib/db/schema'
+import { materials, practiceSessions, practiceAttempts, users } from '@/lib/db/schema'
 import { eq, sql } from 'drizzle-orm'
 
 export async function GET() {
@@ -39,6 +39,13 @@ export async function GET() {
   const correctAttempts = attemptStats?.correctAttempts || 0
   const accuracy = totalAttempts > 0 ? Math.round((correctAttempts / totalAttempts) * 100) : 0
 
+  // Get user's total XP points
+  const [userData] = await db
+    .select({ totalPoints: users.totalPoints })
+    .from(users)
+    .where(eq(users.id, user.id))
+  const totalXP = userData?.totalPoints || 0
+
   // Get all materials
   const allMaterials = await db.select().from(materials).orderBy(materials.order)
 
@@ -56,5 +63,6 @@ export async function GET() {
     currentMaterialId: currentMaterial?.id || 'M001',
     accuracy,
     totalSessions,
+    totalXP,
   })
 }

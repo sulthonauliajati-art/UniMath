@@ -14,12 +14,13 @@ interface Stats {
   totalFloors: number
   accuracy: number
   totalSessions: number
+  totalXP: number
 }
 
 export default function StudentDashboard() {
   const router = useRouter()
   const { user, token, isLoading, logout } = useAuth()
-  const [stats, setStats] = useState<Stats>({ totalFloors: 0, accuracy: 0, totalSessions: 0 })
+  const [stats, setStats] = useState<Stats>({ totalFloors: 0, accuracy: 0, totalSessions: 0, totalXP: 0 })
   const [loadingStats, setLoadingStats] = useState(true)
   // P1 Fix: Onboarding state
   const [showOnboarding, setShowOnboarding] = useState(false)
@@ -44,7 +45,17 @@ export default function StudentDashboard() {
             totalFloors: data.stats?.totalFloors || 0,
             accuracy: data.stats?.accuracy || 0,
             totalSessions: data.stats?.totalSessions || 0,
+            totalXP: 0,
           })
+          
+          // Fetch totalXP from progress API
+          try {
+            const progressRes = await fetch('/api/student/progress')
+            if (progressRes.ok) {
+              const progressData = await progressRes.json()
+              setStats(prev => ({ ...prev, totalXP: progressData.totalXP || 0 }))
+            }
+          } catch {}
           
           // P1 Fix: Show onboarding for new users (no sessions yet)
           const hasSeenOnboarding = localStorage.getItem('unimath_onboarding_seen')
@@ -191,7 +202,7 @@ export default function StudentDashboard() {
            {/* Top Hexagon Badge */}
            <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-30">
              <div className="w-12 h-12 bg-uni-bg-secondary rounded-xl border border-uni-accent shadow-[0_0_15px_rgba(0,119,255,0.5)] rotate-45 flex items-center justify-center">
-               <span className="-rotate-45 text-uni-accent font-bold text-xl">{stats.totalFloors}</span>
+               <span className="-rotate-45 text-uni-accent font-bold text-xl">{stats.totalXP}</span>
              </div>
            </div>
 
@@ -203,7 +214,7 @@ export default function StudentDashboard() {
               Lanjut Berlatih, {user.name.split(' ')[0]}!
             </h2>
             <p className="text-uni-primary text-sm font-medium mb-6">
-              Lantai Saat Ini: {loadingStats ? '...' : stats.totalFloors}
+              ⭐ Total XP: {loadingStats ? '...' : stats.totalXP}
             </p>
 
             {/* Stats Row */}
@@ -215,8 +226,8 @@ export default function StudentDashboard() {
               </div>
               <div className="text-center border-l border-r border-white/10">
                  <div className="text-xl mb-1">⭐</div>
-                 <div className="text-lg font-bold text-uni-warning">{stats.totalFloors * 10}</div>
-                 <div className="text-[10px] text-text-secondary uppercase tracking-wider">Poin</div>
+                 <div className="text-lg font-bold text-uni-warning">{stats.totalXP}</div>
+                 <div className="text-[10px] text-text-secondary uppercase tracking-wider">XP</div>
               </div>
               <div className="text-center">
                  <div className="text-xl mb-1">🏆</div>

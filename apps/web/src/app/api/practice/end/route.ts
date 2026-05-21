@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db/client'
-import { practiceSessions, practiceAttempts, classStudents, classes, schools, teacherProfiles } from '@/lib/db/schema'
+import { practiceSessions, practiceAttempts, classStudents, classes, schools, teacherProfiles, users } from '@/lib/db/schema'
 import { eq, sql } from 'drizzle-orm'
 
 
@@ -34,7 +34,7 @@ async function awardTeacherPoints(studentUserId: string, pointsToAdd: number) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { sessionId, reason } = await request.json()
+    const { sessionId, reason, sessionXP } = await request.json()
 
     if (!sessionId) {
       return NextResponse.json(
@@ -92,8 +92,26 @@ export async function POST(request: NextRequest) {
       await awardTeacherPoints(session.studentUserId, teacherPoints)
     }
 
+    // Award XP to student
+    if (sessionXP && sessionXP > 0) {
+      await db
+        .update(users)
+        .set({
+          totalPoints: sql`COALESCE(total_points, 0) + ${sessionXP}`,
+        })
+        .where(eq(users.id, session.studentUserId))
+    }
+
+    // Get updated totalXP
+    const [updatedUser] = await db
+      .select({ totalPoints: users.totalPoints })
+      .from(users)
+      .where(eq(users.id, session.studentUserId))
+    const totalXP = updatedUser?.totalPoints || 0
+
     return NextResponse.json({
       success: true,
+      totalXP,
       stats: {
         floorsClimbed: session.floor - 1,
         correctAnswers: attemptStats?.correctAnswers || 0,

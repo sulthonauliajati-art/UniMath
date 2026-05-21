@@ -34,9 +34,21 @@ interface GameState {
   isSubmitting: boolean
   currentHint: string | null
   stats: { floorsClimbed: number; correctAnswers: number; totalAttempts: number }
+  streak: number
+  sessionXP: number
+  lastXPGain: number
 }
 
 const TOTAL_FLOORS = 10
+
+/** XP multiplier based on current correct-answer streak */
+function getXPMultiplier(streak: number): number {
+  if (streak >= 10) return 3
+  if (streak >= 5) return 2
+  if (streak >= 3) return 1.5
+  return 1
+}
+const BASE_XP = 10
 
 const DIFFICULTY_COLORS: Record<number, { bg: string; border: string; text: string; label: string }> = {
   1: { bg: 'bg-emerald-500/20', border: 'border-emerald-400/60', text: 'text-emerald-300', label: 'Mudah' },
@@ -53,6 +65,7 @@ export default function GamePlayPage() {
   const [, setRobotState] = useState<'idle' | 'climbing' | 'celebrating'>('idle')
   const [showWrongFeedback, setShowWrongFeedback] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [showXPFloat, setShowXPFloat] = useState(false)
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'STUDENT')) {
@@ -79,6 +92,9 @@ export default function GamePlayPage() {
           isSubmitting: false,
           currentHint: null,
           stats: data.stats || { floorsClimbed: 0, correctAnswers: 0, totalAttempts: 0 },
+          streak: data.streak || 0,
+          sessionXP: data.sessionXP || 0,
+          lastXPGain: 0,
         })
       } else {
         try {
@@ -101,6 +117,9 @@ export default function GamePlayPage() {
               isSubmitting: false,
               currentHint: null,
               stats: data.stats,
+              streak: 0,
+              sessionXP: 0,
+              lastXPGain: 0,
             })
           } else {
             router.push(`/student/practice/${materialId}/start`)
@@ -158,22 +177,29 @@ export default function GamePlayPage() {
         setRobotState('celebrating')
         fireConfetti()
 
-        setGameState((prev) =>
-          prev
-            ? {
-                ...prev,
-                showCorrectModal: true,
-                isSubmitting: false,
-                currentHint: null,
-                stats: {
-                  ...prev.stats,
-                  floorsClimbed: prev.stats.floorsClimbed + 1,
-                  correctAnswers: prev.stats.correctAnswers + 1,
-                  totalAttempts: prev.stats.totalAttempts + 1,
-                },
-              }
-            : null
-        )
+        setGameState((prev) => {
+          if (!prev) return null
+          const newStreak = prev.streak + 1
+          const multiplier = getXPMultiplier(newStreak)
+          const xpGain = Math.round(BASE_XP * multiplier)
+          return {
+            ...prev,
+            showCorrectModal: true,
+            isSubmitting: false,
+            currentHint: null,
+            streak: newStreak,
+            sessionXP: prev.sessionXP + xpGain,
+            lastXPGain: xpGain,
+            stats: {
+              ...prev.stats,
+              floorsClimbed: prev.stats.floorsClimbed + 1,
+              correctAnswers: prev.stats.correctAnswers + 1,
+              totalAttempts: prev.stats.totalAttempts + 1,
+            },
+          }
+        })
+        setShowXPFloat(true)
+        setTimeout(() => setShowXPFloat(false), 1200)
 
         setTimeout(() => {
           setRobotState('climbing')
@@ -225,6 +251,8 @@ export default function GamePlayPage() {
                   isSubmitting: false,
                   showMustStudyModal: true,
                   currentHint: null,
+                  streak: 0,
+                  lastXPGain: 0,
                   stats: { ...prev.stats, totalAttempts: prev.stats.totalAttempts + 1 },
                 }
               : null
@@ -242,6 +270,8 @@ export default function GamePlayPage() {
               selectedAnswer: null,
               isSubmitting: false,
               currentHint: data.currentHint || null,
+              streak: 0,
+              lastXPGain: 0,
               stats: { ...prev.stats, totalAttempts: prev.stats.totalAttempts + 1 },
             }
           })
@@ -264,6 +294,7 @@ export default function GamePlayPage() {
           sessionId: gameState.sessionId,
           reason: 'user_quit',
           stats: gameState.stats,
+          sessionXP: gameState.sessionXP,
         }),
       })
     } catch (error) {
@@ -273,6 +304,8 @@ export default function GamePlayPage() {
       'practiceStats',
       JSON.stringify({
         ...gameState.stats,
+        sessionXP: gameState.sessionXP,
+        bestStreak: gameState.streak,
         materialId: gameState.materialId,
         materialTitle: gameState.materialName,
       })
@@ -533,34 +566,68 @@ export default function GamePlayPage() {
         </motion.div>
       </section>
 
-      {/* ── BOTTOM STATUS BAR ──────────────────────────────────────── */}
+      {/* ── BOTTOM STATUS BAR — Streak + XP ────────────────────────── */}
       <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-20 w-[calc(100%-2rem)] max-w-md pointer-events-none">
-        <div className="pointer-events-auto flex items-center gap-2 px-4 py-2.5 rounded-full bg-[rgba(7,17,36,0.8)] border border-cyan-400/40 backdrop-blur-md shadow-[0_0_24px_-8px_rgba(6,182,212,0.8)]">
-          <span className="text-cyan-300 text-lg">✨</span>
-          <div className="flex-1">
-            <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.15em] text-white/60 mb-0.5">
-              <span>XP · Lantai</span>
-              <span className="text-cyan-300">
-                {gameState.stats.correctAnswers} / {gameState.floor}
-              </span>
-            </div>
-            <div className="h-1.5 rounded-full bg-black/60 overflow-hidden">
-              <motion.div
-                className="h-full bg-gradient-to-r from-cyan-400 to-emerald-400"
-                initial={{ width: 0 }}
-                animate={{
-                  width: `${Math.min(
-                    100,
-                    (gameState.stats.correctAnswers /
-                      Math.max(1, gameState.stats.totalAttempts)) *
-                      100
-                  )}%`,
-                }}
-                transition={{ duration: 0.6 }}
-                style={{ boxShadow: '0 0 8px rgba(6,182,212,0.7)' }}
-              />
+        <div className="pointer-events-auto flex items-center gap-3 px-4 py-2.5 rounded-full bg-[rgba(7,17,36,0.85)] border border-cyan-400/40 backdrop-blur-md shadow-[0_0_24px_-8px_rgba(6,182,212,0.8)]">
+          {/* Streak */}
+          <div className="flex items-center gap-1.5">
+            <motion.span
+              key={gameState.streak}
+              initial={{ scale: 1.6, rotate: -15 }}
+              animate={{ scale: 1, rotate: 0 }}
+              className="text-lg"
+            >
+              {gameState.streak >= 5 ? '🔥' : gameState.streak >= 3 ? '⚡' : '💫'}
+            </motion.span>
+            <div className="text-center leading-none">
+              <motion.span
+                key={gameState.streak}
+                initial={{ scale: 1.4, color: '#fbbf24' }}
+                animate={{ scale: 1, color: gameState.streak >= 3 ? '#fb923c' : '#94a3b8' }}
+                className="text-sm font-bold tabular-nums block"
+              >
+                {gameState.streak}
+              </motion.span>
+              <span className="text-[9px] uppercase tracking-wider text-white/40">Streak</span>
             </div>
           </div>
+
+          {/* Divider */}
+          <div className="w-px h-6 bg-white/10" />
+
+          {/* XP */}
+          <div className="flex-1 relative">
+            <div className="flex items-center gap-1.5">
+              <span className="text-amber-400 text-sm">⭐</span>
+              <motion.span
+                key={gameState.sessionXP}
+                initial={{ scale: 1.2 }}
+                animate={{ scale: 1 }}
+                className="text-sm font-bold text-amber-300 tabular-nums"
+              >
+                +{gameState.sessionXP} XP
+              </motion.span>
+              {gameState.streak >= 3 && (
+                <span className="text-[10px] text-orange-400 font-semibold">×{getXPMultiplier(gameState.streak)}</span>
+              )}
+            </div>
+            {/* Floating +XP animation */}
+            <AnimatePresence>
+              {showXPFloat && gameState.lastXPGain > 0 && (
+                <motion.div
+                  initial={{ opacity: 1, y: 0 }}
+                  animate={{ opacity: 0, y: -28 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 1 }}
+                  className="absolute -top-2 left-8 text-xs font-bold text-emerald-300 pointer-events-none"
+                >
+                  +{gameState.lastXPGain}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* End button */}
           <button
             onClick={handleEndSession}
             className="ml-1 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-slate-900 bg-gradient-to-r from-teal-300 to-cyan-300 shadow-[0_0_12px_-2px_rgba(6,182,212,0.7)] active:scale-95 transition"
@@ -598,10 +665,18 @@ export default function GamePlayPage() {
                 <h2 className="text-2xl sm:text-3xl font-bold text-emerald-300 mb-2">
                   Benar!
                 </h2>
-                <p className="text-white text-sm sm:text-base font-medium">
+                <p className="text-white text-sm sm:text-base font-medium mb-2">
                   Naik ke lantai{' '}
                   <span className="text-cyan-300 font-bold">{gameState.floor + 1}</span>! 🚀
                 </p>
+                <div className="flex items-center justify-center gap-3 mt-3">
+                  <span className="text-amber-300 font-bold text-sm">⭐ +{gameState.lastXPGain} XP</span>
+                  {gameState.streak >= 3 && (
+                    <span className="text-orange-400 text-xs font-semibold px-2 py-0.5 rounded-full bg-orange-500/20 border border-orange-400/30">
+                      🔥 Streak {gameState.streak} (×{getXPMultiplier(gameState.streak)})
+                    </span>
+                  )}
+                </div>
               </GlassCard>
             </motion.div>
           </motion.div>

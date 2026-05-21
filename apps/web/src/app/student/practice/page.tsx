@@ -12,7 +12,7 @@ export default function PracticePage() {
   const router = useRouter()
   const { user, isLoading } = useAuth()
   const [loading, setLoading] = useState(false)
-  const [currentFloor, setCurrentFloor] = useState(1)
+  const [totalXP, setTotalXP] = useState(0)
   const [currentMaterial, setCurrentMaterial] = useState('Penjumlahan Dasar')
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export default function PracticePage() {
       try {
         const res = await fetch('/api/student/progress')
         const data = await res.json()
-        if (data.currentFloor) setCurrentFloor(data.currentFloor)
+        if (data.totalXP !== undefined) setTotalXP(data.totalXP)
         if (data.currentMaterial) setCurrentMaterial(data.currentMaterial)
       } catch (error) {
         console.error('Failed to fetch progress:', error)
@@ -85,10 +85,10 @@ export default function PracticePage() {
             <div className="bg-black/40 border border-cyan-500/20 rounded-xl p-4 mb-6 space-y-2">
               <div className="flex justify-between items-center">
                 <span className="text-slate-400 text-xs sm:text-sm uppercase tracking-wide">
-                  Lantai saat ini
+                  ⭐ Total XP
                 </span>
-                <span className="text-cyan-300 font-bold text-base sm:text-lg">
-                  {currentFloor}
+                <span className="text-amber-300 font-bold text-base sm:text-lg">
+                  {totalXP}
                 </span>
               </div>
               <div className="flex justify-between items-center">
