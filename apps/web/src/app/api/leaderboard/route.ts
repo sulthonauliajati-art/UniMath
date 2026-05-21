@@ -62,8 +62,8 @@ export async function GET(request: NextRequest) {
       })
     )
 
-    // Sort by total floors (descending)
-    leaderboard.sort((a, b) => b.totalFloors - a.totalFloors)
+    // Sort by XP points (descending), then totalFloors as tiebreaker
+    leaderboard.sort((a, b) => b.points - a.points || b.totalFloors - a.totalFloors)
 
     // Add rank
     const rankedLeaderboard = leaderboard.slice(0, limit).map((student, index) => ({

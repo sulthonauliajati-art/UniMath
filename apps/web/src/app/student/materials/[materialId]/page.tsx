@@ -329,10 +329,7 @@ export default function MaterialDetailPage() {
                     animate={{ opacity: 1, height: 'auto' }}
                     className={`mt-2 p-2 rounded-lg text-xs ${isCorrect ? 'bg-emerald-500/10 text-emerald-300' : 'bg-red-500/10 text-red-300'}`}
                   >
-                    {isCorrect ? '✅ Benar!' : `❌ Salah. Jawaban: ${item.answer}`}
-                    {item.explanation && (
-                      <p className="text-slate-300 mt-1">💡 {item.explanation}</p>
-                    )}
+                    {isCorrect ? '✅ Benar!' : '❌ Salah, coba lagi!'}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -382,7 +379,7 @@ export default function MaterialDetailPage() {
         />
       )}
 
-      <div ref={contentRef} className={`relative z-10 p-4 sm:p-6 max-w-4xl mx-auto ${fromGameOver ? 'pb-24' : ''}`}>
+      <div ref={contentRef} className={`relative z-10 p-4 sm:p-6 max-w-4xl mx-auto ${fromGameOver ? 'pb-36' : ''}`}>
         {/* Header */}
         <div className="flex items-center justify-between gap-2 mb-4 sm:mb-6">
           <Link href="/student/materials" className="text-text-secondary hover:text-white text-sm sm:text-base">

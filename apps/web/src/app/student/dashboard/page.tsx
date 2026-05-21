@@ -10,6 +10,16 @@ import { ProgressBar } from '@/components/ui/ProgressBar'
 import { useAuth } from '@/lib/auth/context'
 import { LoadingScreen } from '@/components/ui/LoadingScreen'
 
+/** Convert XP to badge tier */
+function getBadge(xp: number): { name: string; emoji: string; color: string } {
+  if (xp >= 500) return { name: 'Master', emoji: '👑', color: 'text-yellow-300' }
+  if (xp >= 300) return { name: 'Diamond', emoji: '💎', color: 'text-cyan-300' }
+  if (xp >= 150) return { name: 'Gold', emoji: '🏅', color: 'text-amber-400' }
+  if (xp >= 80) return { name: 'Silver', emoji: '🥈', color: 'text-gray-300' }
+  if (xp >= 30) return { name: 'Bronze', emoji: '🥉', color: 'text-orange-400' }
+  return { name: 'Starter', emoji: '⭐', color: 'text-slate-400' }
+}
+
 interface Stats {
   totalFloors: number
   accuracy: number
@@ -202,7 +212,7 @@ export default function StudentDashboard() {
            {/* Top Hexagon Badge */}
            <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-30">
              <div className="w-12 h-12 bg-uni-bg-secondary rounded-xl border border-uni-accent shadow-[0_0_15px_rgba(0,119,255,0.5)] rotate-45 flex items-center justify-center">
-               <span className="-rotate-45 text-uni-accent font-bold text-xl">{stats.totalXP}</span>
+               <span className="-rotate-45 text-2xl">{getBadge(stats.totalXP).emoji}</span>
              </div>
            </div>
 
@@ -213,8 +223,8 @@ export default function StudentDashboard() {
             <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">
               Lanjut Berlatih, {user.name.split(' ')[0]}!
             </h2>
-            <p className="text-uni-primary text-sm font-medium mb-6">
-              ⭐ Total XP: {loadingStats ? '...' : stats.totalXP}
+            <p className={`text-sm font-medium mb-6 ${getBadge(stats.totalXP).color}`}>
+              {getBadge(stats.totalXP).emoji} {getBadge(stats.totalXP).name} · {stats.totalXP} XP
             </p>
 
             {/* Stats Row */}
@@ -225,14 +235,14 @@ export default function StudentDashboard() {
                  <div className="text-[10px] text-text-secondary uppercase tracking-wider">Akurasi</div>
               </div>
               <div className="text-center border-l border-r border-white/10">
-                 <div className="text-xl mb-1">⭐</div>
-                 <div className="text-lg font-bold text-uni-warning">{stats.totalXP}</div>
-                 <div className="text-[10px] text-text-secondary uppercase tracking-wider">XP</div>
+                 <div className="text-xl mb-1">{getBadge(stats.totalXP).emoji}</div>
+                 <div className={`text-lg font-bold ${getBadge(stats.totalXP).color}`}>{getBadge(stats.totalXP).name}</div>
+                 <div className="text-[10px] text-text-secondary uppercase tracking-wider">Badge</div>
               </div>
               <div className="text-center">
-                 <div className="text-xl mb-1">🏆</div>
-                 <div className="text-lg font-bold text-uni-success">12</div>
-                 <div className="text-[10px] text-text-secondary uppercase tracking-wider">Ranking</div>
+                 <div className="text-xl mb-1">🏢</div>
+                 <div className="text-lg font-bold text-uni-primary">{loadingStats ? '...' : stats.totalFloors}</div>
+                 <div className="text-[10px] text-text-secondary uppercase tracking-wider">Lantai</div>
               </div>
             </div>
 
@@ -268,25 +278,25 @@ export default function StudentDashboard() {
            </Link>
         </div>
 
-        {/* Test Mode Navigation (Pretest/Posttest) */}
+        {/* Test Mode + Profile Navigation */}
         <div className="grid grid-cols-2 gap-4 w-full relative z-20 mt-4">
-           <Link href="/student/test?type=pretest">
+           <Link href="/student/test">
               <GlassCard hover className="p-4 flex flex-col items-center justify-center text-center h-full glass-strong">
                  <div className="w-12 h-12 bg-uni-bg/50 rounded-full border border-uni-accent/30 flex items-center justify-center mb-3 text-2xl shadow-[inset_0_0_10px_rgba(0,119,255,0.2)]">
                     📝
                  </div>
-                 <h3 className="text-sm font-bold text-white mb-1">Pre-test</h3>
-                 <p className="text-[10px] text-text-secondary">Uji pemahaman awal</p>
+                 <h3 className="text-sm font-bold text-white mb-1">Tes</h3>
+                 <p className="text-[10px] text-text-secondary">Pre-test & Post-test</p>
               </GlassCard>
            </Link>
 
-           <Link href="/student/test?type=posttest">
+           <Link href="/student/profile">
               <GlassCard hover className="p-4 flex flex-col items-center justify-center text-center h-full glass-strong">
                  <div className="w-12 h-12 bg-uni-bg/50 rounded-full border border-uni-success/30 flex items-center justify-center mb-3 text-2xl shadow-[inset_0_0_10px_rgba(16,185,129,0.2)]">
-                    ✅
+                    👤
                  </div>
-                 <h3 className="text-sm font-bold text-white mb-1">Post-test</h3>
-                 <p className="text-[10px] text-text-secondary">Ukur peningkatan</p>
+                 <h3 className="text-sm font-bold text-white mb-1">Profil</h3>
+                 <p className="text-[10px] text-text-secondary">Statistik & pengaturan</p>
               </GlassCard>
            </Link>
         </div>

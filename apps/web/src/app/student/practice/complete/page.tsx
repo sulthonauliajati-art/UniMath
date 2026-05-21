@@ -94,14 +94,8 @@ export default function PracticeCompletePage() {
 
   const getRecommendation = () => {
     if (!stats) return null
-    if (accuracy >= 80) {
-      return {
-        text: 'Lanjut ke Materi Berikutnya',
-        href: '/student/materials',
-      }
-    }
     return {
-      text: 'Ulangi Latihan',
+      text: 'Latihan Lagi',
       href: stats.materialId
         ? `/student/practice/${stats.materialId}/start`
         : '/student/practice',
@@ -234,13 +228,8 @@ export default function PracticeCompletePage() {
                   </button>
                 </Link>
               )}
-              <Link href="/student/materials" className="block">
-                <button className="w-full py-3 rounded-xl bg-black/40 border border-cyan-400/50 text-white font-semibold text-sm sm:text-base hover:bg-cyan-500/10 transition-colors">
-                  Pilih Materi Lain
-                </button>
-              </Link>
               <Link href="/student/dashboard" className="block">
-                <button className="w-full py-2.5 rounded-xl text-slate-400 hover:text-white text-sm transition-colors">
+                <button className="w-full py-3 rounded-xl bg-black/40 border border-cyan-400/50 text-white font-semibold text-sm sm:text-base hover:bg-cyan-500/10 transition-colors">
                   Kembali ke Dashboard
                 </button>
               </Link>
