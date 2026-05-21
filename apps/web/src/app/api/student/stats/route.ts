@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db/client'
-import { materials, practiceSessions, practiceAttempts } from '@/lib/db/schema'
+import { users, materials, practiceSessions, practiceAttempts } from '@/lib/db/schema'
 import { eq, sql } from 'drizzle-orm'
 import { validateToken } from '@/lib/auth/utils'
 
@@ -53,6 +53,36 @@ export async function GET(request: NextRequest) {
     const correctAttempts = attemptStats?.correctAttempts || 0
     const accuracy = totalAttempts > 0 ? Math.round((correctAttempts / totalAttempts) * 100) : 0
 
+    // Calculate rank in leaderboard
+    const allStudents = await db
+      .select({
+        id: users.id,
+        points: users.totalPoints,
+      })
+      .from(users)
+      .where(eq(users.role, 'STUDENT'))
+
+    const leaderboardStats = await Promise.all(
+      allStudents.map(async (student) => {
+        const [sStats] = await db
+          .select({
+            totalFloors: sql<number>`COALESCE(SUM(floor - 1), 0)`,
+          })
+          .from(practiceSessions)
+          .where(eq(practiceSessions.studentUserId, student.id))
+
+        return {
+          id: student.id,
+          points: student.points || 0,
+          totalFloors: sStats?.totalFloors || 0,
+        }
+      })
+    )
+
+    // Sort by points (XP) descending, then totalFloors descending
+    leaderboardStats.sort((a, b) => b.points - a.points || b.totalFloors - a.totalFloors)
+    const rank = leaderboardStats.findIndex((s) => s.id === userId) + 1
+
     // Get all materials
     const allMaterials = await db.select().from(materials).orderBy(materials.order)
 
@@ -88,6 +118,7 @@ export async function GET(request: NextRequest) {
         totalAttempts,
         correctAttempts,
         accuracy,
+        rank,
       },
       materialProgress,
     })

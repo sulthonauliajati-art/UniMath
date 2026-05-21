@@ -20,17 +20,28 @@ function getBadge(xp: number): { name: string; emoji: string; color: string } {
   return { name: 'Starter', emoji: '⭐', color: 'text-slate-400' }
 }
 
+/** Get next badge tier info */
+function getNextBadgeInfo(xp: number): { nextName: string; nextEmoji: string; xpNeeded: number; xpRemaining: number } | null {
+  if (xp < 30) return { nextName: 'Bronze', nextEmoji: '🥉', xpNeeded: 30, xpRemaining: 30 - xp }
+  if (xp < 80) return { nextName: 'Silver', nextEmoji: '🥈', xpNeeded: 80, xpRemaining: 80 - xp }
+  if (xp < 150) return { nextName: 'Gold', nextEmoji: '🏅', xpNeeded: 150, xpRemaining: 150 - xp }
+  if (xp < 300) return { nextName: 'Diamond', nextEmoji: '💎', xpNeeded: 300, xpRemaining: 300 - xp }
+  if (xp < 500) return { nextName: 'Master', nextEmoji: '👑', xpNeeded: 500, xpRemaining: 500 - xp }
+  return null
+}
+
 interface Stats {
   totalFloors: number
   accuracy: number
   totalSessions: number
   totalXP: number
+  rank?: number
 }
 
 export default function StudentDashboard() {
   const router = useRouter()
   const { user, token, isLoading, logout } = useAuth()
-  const [stats, setStats] = useState<Stats>({ totalFloors: 0, accuracy: 0, totalSessions: 0, totalXP: 0 })
+  const [stats, setStats] = useState<Stats>({ totalFloors: 0, accuracy: 0, totalSessions: 0, totalXP: 0, rank: 1 })
   const [loadingStats, setLoadingStats] = useState(true)
   // P1 Fix: Onboarding state
   const [showOnboarding, setShowOnboarding] = useState(false)
@@ -56,6 +67,7 @@ export default function StudentDashboard() {
             accuracy: data.stats?.accuracy || 0,
             totalSessions: data.stats?.totalSessions || 0,
             totalXP: 0,
+            rank: data.stats?.rank || 1,
           })
           
           // Fetch totalXP from progress API
@@ -209,11 +221,26 @@ export default function StudentDashboard() {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           className="w-full mb-8 relative"
         >
-           {/* Top Hexagon Badge */}
-           <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-30">
-             <div className="w-12 h-12 bg-uni-bg-secondary rounded-xl border border-uni-accent shadow-[0_0_15px_rgba(0,119,255,0.5)] rotate-45 flex items-center justify-center">
-               <span className="-rotate-45 text-2xl">{getBadge(stats.totalXP).emoji}</span>
+           {/* Top Leaderboard Rank Badge */}
+           <div className="absolute -top-7 left-1/2 -translate-x-1/2 z-30">
+             <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
+               stats.rank === 1
+                 ? 'bg-gradient-to-br from-yellow-300 via-amber-500 to-yellow-600 border-yellow-200 shadow-[0_0_20px_rgba(250,204,21,0.8),_inset_0_0_8px_rgba(255,255,255,0.4)] scale-110 animate-pulse'
+                 : stats.rank === 2
+                 ? 'bg-gradient-to-br from-slate-200 via-gray-400 to-slate-500 border-slate-100 shadow-[0_0_20px_rgba(226,232,240,0.6),_inset_0_0_8px_rgba(255,255,255,0.3)] scale-105'
+                 : stats.rank === 3
+                 ? 'bg-gradient-to-br from-orange-400 via-amber-600 to-orange-700 border-orange-300 shadow-[0_0_20px_rgba(249,115,22,0.6),_inset_0_0_8px_rgba(255,255,255,0.3)] scale-105'
+                 : 'bg-gradient-to-br from-[#1E293B] to-[#0F172A] border-uni-primary/60 shadow-[0_0_15px_rgba(0,229,255,0.4),_inset_0_0_6px_rgba(0,229,255,0.1)]'
+             }`}>
+               <span className={`font-extrabold tracking-tight ${
+                 stats.rank && stats.rank <= 3 ? 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] text-lg' : 'text-uni-primary text-base'
+               }`}>
+                 #{stats.rank || 1}
+               </span>
              </div>
+             {stats.rank === 1 && (
+               <div className="absolute -top-4 left-1/2 -translate-x-1/2 text-lg animate-bounce select-none">👑</div>
+             )}
            </div>
 
           <GlassCard className="p-6 pt-10 text-center glass-strong border-uni-primary/40 relative overflow-hidden group">
@@ -223,9 +250,32 @@ export default function StudentDashboard() {
             <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">
               Lanjut Berlatih, {user.name.split(' ')[0]}!
             </h2>
-            <p className={`text-sm font-medium mb-6 ${getBadge(stats.totalXP).color}`}>
-              {getBadge(stats.totalXP).emoji} {getBadge(stats.totalXP).name} · {stats.totalXP} XP
-            </p>
+            {(() => {
+              const current = getBadge(stats.totalXP)
+              const nextInfo = getNextBadgeInfo(stats.totalXP)
+              return (
+                <div className="mb-6 flex flex-col items-center gap-1.5 bg-black/25 rounded-xl p-3 border border-white/5 backdrop-blur-sm">
+                  <div className={`text-sm font-bold flex items-center gap-1.5 ${current.color}`}>
+                    <span>{current.emoji}</span>
+                    <span>{current.name}</span>
+                    <span className="text-text-muted font-normal">•</span>
+                    <span className="text-white font-semibold">{stats.totalXP} XP</span>
+                  </div>
+                  <div className="text-xs text-text-secondary">
+                    {nextInfo ? (
+                      <span>
+                        🔥 <span className="text-uni-accent font-bold">{nextInfo.xpRemaining} XP lagi</span> untuk mencapai{' '}
+                        <span className="font-bold text-white">
+                          {nextInfo.nextEmoji} {nextInfo.nextName}
+                        </span>
+                      </span>
+                    ) : (
+                      <span className="text-uni-success font-bold">🎉 Kamu telah mencapai tingkat tertinggi: Master!</span>
+                    )}
+                  </div>
+                </div>
+              )
+            })()}
 
             {/* Stats Row */}
             <div className="grid grid-cols-3 gap-2 mb-8 bg-black/20 rounded-xl p-3 border border-white/5">
