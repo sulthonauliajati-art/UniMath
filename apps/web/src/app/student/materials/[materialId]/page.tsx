@@ -25,13 +25,6 @@ interface Material {
   checkpointAnswer: string | null
 }
 
-interface CheckpointItem {
-  question: string
-  options: string
-  answer: string
-  explanation: string
-}
-
 interface MaterialContent {
   id: string
   materialId: string
@@ -46,7 +39,6 @@ interface MaterialContent {
   steps: string[] | null
   examples: { title: string; problem: string; solution: string }[] | null
   commonMistakes: string[] | null
-  checkpointItems: CheckpointItem[] | null
   bodyMarkdown: string | null
   wajibBelajarMessage: string | null
   estimatedReadingMinutes: number | null
@@ -68,15 +60,10 @@ export default function MaterialDetailPage() {
   const [scrollDone, setScrollDone] = useState(false)
   const [timerDone, setTimerDone] = useState(false)
   const [timeLeft, setTimeLeft] = useState(0)
-  const [checkpointPassed, setCheckpointPassed] = useState(false)
-  const [correctCheckpoints, setCorrectCheckpoints] = useState(0)
 
-  const [checkpointAnswers, setCheckpointAnswers] = useState<Record<number, string>>({})
-  const [checkpointRevealed, setCheckpointRevealed] = useState<Record<number, boolean>>({})
   const contentRef = useRef<HTMLDivElement>(null)
 
   const MIN_STUDY_SECONDS = 90
-  const REQUIRED_CORRECT = 2
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'STUDENT')) {
@@ -100,23 +87,22 @@ export default function MaterialDetailPage() {
 
   // ── Countdown timer (90s default) ──
   useEffect(() => {
-    if (!fromGameOver || timerDone || checkpointPassed) return
+    if (!fromGameOver || timerDone) return
     if (timeLeft <= 0) {
       setTimerDone(true)
       return
     }
     const t = setTimeout(() => setTimeLeft(prev => prev - 1), 1000)
     return () => clearTimeout(t)
-  }, [fromGameOver, timerDone, checkpointPassed, timeLeft])
+  }, [fromGameOver, timerDone, timeLeft])
 
-  // ── Unlock logic: scrollDone AND (timerDone OR checkpointPassed) ──
+  // ── Unlock logic: scrollDone AND timerDone ──
   useEffect(() => {
     if (!fromGameOver || canContinue) return
-    const timeCondition = timerDone || checkpointPassed
-    if (scrollDone && timeCondition) {
+    if (scrollDone && timerDone) {
       setCanContinue(true)
     }
-  }, [fromGameOver, canContinue, scrollDone, timerDone, checkpointPassed])
+  }, [fromGameOver, canContinue, scrollDone, timerDone])
 
   // ── Scroll-based progress tracking ──
   const handleScroll = useCallback(() => {
@@ -258,88 +244,6 @@ export default function MaterialDetailPage() {
     })
   }
 
-  // Render checkpoint items as interactive quiz
-  const renderCheckpoints = (items: CheckpointItem[]) => {
-    return (
-      <div className="space-y-4">
-        {items.map((item, idx) => {
-          const options = item.options.split('|').map(o => o.trim())
-          const selected = checkpointAnswers[idx]
-          const revealed = checkpointRevealed[idx]
-          const isCorrect = selected === item.answer
-
-          return (
-            <GlassCard key={idx} className="p-4">
-              <p className="text-white font-medium text-sm mb-3">
-                <span className="text-cyan-400 font-bold mr-1">{idx + 1}.</span> {item.question}
-              </p>
-              <div className="grid grid-cols-2 gap-2 mb-2">
-                {options.map((opt) => {
-                  const letter = opt.charAt(0)
-                  const isSelected = selected === letter
-                  const isAnswer = revealed && letter === item.answer
-
-                  let btnClass = 'p-2 rounded-lg text-xs text-left transition-all border '
-                  if (revealed) {
-                    if (isAnswer) btnClass += 'bg-emerald-500/20 border-emerald-400/60 text-emerald-300'
-                    else if (isSelected && !isCorrect) btnClass += 'bg-red-500/20 border-red-400/60 text-red-300'
-                    else btnClass += 'bg-slate-800/50 border-slate-600/30 text-slate-400'
-                  } else if (isSelected) {
-                    btnClass += 'bg-cyan-500/20 border-cyan-400/60 text-cyan-300'
-                  } else {
-                    btnClass += 'bg-slate-800/50 border-slate-600/30 text-slate-300 hover:border-slate-500'
-                  }
-
-                  return (
-                    <button
-                      key={letter}
-                      onClick={() => {
-                        if (!revealed) setCheckpointAnswers(prev => ({ ...prev, [idx]: letter }))
-                      }}
-                      className={btnClass}
-                      disabled={revealed}
-                    >
-                      {opt}
-                    </button>
-                  )
-                })}
-              </div>
-              {selected && !revealed && (
-                <button
-                  onClick={() => {
-                    setCheckpointRevealed(prev => ({ ...prev, [idx]: true }))
-                    // Track correct checkpoint answers for Wajib Belajar bypass
-                    if (selected === item.answer) {
-                      const newCount = correctCheckpoints + 1
-                      setCorrectCheckpoints(newCount)
-                      if (newCount >= REQUIRED_CORRECT) {
-                        setCheckpointPassed(true)
-                      }
-                    }
-                  }}
-                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/30 transition-all"
-                >
-                  Cek Jawaban
-                </button>
-              )}
-              <AnimatePresence>
-                {revealed && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    className={`mt-2 p-2 rounded-lg text-xs ${isCorrect ? 'bg-emerald-500/10 text-emerald-300' : 'bg-red-500/10 text-red-300'}`}
-                  >
-                    {isCorrect ? '✅ Benar!' : '❌ Salah, coba lagi!'}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </GlassCard>
-          )
-        })}
-      </div>
-    )
-  }
-
   // Google Drive & YouTube helpers
   const getGoogleDriveEmbedUrl = (url: string | null) => {
     if (!url) return null
@@ -372,9 +276,6 @@ export default function MaterialDetailPage() {
           scrollDone={scrollDone}
           timerDone={timerDone}
           timeLeft={timeLeft}
-          checkpointPassed={checkpointPassed}
-          correctCheckpoints={correctCheckpoints}
-          requiredCorrect={REQUIRED_CORRECT}
           onContinue={handleBackToPractice}
         />
       )}
@@ -434,13 +335,13 @@ export default function MaterialDetailPage() {
         {/* Tabs */}
         <div className="flex gap-1 sm:gap-2 mb-4 sm:mb-6 p-1 bg-uni-bg-secondary/50 rounded-xl overflow-x-auto">
           <button
-            onClick={() => { setActiveTab('ringkasan'); setCheckpointAnswers({}); setCheckpointRevealed({}) }}
+            onClick={() => setActiveTab('ringkasan')}
             className={`flex-1 min-w-[80px] py-2 px-2 sm:px-4 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'ringkasan' ? 'bg-uni-primary text-white' : 'text-text-secondary hover:text-white'}`}
           >
             📄 <span className="hidden sm:inline">Ringkasan</span><span className="sm:hidden">Ringkas</span>
           </button>
           <button
-            onClick={() => { setActiveTab('lengkap'); setCheckpointAnswers({}); setCheckpointRevealed({}) }}
+            onClick={() => setActiveTab('lengkap')}
             className={`flex-1 min-w-[80px] py-2 px-2 sm:px-4 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'lengkap' ? 'bg-uni-primary text-white' : 'text-text-secondary hover:text-white'}`}
           >
             📖 Lengkap
@@ -489,15 +390,6 @@ export default function MaterialDetailPage() {
                 </GlassCard>
               )}
 
-              {/* Checkpoint Section */}
-              {currentContent?.checkpointItems && currentContent.checkpointItems.length > 0 && (
-                <div>
-                  <h3 className="text-emerald-400 font-bold text-sm sm:text-base mb-3 flex items-center gap-2">
-                    ✅ Checkpoint — Uji Pemahamanmu
-                  </h3>
-                  {renderCheckpoints(currentContent.checkpointItems)}
-                </div>
-              )}
             </div>
           )}
 
@@ -556,19 +448,17 @@ export default function MaterialDetailPage() {
                   <span className={scrollDone ? 'text-emerald-400' : 'text-slate-500'}>
                     {scrollDone ? '✅' : '⬜'} Scroll
                   </span>
-                  {/* Timer / Checkpoint check */}
-                  <span className={timerDone || checkpointPassed ? 'text-emerald-400' : 'text-slate-500'}>
-                    {timerDone || checkpointPassed ? '✅' : '⬜'}
-                    {checkpointPassed
-                      ? ` Checkpoint (${correctCheckpoints}/${REQUIRED_CORRECT})`
-                      : ` ${timeLeft > 0 ? `${timeLeft}s` : 'Timer'}`}
+                  {/* Timer check */}
+                  <span className={timerDone ? 'text-emerald-400' : 'text-slate-500'}>
+                    {timerDone ? '✅' : '⬜'}
+                    {` ${timeLeft > 0 ? `${timeLeft}s` : 'Timer'}`}
                   </span>
                 </div>
                 {!canContinue && (
                   <p className="text-slate-500 text-[10px] sm:text-xs mt-0.5 line-clamp-1">
                     {!scrollDone
                       ? 'Scroll sampai bawah untuk membaca materi'
-                      : 'Tunggu waktu habis atau jawab benar 2 soal checkpoint'}
+                      : 'Tunggu waktu habis sebelum bisa lanjut latihan'}
                   </p>
                 )}
               </div>
@@ -617,9 +507,6 @@ function StickyContinueBar({
   scrollDone,
   timerDone,
   timeLeft,
-  checkpointPassed,
-  correctCheckpoints,
-  requiredCorrect,
   onContinue,
 }: {
   canContinue: boolean
@@ -627,9 +514,6 @@ function StickyContinueBar({
   scrollDone: boolean
   timerDone: boolean
   timeLeft: number
-  checkpointPassed: boolean
-  correctCheckpoints: number
-  requiredCorrect: number
   onContinue: () => void
 }) {
   // Status message for the top bar
@@ -638,8 +522,7 @@ function StickyContinueBar({
     const parts: string[] = []
     if (!scrollDone) parts.push(`Scroll ${scrollProgress}%`)
     else parts.push('Scroll ✅')
-    if (checkpointPassed) parts.push(`Checkpoint ✅`)
-    else if (!timerDone) parts.push(`⏱ ${timeLeft}s`)
+    if (!timerDone) parts.push(`⏱ ${timeLeft}s`)
     else parts.push('Timer ✅')
     return parts.join(' · ')
   }
