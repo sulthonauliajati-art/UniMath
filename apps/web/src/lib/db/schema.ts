@@ -131,6 +131,7 @@ export const practiceSessions = sqliteTable('practice_sessions', {
   floor: integer('floor').notNull().default(1),
   consecutiveWrong: integer('consecutive_wrong').notNull().default(0), // salah berturut-turut lintas soal
   currentDifficulty: integer('current_difficulty').notNull().default(2), // 1=Mudah, 2=Sedang, 3=Sulit. Selalu mulai di 2
+  currentStreak: integer('current_streak').notNull().default(0), // streak jawaban benar berturut-turut (untuk XP multiplier)
   currentQuestionId: text('current_question_id'), // ID soal yang sedang aktif
   startedAt: text('started_at').notNull(),
   endedAt: text('ended_at'),
@@ -147,6 +148,7 @@ export const practiceAttempts = sqliteTable('practice_attempts', {
   questionId: text('question_id').notNull().references(() => questions.id),
   answer: text('answer', { enum: ['A', 'B', 'C', 'D'] }).notNull(),
   isCorrect: integer('is_correct', { mode: 'boolean' }).notNull(),
+  xpAwarded: integer('xp_awarded').notNull().default(0), // XP yang diberikan pada attempt ini (0 jika salah)
   hintCountAtAnswer: integer('hint_count_at_answer').default(0), // jumlah hint yang sudah dilihat saat menjawab
   difficultyAtAnswer: integer('difficulty_at_answer').notNull(), // tingkat kesulitan saat menjawab
   isRemedialSession: integer('is_remedial_session', { mode: 'boolean' }).default(false),

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db/client'
-import { questions, materials, practiceSessions, practiceAttempts } from '@/lib/db/schema'
-import { eq, and, notInArray, or } from 'drizzle-orm'
+import { questions, materials, practiceSessions, practiceAttempts, users } from '@/lib/db/schema'
+import { eq, and, notInArray, or, sql } from 'drizzle-orm'
 
 const DIFFICULTY_LABELS: Record<number, string> = {
   1: 'Mudah',
@@ -106,6 +106,15 @@ function clampDifficulty(d: number): number {
   return Math.max(1, Math.min(3, d))
 }
 
+/** XP multiplier based on current correct-answer streak (server-authoritative) */
+const BASE_XP = 10
+function getXPMultiplier(streak: number): number {
+  if (streak >= 10) return 3
+  if (streak >= 5) return 2
+  if (streak >= 3) return 1.5
+  return 1
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { sessionId, questionId, answer, responseMs } = await request.json()
@@ -156,20 +165,8 @@ export async function POST(request: NextRequest) {
     const usedQuestionIds = Array.from(new Set(usedAttempts.map((a) => a.questionId)))
     usedQuestionIds.push(questionId) // also exclude current question
 
-    // Save attempt
-    await db.insert(practiceAttempts).values({
-      id: `attempt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      sessionId,
-      floor: session.floor,
-      questionId,
-      answer: answer as 'A' | 'B' | 'C' | 'D',
-      isCorrect,
-      hintCountAtAnswer: session.consecutiveWrong, // how many hints were visible when they answered
-      difficultyAtAnswer: session.currentDifficulty,
-      isRemedialSession: session.status === 'REMEDIAL_REQUIRED',
-      responseMs: responseMs || 0,
-      createdAt: new Date().toISOString(),
-    })
+    // Save attempt (XP calculated below for correct answers)
+    const attemptId = `attempt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
     // Get material name
     const [material] = await db
@@ -183,6 +180,11 @@ export async function POST(request: NextRequest) {
     // ──────────────────────────────────────────────────────────────────
     if (isCorrect) {
       const newFloor = session.floor + 1
+      const newStreak = (session.currentStreak || 0) + 1
+
+      // Calculate XP server-side (authoritative)
+      const multiplier = getXPMultiplier(newStreak)
+      const xpGain = Math.round(BASE_XP * multiplier)
 
       // Difficulty goes UP:  Mudah→Sedang, Sedang→Sulit, Sulit→Sulit
       const nextDifficulty = clampDifficulty(session.currentDifficulty + 1)
@@ -190,30 +192,74 @@ export async function POST(request: NextRequest) {
       // Get next question at new difficulty
       const nextQ = await getNewQuestion(session.materialId, nextDifficulty, usedQuestionIds)
 
-      // Update session: reset consecutive wrong, raise floor & difficulty
+      // Persist attempt with XP
+      await db.insert(practiceAttempts).values({
+        id: attemptId,
+        sessionId,
+        floor: session.floor,
+        questionId,
+        answer: answer as 'A' | 'B' | 'C' | 'D',
+        isCorrect,
+        xpAwarded: xpGain,
+        hintCountAtAnswer: session.consecutiveWrong,
+        difficultyAtAnswer: session.currentDifficulty,
+        isRemedialSession: session.status === 'REMEDIAL_REQUIRED',
+        responseMs: responseMs || 0,
+        createdAt: new Date().toISOString(),
+      })
+
+      // Update session: reset consecutive wrong, raise floor & difficulty & streak
       await db
         .update(practiceSessions)
         .set({
           floor: newFloor,
           consecutiveWrong: 0,
+          currentStreak: newStreak,
           currentDifficulty: nextQ ? nextQ.difficulty : nextDifficulty,
           currentQuestionId: nextQ?.id || null,
         })
         .where(eq(practiceSessions.id, sessionId))
 
+      // Persist XP to user immediately — never lost even if browser closes
+      await db
+        .update(users)
+        .set({
+          totalPoints: sql`COALESCE(total_points, 0) + ${xpGain}`,
+        })
+        .where(eq(users.id, session.studentUserId))
+
       return NextResponse.json({
         isCorrect: true,
         floor: newFloor,
         consecutiveWrong: 0,
+        currentStreak: newStreak,
         currentDifficulty: nextQ ? nextQ.difficulty : nextDifficulty,
         difficultyLabel: DIFFICULTY_LABELS[nextQ ? nextQ.difficulty : nextDifficulty] || 'Sedang',
         nextQuestion: nextQ ? formatQuestionForClient(nextQ) : null,
+        xpGain, // for client animation
       })
     }
 
     // ──────────────────────────────────────────────────────────────────
     // CASE 2: WRONG ANSWER
     // ──────────────────────────────────────────────────────────────────
+
+    // Persist attempt (0 XP for wrong)
+    await db.insert(practiceAttempts).values({
+      id: attemptId,
+      sessionId,
+      floor: session.floor,
+      questionId,
+      answer: answer as 'A' | 'B' | 'C' | 'D',
+      isCorrect,
+      xpAwarded: 0,
+      hintCountAtAnswer: session.consecutiveWrong,
+      difficultyAtAnswer: session.currentDifficulty,
+      isRemedialSession: session.status === 'REMEDIAL_REQUIRED',
+      responseMs: responseMs || 0,
+      createdAt: new Date().toISOString(),
+    })
+
     const newConsecutiveWrong = session.consecutiveWrong + 1
 
     // Difficulty goes DOWN: Sulit→Sedang, Sedang→Mudah, Mudah→Mudah
@@ -226,6 +272,7 @@ export async function POST(request: NextRequest) {
         .set({
           status: 'REMEDIAL_REQUIRED',
           consecutiveWrong: newConsecutiveWrong,
+          currentStreak: 0, // reset streak on wrong
           currentDifficulty: nextDifficulty,
           currentQuestionId: null, // will get new question after remedial
         })
@@ -254,6 +301,7 @@ export async function POST(request: NextRequest) {
       .update(practiceSessions)
       .set({
         consecutiveWrong: newConsecutiveWrong,
+        currentStreak: 0, // reset streak on wrong
         currentDifficulty: nextQ ? nextQ.difficulty : nextDifficulty,
         currentQuestionId: nextQ?.id || null,
       })

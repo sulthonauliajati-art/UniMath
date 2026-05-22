@@ -202,9 +202,9 @@ export default function GamePlayPage() {
 
         setGameState((prev) => {
           if (!prev) return null
-          const newStreak = prev.streak + 1
-          const multiplier = getXPMultiplier(newStreak)
-          const xpGain = Math.round(BASE_XP * multiplier)
+          // Use server-authoritative XP and streak
+          const xpGain = data.xpGain || 0
+          const newStreak = data.currentStreak || prev.streak + 1
           return {
             ...prev,
             showCorrectModal: true,

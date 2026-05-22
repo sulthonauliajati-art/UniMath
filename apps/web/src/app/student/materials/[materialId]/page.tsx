@@ -70,7 +70,7 @@ export default function MaterialDetailPage() {
   const [timeLeft, setTimeLeft] = useState(0)
 
   // Checkpoint quiz state
-  const [checkpointAnswers, setCheckpointAnswers] = useState<Record<number, string>>({})
+  const [checkpointAnswers, setCheckpointAnswers] = useState<Record<number, string[]>>({})
   const [checkpointResults, setCheckpointResults] = useState<Record<number, boolean | null>>({})
 
   // Reset checkpoint answers when tab changes
@@ -426,8 +426,10 @@ export default function MaterialDetailPage() {
                         text: o.slice(2).trim(),
                       }))
 
-                      const selectedAnswer = checkpointAnswers[idx]
                       const result = checkpointResults[idx]
+                      const isCorrect = result === true
+                      // Track which options have been tried (wrong)
+                      const triedWrong: string[] = checkpointAnswers[idx] || []
 
                       return (
                         <div key={idx} className="p-3 sm:p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
@@ -436,48 +438,60 @@ export default function MaterialDetailPage() {
                           </p>
                           <div className="space-y-2">
                             {parsedOptions.map((opt) => {
-                              const isSelected = selectedAnswer === opt.letter
-                              const isAnswered = result !== undefined && result !== null
-                              const isCorrectChoice = isAnswered && isSelected && result === true
-                              const isWrongChoice = isAnswered && isSelected && result === false
+                              const wasTriedWrong = triedWrong.includes(opt.letter)
+                              const isDisabled = isCorrect || wasTriedWrong
 
                               return (
                                 <button
                                   key={opt.letter}
                                   onClick={() => {
-                                    if (isAnswered) return // already answered
-                                    setCheckpointAnswers(prev => ({ ...prev, [idx]: opt.letter }))
-                                    const isCorrect = opt.letter === item.answer
-                                    setCheckpointResults(prev => ({ ...prev, [idx]: isCorrect }))
+                                    if (isDisabled) return
+                                    const correct = opt.letter === item.answer
+                                    if (correct) {
+                                      setCheckpointResults(prev => ({ ...prev, [idx]: true }))
+                                      setCheckpointAnswers(prev => ({ ...prev, [idx]: [...triedWrong, opt.letter] }))
+                                    } else {
+                                      // Mark this option as tried-wrong, allow retry
+                                      setCheckpointAnswers(prev => ({ ...prev, [idx]: [...triedWrong, opt.letter] }))
+                                      setCheckpointResults(prev => ({ ...prev, [idx]: false }))
+                                    }
                                   }}
-                                  disabled={isAnswered}
+                                  disabled={isDisabled}
                                   className={[
                                     'w-full text-left px-3 sm:px-4 py-2.5 rounded-lg text-sm transition-all flex items-center gap-2',
-                                    !isAnswered && !isSelected && 'bg-slate-700/50 hover:bg-slate-600/50 text-slate-200 border border-slate-600/50',
-                                    !isAnswered && isSelected && 'bg-uni-primary/20 border border-uni-primary text-white',
-                                    isCorrectChoice && 'bg-emerald-500/20 border border-emerald-400 text-emerald-300',
-                                    isWrongChoice && 'bg-red-500/20 border border-red-400 text-red-300',
-                                    isAnswered && !isSelected && 'bg-slate-800/30 border border-slate-700/30 text-slate-500',
+                                    // Correct final answer
+                                    isCorrect && triedWrong.includes(opt.letter) && opt.letter === item.answer && 'bg-emerald-500/20 border border-emerald-400 text-emerald-300',
+                                    // Was tried wrong → disabled, muted
+                                    wasTriedWrong && opt.letter !== item.answer && 'bg-slate-800/30 border border-orange-400/30 text-slate-500 line-through opacity-60',
+                                    // Not yet interacted, still available
+                                    !isDisabled && !wasTriedWrong && 'bg-slate-700/50 hover:bg-slate-600/50 text-slate-200 border border-slate-600/50',
+                                    // Correct but not the answer clicked (when quiz is done)
+                                    isCorrect && !triedWrong.includes(opt.letter) && 'bg-slate-800/30 border border-slate-700/30 text-slate-400',
                                   ].filter(Boolean).join(' ')}
                                 >
                                   <span className={[
                                     'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0',
-                                    !isAnswered && 'bg-slate-600/50 text-slate-300',
-                                    isCorrectChoice && 'bg-emerald-400 text-slate-900',
-                                    isWrongChoice && 'bg-red-400 text-slate-900',
-                                    isAnswered && !isSelected && 'bg-slate-700/30 text-slate-500',
+                                    isCorrect && opt.letter === item.answer && 'bg-emerald-400 text-slate-900',
+                                    wasTriedWrong && opt.letter !== item.answer && 'bg-orange-400/50 text-slate-900',
+                                    !isDisabled && !wasTriedWrong && 'bg-slate-600/50 text-slate-300',
+                                    isCorrect && !triedWrong.includes(opt.letter) && opt.letter !== item.answer && 'bg-slate-700/30 text-slate-500',
                                   ].filter(Boolean).join(' ')}>
-                                    {opt.letter}
+                                    {wasTriedWrong && opt.letter !== item.answer ? '✕' : opt.letter}
                                   </span>
                                   <span>{opt.text}</span>
                                 </button>
                               )
                             })}
                           </div>
-                          {/* Feedback — only Benar/Salah, no answer or explanation */}
-                          {result !== undefined && result !== null && (
-                            <div className={`mt-3 px-3 py-2 rounded-lg text-sm font-medium ${result ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
-                              {result ? '✅ Benar!' : '❌ Salah, coba baca lagi materinya.'}
+                          {/* Feedback */}
+                          {isCorrect && (
+                            <div className="mt-3 px-3 py-2 rounded-lg text-sm font-medium bg-emerald-500/10 text-emerald-400">
+                              ✅ Benar! Kamu paham materinya.
+                            </div>
+                          )}
+                          {result === false && !isCorrect && (
+                            <div className="mt-3 px-3 py-2 rounded-lg text-sm font-medium bg-amber-500/10 text-amber-400">
+                              🤔 Kurang tepat, coba lagi!
                             </div>
                           )}
                         </div>

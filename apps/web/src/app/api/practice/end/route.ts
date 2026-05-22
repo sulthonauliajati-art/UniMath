@@ -92,17 +92,10 @@ export async function POST(request: NextRequest) {
       await awardTeacherPoints(session.studentUserId, teacherPoints)
     }
 
-    // Award XP to student
-    if (sessionXP && sessionXP > 0) {
-      await db
-        .update(users)
-        .set({
-          totalPoints: sql`COALESCE(total_points, 0) + ${sessionXP}`,
-        })
-        .where(eq(users.id, session.studentUserId))
-    }
+    // XP is now persisted per-answer in /api/practice/answer,
+    // so we no longer need to award it here. Just read the current total.
 
-    // Get updated totalXP
+    // Get current totalXP
     const [updatedUser] = await db
       .select({ totalPoints: users.totalPoints })
       .from(users)
