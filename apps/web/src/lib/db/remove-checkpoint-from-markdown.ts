@@ -119,13 +119,15 @@ async function main() {
       }
     }
 
-    // 2. Clear checkpoint_items JSON
-    if (content.checkpointItems) {
-      updates.checkpointItems = null
-      needsUpdate = true
-      clearedCheckpointItems++
-      console.log(`   🗑️  ${content.id}: cleared checkpointItems`)
-    }
+    // 2. Clear checkpoint_items JSON — DISABLED: checkpointItems is used by
+    //    the interactive quiz widget (Uji Pemahaman) that only shows ✅/❌
+    //    without revealing the answer key. It should NOT be cleared.
+    // if (content.checkpointItems) {
+    //   updates.checkpointItems = null
+    //   needsUpdate = true
+    //   clearedCheckpointItems++
+    //   console.log(`   🗑️  ${content.id}: cleared checkpointItems`)
+    // }
 
     if (needsUpdate) {
       await db
