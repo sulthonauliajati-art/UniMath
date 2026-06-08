@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db/client'
-import { users, teacherProfiles } from '@/lib/db/schema'
-import { and, eq } from 'drizzle-orm'
+import { users, teacherProfiles, practiceSessions, practiceAttempts } from '@/lib/db/schema'
+import { and, eq, sql } from 'drizzle-orm'
 import { hashPassword, validateToken, revokeAllUserTokens } from '@/lib/auth/utils'
 
 async function requireAdmin(request: NextRequest) {
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
       .leftJoin(teacherProfiles, eq(teacherProfiles.userId, users.id))
       .where(eq(users.role, 'TEACHER'))
 
-    const students = await db
+    const studentsRaw = await db
       .select({
         id: users.id,
         name: users.name,
@@ -53,6 +53,42 @@ export async function GET(request: NextRequest) {
       })
       .from(users)
       .where(eq(users.role, 'STUDENT'))
+
+    // ✅ FIX #14: Ambil statistik latihan per siswa
+    const students = await Promise.all(
+      studentsRaw.map(async (s) => {
+        const [sessionStats] = await db
+          .select({
+            totalSessions: sql<number>`COUNT(DISTINCT ${practiceSessions.id})`,
+            highestFloor: sql<number>`COALESCE(MAX(${practiceSessions.floor}), 0)`,
+            lastPracticeAt: sql<string>`MAX(${practiceSessions.startedAt})`,
+          })
+          .from(practiceSessions)
+          .where(eq(practiceSessions.studentUserId, s.id))
+
+        const [attemptStats] = await db
+          .select({
+            totalAttempts: sql<number>`COUNT(*)`,
+            correctAttempts: sql<number>`COALESCE(SUM(CASE WHEN ${practiceAttempts.isCorrect} = 1 THEN 1 ELSE 0 END), 0)`,
+          })
+          .from(practiceAttempts)
+          .innerJoin(practiceSessions, eq(practiceAttempts.sessionId, practiceSessions.id))
+          .where(eq(practiceSessions.studentUserId, s.id))
+
+        const total = attemptStats?.totalAttempts || 0
+        const correct = attemptStats?.correctAttempts || 0
+        const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0
+
+        return {
+          ...s,
+          totalSessions: sessionStats?.totalSessions || 0,
+          highestFloor: sessionStats?.highestFloor || 0,
+          accuracy,
+          totalAttempts: total,
+          lastPracticeAt: sessionStats?.lastPracticeAt || null,
+        }
+      })
+    )
 
     return NextResponse.json({ teachers, students })
   } catch (error) {

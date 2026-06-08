@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { db } from '@/lib/db/client'
-import { materials, practiceSessions, questions } from '@/lib/db/schema'
+import { materials, practiceSessions, practiceAttempts, questions } from '@/lib/db/schema'
 import { eq, sql, and } from 'drizzle-orm'
 
 export async function GET(request: NextRequest) {
@@ -14,7 +14,9 @@ export async function GET(request: NextRequest) {
     if (userCookie) {
       try {
         const user = JSON.parse(userCookie.value)
-        userId = user.id
+        if (user.id && user.id !== 'anonymous') {
+          userId = user.id
+        }
       } catch {}
     }
 
@@ -31,33 +33,41 @@ export async function GET(request: NextRequest) {
         let progress = 0
 
         if (userId) {
-          // Get total questions for this material
+          // ✅ FIX #7: Hitung progress berdasarkan jawaban BENAR, bukan SUM(floor)
+          // Total soal PRACTICE untuk materi ini
           const [questionCount] = await db
             .select({ count: sql<number>`COUNT(*)` })
             .from(questions)
-            .where(eq(questions.materialId, material.id))
-
-          // Get completed sessions (floors climbed) for this material
-          const [sessionStats] = await db
-            .select({ 
-              totalFloors: sql<number>`COALESCE(SUM(floor), 0)`,
-              completedSessions: sql<number>`COUNT(CASE WHEN status = 'COMPLETED' THEN 1 END)`
-            })
-            .from(practiceSessions)
             .where(
               and(
-                eq(practiceSessions.studentUserId, userId),
-                eq(practiceSessions.materialId, material.id)
+                eq(questions.materialId, material.id),
+                // hanya hitung soal practice
+                sql`(${questions.mode} = 'PRACTICE' OR ${questions.mode} = 'ALL')`
               )
             )
 
-          // Calculate progress based on floors climbed vs total questions
-          const totalQuestions = questionCount?.count || 0
-          const floorsClimbed = sessionStats?.totalFloors || 0
-          
-          if (totalQuestions > 0) {
-            // Progress = (floors climbed / total questions) * 100, max 100%
-            progress = Math.min(Math.round((floorsClimbed / totalQuestions) * 100), 100)
+          const totalPracticeQuestions = questionCount?.count || 0
+
+          if (totalPracticeQuestions > 0) {
+            // Hitung total jawaban benar dari semua attempt untuk materi ini
+            const [correctStats] = await db
+              .select({
+                correctCount: sql<number>`COALESCE(SUM(CASE WHEN ${practiceAttempts.isCorrect} = 1 THEN 1 ELSE 0 END), 0)`,
+              })
+              .from(practiceAttempts)
+              .innerJoin(practiceSessions, eq(practiceAttempts.sessionId, practiceSessions.id))
+              .where(
+                and(
+                  eq(practiceSessions.studentUserId, userId),
+                  eq(practiceSessions.materialId, material.id)
+                )
+              )
+
+            const correctAnswers = correctStats?.correctCount || 0
+            // Progress = jawaban benar / total soal practice, max 100%
+            // Minimal 10 soal benar dianggap 100%
+            const targetAnswers = Math.min(totalPracticeQuestions, 10)
+            progress = Math.min(Math.round((correctAnswers / targetAnswers) * 100), 100)
           }
         }
 

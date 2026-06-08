@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import confetti from 'canvas-confetti'
@@ -37,6 +37,8 @@ interface GameState {
   streak: number
   sessionXP: number
   lastXPGain: number
+  // Floor sebelum dinaikkan — dipakai di modal Benar agar tidak +1 lagi
+  floorBeforeAnswer: number
 }
 
 const TOTAL_FLOORS = 10
@@ -48,7 +50,6 @@ function getXPMultiplier(streak: number): number {
   if (streak >= 3) return 1.5
   return 1
 }
-const BASE_XP = 10
 
 const DIFFICULTY_COLORS: Record<number, { bg: string; border: string; text: string; label: string }> = {
   1: { bg: 'bg-emerald-500/20', border: 'border-emerald-400/60', text: 'text-emerald-300', label: 'Mudah' },
@@ -67,6 +68,10 @@ export default function GamePlayPage() {
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [showXPFloat, setShowXPFloat] = useState(false)
 
+  // ── Ref untuk hitung responseMs ──────────────────────────────────────
+  // Dicatat setiap kali soal baru muncul di layar
+  const questionShownAtRef = useRef<number>(Date.now())
+
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'STUDENT')) {
       router.push('/student/login')
@@ -77,9 +82,11 @@ export default function GamePlayPage() {
       const sessionData = sessionStorage.getItem('practiceSession')
       if (sessionData) {
         const data = JSON.parse(sessionData)
+        questionShownAtRef.current = Date.now()
         setGameState({
           sessionId: data.sessionId,
           floor: data.floor || 1,
+          floorBeforeAnswer: data.floor || 1,
           consecutiveWrong: data.consecutiveWrong || 0,
           currentDifficulty: data.currentDifficulty || 2,
           difficultyLabel: data.difficultyLabel || 'Sedang',
@@ -92,6 +99,7 @@ export default function GamePlayPage() {
           isSubmitting: false,
           currentHint: null,
           stats: data.stats || { floorsClimbed: 0, correctAnswers: 0, totalAttempts: 0 },
+          // ✅ FIX #12: Restore streak dari session storage (bukan selalu 0)
           streak: data.streak || 0,
           sessionXP: data.sessionXP || 0,
           lastXPGain: 0,
@@ -102,9 +110,11 @@ export default function GamePlayPage() {
           if (res.ok) {
             const data = await res.json()
             sessionStorage.setItem('practiceSession', JSON.stringify(data))
+            questionShownAtRef.current = Date.now()
             setGameState({
               sessionId: data.sessionId,
               floor: data.floor,
+              floorBeforeAnswer: data.floor,
               consecutiveWrong: data.consecutiveWrong || 0,
               currentDifficulty: data.currentDifficulty || 2,
               difficultyLabel: data.difficultyLabel || 'Sedang',
@@ -117,7 +127,8 @@ export default function GamePlayPage() {
               isSubmitting: false,
               currentHint: null,
               stats: data.stats,
-              streak: 0,
+              // ✅ FIX #12: Gunakan currentStreak dari server saat resume
+              streak: data.currentStreak || 0,
               sessionXP: 0,
               lastXPGain: 0,
             })
@@ -134,7 +145,6 @@ export default function GamePlayPage() {
   }, [user, isLoading, router, materialId])
 
   // Auto-save session state to sessionStorage on every gameState change
-  // This ensures progress is preserved even if the student navigates away
   useEffect(() => {
     if (gameState) {
       sessionStorage.setItem(
@@ -173,6 +183,9 @@ export default function GamePlayPage() {
   const handleSubmitAnswer = async () => {
     if (!gameState || !gameState.selectedAnswer || gameState.isSubmitting) return
 
+    // ✅ FIX #10: Hitung responseMs sebelum submit
+    const responseMs = Date.now() - questionShownAtRef.current
+
     setGameState((prev) => (prev ? { ...prev, isSubmitting: true } : null))
     setSubmitError(null)
 
@@ -184,11 +197,12 @@ export default function GamePlayPage() {
           sessionId: gameState.sessionId,
           questionId: gameState.question.id,
           answer: gameState.selectedAnswer,
+          // ✅ FIX #10: Kirim responseMs yang valid
+          responseMs,
         }),
       })
       const data = await res.json()
 
-      // Handle API error
       if (!res.ok || data.error) {
         setSubmitError(data.error?.message || 'Gagal mengirim jawaban. Coba lagi.')
         setGameState((prev) => (prev ? { ...prev, isSubmitting: false } : null))
@@ -202,11 +216,16 @@ export default function GamePlayPage() {
 
         setGameState((prev) => {
           if (!prev) return null
-          // Use server-authoritative XP and streak
           const xpGain = data.xpGain || 0
           const newStreak = data.currentStreak || prev.streak + 1
+          const newFloor = data.floor  // floor baru dari server
+
           return {
             ...prev,
+            // ✅ FIX #5: Simpan floorBeforeAnswer = floor sebelum update
+            // floor di server sudah naik (= lantai baru). Modal tampilkan ini.
+            floorBeforeAnswer: prev.floor,  // lantai sebelum naik
+            floor: newFloor,                // lantai setelah naik
             showCorrectModal: true,
             isSubmitting: false,
             currentHint: null,
@@ -228,12 +247,16 @@ export default function GamePlayPage() {
           setRobotState('climbing')
           setTimeout(() => {
             setRobotState('idle')
-            if (data.nextQuestion) {
+            // ✅ FIX #4: Cek apakah semua 10 lantai selesai
+            const isSessionComplete = data.floor >= TOTAL_FLOORS + 1 || !data.nextQuestion
+
+            if (data.nextQuestion && !isSessionComplete) {
+              // Reset timer untuk soal baru
+              questionShownAtRef.current = Date.now()
               setGameState((prev) =>
                 prev
                   ? {
                       ...prev,
-                      floor: data.floor,
                       consecutiveWrong: 0,
                       currentDifficulty: data.currentDifficulty,
                       difficultyLabel: data.difficultyLabel,
@@ -245,7 +268,8 @@ export default function GamePlayPage() {
                   : null
               )
             } else {
-              handleEndSession()
+              // ✅ FIX #4: Kirim reason: 'completed' bukan 'user_quit'
+              handleEndSession('completed')
             }
           }, 800)
         }, 1500)
@@ -282,6 +306,10 @@ export default function GamePlayPage() {
           )
         } else {
           // Wrong but < 3 → show hint banner + new question
+          // Reset timer untuk soal baru
+          if (data.nextQuestion) {
+            questionShownAtRef.current = Date.now()
+          }
           setGameState((prev) => {
             if (!prev) return null
             return {
@@ -307,35 +335,48 @@ export default function GamePlayPage() {
     }
   }
 
-  const handleEndSession = async () => {
-    if (!gameState) return
-    try {
-      await fetch('/api/practice/end', {
+  // ✅ FIX #4: handleEndSession terima reason + sessionId parameter
+  // Menerima sessionId eksplisit agar tidak bergantung pada gameState yang mungkin stale
+  // saat dipanggil dari dalam setTimeout chain
+  const handleEndSession = useCallback(async (
+    reason: 'completed' | 'user_quit' = 'user_quit',
+    sessionIdOverride?: string
+  ) => {
+    // Baca state terkini melalui functional getter
+    setGameState((currentState) => {
+      if (!currentState) return null
+      const sid = sessionIdOverride || currentState.sessionId
+
+      // Fire-and-forget: simpan ke sessionStorage dulu
+      sessionStorage.setItem(
+        'practiceStats',
+        JSON.stringify({
+          ...currentState.stats,
+          sessionXP: currentState.sessionXP,
+          bestStreak: currentState.streak,
+          materialId: currentState.materialId,
+          materialTitle: currentState.materialName,
+        })
+      )
+      sessionStorage.removeItem('practiceSession')
+
+      // Call end API (fire-and-forget, tidak block navigasi)
+      fetch('/api/practice/end', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          sessionId: gameState.sessionId,
-          reason: 'user_quit',
-          stats: gameState.stats,
-          sessionXP: gameState.sessionXP,
+          sessionId: sid,
+          reason,
+          stats: currentState.stats,
+          sessionXP: currentState.sessionXP,
         }),
-      })
-    } catch (error) {
-      console.error('Failed to end session:', error)
-    }
-    sessionStorage.setItem(
-      'practiceStats',
-      JSON.stringify({
-        ...gameState.stats,
-        sessionXP: gameState.sessionXP,
-        bestStreak: gameState.streak,
-        materialId: gameState.materialId,
-        materialTitle: gameState.materialName,
-      })
-    )
-    sessionStorage.removeItem('practiceSession')
+      }).catch((err) => console.error('Failed to end session:', err))
+
+      return null // trigger loading state
+    })
+
     router.push('/student/practice/complete')
-  }
+  }, [router])
 
   if (isLoading || !user || !gameState) {
     return (
@@ -650,9 +691,9 @@ export default function GamePlayPage() {
             </AnimatePresence>
           </div>
 
-          {/* End button */}
+          {/* End button — ✅ FIX #4: kirim 'user_quit' */}
           <button
-            onClick={handleEndSession}
+            onClick={() => handleEndSession('user_quit')}
             className="ml-1 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-slate-900 bg-gradient-to-r from-teal-300 to-cyan-300 shadow-[0_0_12px_-2px_rgba(6,182,212,0.7)] active:scale-95 transition"
             title="Udah dulu latihan hari ini"
           >
@@ -688,9 +729,12 @@ export default function GamePlayPage() {
                 <h2 className="text-2xl sm:text-3xl font-bold text-emerald-300 mb-2">
                   Benar!
                 </h2>
+                {/* ✅ FIX #5: Tampilkan gameState.floor (lantai baru yang valid dari server)
+                    floorBeforeAnswer = lantai sebelum jawab benar
+                    floor = lantai baru setelah naik */}
                 <p className="text-white text-sm sm:text-base font-medium mb-2">
                   Naik ke lantai{' '}
-                  <span className="text-cyan-300 font-bold">{gameState.floor + 1}</span>! 🚀
+                  <span className="text-cyan-300 font-bold">{gameState.floor}</span>! 🚀
                 </p>
                 <div className="flex items-center justify-center gap-3 mt-3">
                   <span className="text-amber-300 font-bold text-sm">⭐ +{gameState.lastXPGain} XP</span>

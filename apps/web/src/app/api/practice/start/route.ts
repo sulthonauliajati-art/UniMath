@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { db } from '@/lib/db/client'
 import { questions, materials, practiceSessions, practiceAttempts } from '@/lib/db/schema'
 import { eq, and, or, desc, notInArray, sql } from 'drizzle-orm'
+import { validateToken } from '@/lib/auth/utils'
 
 const DIFFICULTY_LABELS: Record<number, string> = {
   1: 'Mudah',
@@ -24,26 +25,139 @@ function formatQuestionForClient(q: typeof questions.$inferSelect) {
   }
 }
 
+/**
+ * Resolve authenticated user ID dari:
+ * 1. Authorization header (Bearer token) — diutamakan
+ * 2. Cookie 'auth_token'
+ * 3. Cookie 'user' (legacy) — hanya sebagai fallback dengan validasi
+ * 
+ * Return null jika tidak ada user yang valid.
+ */
+async function resolveAuthenticatedUserId(request: NextRequest): Promise<string | null> {
+  // 1. Authorization header
+  const authHeader = request.headers.get('authorization')
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.replace('Bearer ', '').trim()
+    if (token) {
+      const t = await validateToken(token)
+      if (t.valid && t.userId) return t.userId
+    }
+  }
+
+  // 2. Cookie 'auth_token' (server-set token)
+  const cookieStore = await cookies()
+  const authToken = cookieStore.get('auth_token')
+  if (authToken?.value) {
+    const t = await validateToken(authToken.value)
+    if (t.valid && t.userId) return t.userId
+  }
+
+  // 2b. Cookie 'token' (client-set oleh AuthContext login())
+  const tokenCookie = cookieStore.get('token')
+  if (tokenCookie?.value) {
+    const t = await validateToken(tokenCookie.value)
+    if (t.valid && t.userId) return t.userId
+  }
+
+  // 3. Cookie 'user' legacy — parse and validate format
+  const userCookie = cookieStore.get('user')
+  if (userCookie?.value) {
+    try {
+      const user = JSON.parse(userCookie.value)
+      // Pastikan ID tidak 'anonymous' dan punya format yang valid
+      if (user.id && typeof user.id === 'string' && user.id !== 'anonymous' && user.id.length > 0) {
+        return user.id
+      }
+    } catch {
+      // invalid JSON — ignore
+    }
+  }
+
+  return null
+}
+
+async function getNewQuestion(
+  materialId: string,
+  difficulty: number,
+  excludeIds: string[]
+) {
+  // Try exact difficulty first, excluding used
+  let available = await db
+    .select()
+    .from(questions)
+    .where(
+      excludeIds.length > 0
+        ? and(
+            eq(questions.materialId, materialId),
+            eq(questions.difficulty, difficulty),
+            or(eq(questions.mode, 'PRACTICE'), eq(questions.mode, 'ALL')),
+            notInArray(questions.id, excludeIds)
+          )
+        : and(
+            eq(questions.materialId, materialId),
+            eq(questions.difficulty, difficulty),
+            or(eq(questions.mode, 'PRACTICE'), eq(questions.mode, 'ALL'))
+          )
+    )
+
+  // Fallback: any unused question
+  if (available.length === 0) {
+    available = await db
+      .select()
+      .from(questions)
+      .where(
+        excludeIds.length > 0
+          ? and(
+              eq(questions.materialId, materialId),
+              or(eq(questions.mode, 'PRACTICE'), eq(questions.mode, 'ALL')),
+              notInArray(questions.id, excludeIds)
+            )
+          : and(
+              eq(questions.materialId, materialId),
+              or(eq(questions.mode, 'PRACTICE'), eq(questions.mode, 'ALL'))
+            )
+      )
+  }
+
+  // Fallback: allow repeats
+  if (available.length === 0) {
+    available = await db
+      .select()
+      .from(questions)
+      .where(
+        and(
+          eq(questions.materialId, materialId),
+          or(eq(questions.mode, 'PRACTICE'), eq(questions.mode, 'ALL'))
+        )
+      )
+  }
+
+  if (available.length === 0) return null
+  return available[Math.floor(Math.random() * available.length)]
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     let { materialId } = body
 
-    // Get user from cookie
-    const cookieStore = await cookies()
-    const userCookie = cookieStore.get('user')
-    let userId = 'anonymous'
+    // ── AUTH: Wajib ada user yang terautentikasi ──────────────────────────
+    const userId = await resolveAuthenticatedUserId(request)
 
-    if (userCookie) {
-      try {
-        const user = JSON.parse(userCookie.value)
-        userId = user.id
-      } catch {}
+    if (!userId) {
+      return NextResponse.json(
+        { error: { code: 'UNAUTHORIZED', message: 'Kamu harus login untuk memulai latihan' } },
+        { status: 401 }
+      )
     }
 
-    // If no materialId provided, use first material
+    // If no materialId provided, use first active material
     if (!materialId) {
-      const allMaterials = await db.select().from(materials).orderBy(materials.order)
+      const allMaterials = await db
+        .select()
+        .from(materials)
+        .where(eq(materials.isActive, true))
+        .orderBy(materials.order)
       materialId = allMaterials[0]?.id
     }
 
@@ -54,9 +168,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // ──────────────────────────────────────────────────────────────
-    // CHECK FOR EXISTING ACTIVE SESSION — Resume if found!
-    // ──────────────────────────────────────────────────────────────
+    // ── CHECK FOR EXISTING ACTIVE SESSION — Resume if found ──────────────
     const existingSessions = await db
       .select()
       .from(practiceSessions)
@@ -76,7 +188,6 @@ export async function POST(request: NextRequest) {
     if (existingSessions.length > 0) {
       const session = existingSessions[0]
 
-      // Get material info
       const [material] = await db
         .select()
         .from(materials)
@@ -102,59 +213,11 @@ export async function POST(request: NextRequest) {
           .where(eq(practiceAttempts.sessionId, session.id))
         const usedIds = Array.from(new Set(usedAttempts.map((a) => a.questionId)))
 
-        let available = await db
-          .select()
-          .from(questions)
-          .where(
-            usedIds.length > 0
-              ? and(
-                  eq(questions.materialId, materialId),
-                  eq(questions.difficulty, session.currentDifficulty),
-                  or(eq(questions.mode, 'PRACTICE'), eq(questions.mode, 'ALL')),
-                  notInArray(questions.id, usedIds)
-                )
-              : and(
-                  eq(questions.materialId, materialId),
-                  eq(questions.difficulty, session.currentDifficulty),
-                  or(eq(questions.mode, 'PRACTICE'), eq(questions.mode, 'ALL'))
-                )
-          )
+        const newQ = await getNewQuestion(materialId, session.currentDifficulty, usedIds)
 
-        // Fallback: any unused
-        if (available.length === 0) {
-          available = await db
-            .select()
-            .from(questions)
-            .where(
-              usedIds.length > 0
-                ? and(
-                    eq(questions.materialId, materialId),
-                    or(eq(questions.mode, 'PRACTICE'), eq(questions.mode, 'ALL')),
-                    notInArray(questions.id, usedIds)
-                  )
-                : and(
-                    eq(questions.materialId, materialId),
-                    or(eq(questions.mode, 'PRACTICE'), eq(questions.mode, 'ALL'))
-                  )
-            )
-        }
-
-        // Fallback: allow repeats
-        if (available.length === 0) {
-          available = await db
-            .select()
-            .from(questions)
-            .where(
-              and(
-                eq(questions.materialId, materialId),
-                or(eq(questions.mode, 'PRACTICE'), eq(questions.mode, 'ALL'))
-              )
-            )
-        }
-
-        if (available.length > 0) {
-          currentQuestion = available[Math.floor(Math.random() * available.length)]
-          // Update session with the new question and reset remedial status
+        if (newQ) {
+          currentQuestion = newQ
+          // Update session: reset remedial status, assign new question
           await db
             .update(practiceSessions)
             .set({
@@ -168,12 +231,12 @@ export async function POST(request: NextRequest) {
 
       if (!currentQuestion) {
         return NextResponse.json(
-          { error: { code: 'NOT_FOUND', message: 'Tidak ada soal tersedia' } },
+          { error: { code: 'NOT_FOUND', message: 'Tidak ada soal tersedia untuk materi ini' } },
           { status: 404 }
         )
       }
 
-      // Get stats for this session
+      // Get session attempt stats
       const sessionAttempts = await db
         .select()
         .from(practiceAttempts)
@@ -182,7 +245,6 @@ export async function POST(request: NextRequest) {
       const correctAnswers = sessionAttempts.filter((a) => a.isCorrect).length
       const totalAttempts = sessionAttempts.length
 
-      // Return RESUMED session with current floor
       return NextResponse.json({
         sessionId: session.id,
         materialId,
@@ -191,6 +253,8 @@ export async function POST(request: NextRequest) {
         consecutiveWrong: session.status === 'REMEDIAL_REQUIRED' ? 0 : session.consecutiveWrong,
         currentDifficulty: session.currentDifficulty,
         difficultyLabel: DIFFICULTY_LABELS[session.currentDifficulty] || 'Sedang',
+        // ✅ FIX: Kembalikan currentStreak saat resume — bukan 0
+        currentStreak: session.currentStreak || 0,
         mode: 'practice',
         question: formatQuestionForClient(currentQuestion),
         stats: { floorsClimbed: session.floor - 1, correctAnswers, totalAttempts },
@@ -198,17 +262,19 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // ──────────────────────────────────────────────────────────────
-    // NO ACTIVE SESSION — Create a brand new one
-    // Start from the student's HIGHEST floor ever reached (across ALL
-    // sessions and ALL materials) so progress is never lost.
-    // ──────────────────────────────────────────────────────────────
+    // ── NO ACTIVE SESSION — Create a brand new one ────────────────────────
+    // Start from the student's HIGHEST floor ever reached for this material
     const [highestFloorRow] = await db
       .select({
         maxFloor: sql<number>`COALESCE(MAX(floor), 1)`,
       })
       .from(practiceSessions)
-      .where(eq(practiceSessions.studentUserId, userId))
+      .where(
+        and(
+          eq(practiceSessions.studentUserId, userId),
+          eq(practiceSessions.materialId, materialId)
+        )
+      )
 
     const startingFloor = highestFloorRow?.maxFloor || 1
 
@@ -260,6 +326,7 @@ export async function POST(request: NextRequest) {
       floor: startingFloor,
       consecutiveWrong: 0,
       currentDifficulty: firstQuestion.difficulty,
+      currentStreak: 0,
       currentQuestionId: firstQuestion.id,
       startedAt: new Date().toISOString(),
       status: 'ACTIVE',
@@ -273,6 +340,7 @@ export async function POST(request: NextRequest) {
       consecutiveWrong: 0,
       currentDifficulty: firstQuestion.difficulty,
       difficultyLabel: DIFFICULTY_LABELS[firstQuestion.difficulty] || 'Sedang',
+      currentStreak: 0,
       mode: 'practice',
       question: formatQuestionForClient(firstQuestion),
       stats: { floorsClimbed: startingFloor - 1, correctAnswers: 0, totalAttempts: 0 },

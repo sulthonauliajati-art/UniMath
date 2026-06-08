@@ -11,7 +11,7 @@ export default function PracticeStartPage() {
   const params = useParams()
   const materialId = params.materialId as string
   const router = useRouter()
-  const { user, isLoading } = useAuth()
+  const { user, isLoading, token } = useAuth()
   const [loading, setLoading] = useState(false)
   const [materialTitle, setMaterialTitle] = useState('Latihan')
   const [fetchingTitle, setFetchingTitle] = useState(true)
@@ -50,9 +50,12 @@ export default function PracticeStartPage() {
     setLoading(true)
     setError('')
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      if (token) headers['Authorization'] = `Bearer ${token}`
+
       const res = await fetch('/api/practice/start', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ materialId }),
       })
       const data = await res.json()

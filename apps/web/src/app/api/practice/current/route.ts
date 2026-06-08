@@ -26,18 +26,47 @@ function formatQuestionForClient(q: typeof questions.$inferSelect) {
 
 export async function GET(request: NextRequest) {
   try {
+    // Resolve userId via multiple auth methods — konsisten dengan /api/practice/start
     const cookieStore = await cookies()
-    const userCookie = cookieStore.get('user')
-    if (!userCookie) {
-      return NextResponse.json({ error: { message: 'Unauthorized' } }, { status: 401 })
+    let userId = ''
+
+    // 1. Authorization header
+    const authHeader = request.headers.get('authorization')
+    if (authHeader?.startsWith('Bearer ')) {
+      const { validateToken } = await import('@/lib/auth/utils')
+      const t = await validateToken(authHeader.replace('Bearer ', '').trim())
+      if (t.valid && t.userId) userId = t.userId
     }
 
-    let userId = ''
-    try {
-      const user = JSON.parse(userCookie.value)
-      userId = user.id
-    } catch {
-      return NextResponse.json({ error: { message: 'Invalid token' } }, { status: 401 })
+    // 2. Cookie 'token' (set oleh AuthContext)
+    if (!userId) {
+      const tokenCookie = cookieStore.get('token')
+      if (tokenCookie?.value) {
+        const { validateToken } = await import('@/lib/auth/utils')
+        const t = await validateToken(tokenCookie.value)
+        if (t.valid && t.userId) userId = t.userId
+      }
+    }
+
+    // 3. Cookie 'user' legacy (dengan validasi anonymous)
+    if (!userId) {
+      const userCookie = cookieStore.get('user')
+      if (!userCookie) {
+        return NextResponse.json({ error: { message: 'Unauthorized' } }, { status: 401 })
+      }
+      try {
+        const user = JSON.parse(userCookie.value)
+        if (!user.id || user.id === 'anonymous') {
+          return NextResponse.json({ error: { message: 'Unauthorized' } }, { status: 401 })
+        }
+        userId = user.id
+      } catch {
+        return NextResponse.json({ error: { message: 'Invalid token' } }, { status: 401 })
+      }
+    }
+
+    if (!userId) {
+      return NextResponse.json({ error: { message: 'Unauthorized' } }, { status: 401 })
     }
 
     // Find the latest active session
@@ -151,6 +180,8 @@ export async function GET(request: NextRequest) {
       consecutiveWrong: session.consecutiveWrong,
       currentDifficulty: session.currentDifficulty,
       difficultyLabel: DIFFICULTY_LABELS[session.currentDifficulty] || 'Sedang',
+      // ✅ FIX: Kembalikan currentStreak agar play page bisa restore streak saat resume
+      currentStreak: session.currentStreak || 0,
       mode: 'practice',
       question: formatQuestionForClient(currentQuestion),
       stats: { floorsClimbed: session.floor - 1, correctAnswers, totalAttempts }

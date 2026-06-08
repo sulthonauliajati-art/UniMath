@@ -26,6 +26,12 @@ interface Student {
   totalPoints: number | null
   passwordStatus: string | null
   createdAt: string
+  // ✅ FIX #14: Statistik latihan
+  totalSessions: number
+  highestFloor: number
+  accuracy: number
+  totalAttempts: number
+  lastPracticeAt: string | null
 }
 
 type TabKey = 'teachers' | 'students'
@@ -385,15 +391,35 @@ export default function AdminUsersClient() {
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-white truncate">{s.name}</h3>
                       <p className="text-sm text-text-secondary">NISN: {s.nisn || '-'}</p>
-                      <div className="flex items-center gap-2 mt-1 text-xs">
-                        <span
-                          className={s.passwordStatus === 'SET' ? 'text-green-400' : 'text-yellow-400'}
-                        >
-                          {s.passwordStatus === 'SET' ? '✓ Password aktif' : '⚠ Password belum diset'}
+                      <div className="flex items-center gap-2 mt-1 text-xs flex-wrap">
+                        <span className={s.passwordStatus === 'SET' ? 'text-green-400' : 'text-yellow-400'}>
+                          {s.passwordStatus === 'SET' ? '✓ Aktif' : '⚠ Belum set'}
                         </span>
                         <span className="text-text-muted">·</span>
-                        <span className="text-uni-primary">{s.totalPoints || 0} poin</span>
+                        <span className="text-uni-primary">{s.totalPoints || 0} XP</span>
+                        {(s.totalSessions ?? 0) > 0 ? (
+                          <>
+                            <span className="text-text-muted">·</span>
+                            <span className="text-cyan-300">{s.totalSessions} sesi</span>
+                            <span className="text-text-muted">·</span>
+                            <span className="text-emerald-300">🏢 {s.highestFloor}</span>
+                            <span className="text-text-muted">·</span>
+                            <span className={s.accuracy >= 75 ? 'text-emerald-300' : s.accuracy >= 50 ? 'text-amber-300' : 'text-red-300'}>
+                              🎯 {s.accuracy}%
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-text-muted">·</span>
+                            <span className="text-text-muted italic">Belum latihan</span>
+                          </>
+                        )}
                       </div>
+                      {s.lastPracticeAt && (
+                        <p className="text-[11px] text-text-muted mt-1">
+                          Terakhir: {new Date(s.lastPracticeAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      )}
                     </div>
                     <div className="flex gap-1">
                       <ActionBtn onClick={() => openEditStudent(s)} label="Edit" emoji="✏️" />

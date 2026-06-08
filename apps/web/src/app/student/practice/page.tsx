@@ -4,16 +4,28 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { TowerBackground, GlassCard } from '@/components/ui'
+import { TowerBackground, GlassCard, StarryBackground } from '@/components/ui'
+import { ProgressBar } from '@/components/ui/ProgressBar'
 import { useAuth } from '@/lib/auth/context'
 import { LoadingScreen } from '@/components/ui/LoadingScreen'
 
+interface Material {
+  id: string
+  title: string
+  order: number
+  progress: number
+}
+
+/**
+ * ✅ FIX #3 & #15: Halaman /student/practice sekarang menampilkan DAFTAR MATERI
+ * untuk dipilih siswa secara eksplisit — bukan langsung memulai dengan materi pertama.
+ * Setiap materi memiliki tombol "Mulai Latihan" yang mengarah ke start page materi itu.
+ */
 export default function PracticePage() {
   const router = useRouter()
   const { user, isLoading } = useAuth()
-  const [loading, setLoading] = useState(false)
-  const [totalXP, setTotalXP] = useState(0)
-  const [currentMaterial, setCurrentMaterial] = useState('Penjumlahan Dasar')
+  const [materials, setMaterials] = useState<Material[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'STUDENT')) {
@@ -22,45 +34,19 @@ export default function PracticePage() {
   }, [user, isLoading, router])
 
   useEffect(() => {
-    async function fetchProgress() {
+    async function fetchMaterials() {
       try {
-        const res = await fetch('/api/student/progress')
+        const res = await fetch('/api/student/materials')
         const data = await res.json()
-        if (data.totalXP !== undefined) setTotalXP(data.totalXP)
-        if (data.currentMaterial) setCurrentMaterial(data.currentMaterial)
+        setMaterials(data.materials || [])
       } catch (error) {
-        console.error('Failed to fetch progress:', error)
+        console.error('Failed to fetch materials:', error)
+      } finally {
+        setLoading(false)
       }
     }
-    if (user) fetchProgress()
+    if (user) fetchMaterials()
   }, [user])
-
-  const handleStartPractice = async () => {
-    setLoading(true)
-    try {
-      const res = await fetch('/api/practice/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode: 'practice' }),
-      })
-      const data = await res.json()
-
-      if (data.sessionId) {
-        sessionStorage.setItem(
-          'practiceSession',
-          JSON.stringify({
-            ...data,
-            materialName: data.materialName || currentMaterial,
-          })
-        )
-        router.push(`/student/practice/${data.materialId}/play`)
-      }
-    } catch (error) {
-      console.error('Failed to start practice:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   if (isLoading || !user) {
     return <LoadingScreen />
@@ -68,56 +54,79 @@ export default function PracticePage() {
 
   return (
     <TowerBackground variant="practice">
-      <section className="relative z-20 flex-1 flex items-center justify-center p-4 sm:p-6">
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md"
-        >
-          <GlassCard glowColor="cyan" intensity="strong" className="p-6 sm:p-8 text-center">
-            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-              Siap Latihan?
-            </h1>
-            <p className="text-slate-300 text-sm sm:text-base mb-6">
-              Bantu robot naik gedung dengan menjawab soal!
+      <div className="relative z-20 w-full max-w-2xl mx-auto px-4 pt-8 pb-10">
+        {/* Header */}
+        <div className="flex items-center gap-4 mb-8">
+          <Link
+            href="/student/dashboard"
+            className="w-10 h-10 flex items-center justify-center rounded-xl border border-cyan-400/30 bg-black/40 text-white hover:bg-cyan-500/10 transition-colors flex-shrink-0"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </Link>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white">Pilih Materi Latihan</h1>
+            <p className="text-sm text-slate-400 mt-0.5">
+              Pilih materi yang ingin kamu latih sekarang
             </p>
+          </div>
+        </div>
 
-            <div className="bg-black/40 border border-cyan-500/20 rounded-xl p-4 mb-6 space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400 text-xs sm:text-sm uppercase tracking-wide">
-                  ⭐ Total XP
-                </span>
-                <span className="text-amber-300 font-bold text-base sm:text-lg">
-                  {totalXP}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400 text-xs sm:text-sm uppercase tracking-wide">
-                  Materi
-                </span>
-                <span className="text-white font-semibold text-sm sm:text-base truncate ml-2">
-                  {currentMaterial}
-                </span>
-              </div>
-            </div>
-
-            <button
-              onClick={handleStartPractice}
-              disabled={loading}
-              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-cyan-400 to-emerald-400 text-slate-900 font-bold text-base shadow-[0_0_24px_-4px_rgba(6,182,212,0.8)] hover:shadow-[0_0_32px_-4px_rgba(6,182,212,1)] disabled:opacity-60 disabled:cursor-not-allowed transition-shadow"
-            >
-              {loading ? 'Menyiapkan…' : '🚀 Mulai Latihan'}
-            </button>
-
-            <Link
-              href="/student/dashboard"
-              className="block mt-4 text-slate-400 hover:text-white text-xs sm:text-sm transition-colors"
-            >
-              ← Kembali ke Dashboard
-            </Link>
+        {/* Materials List */}
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <LoadingScreen fullScreen={false} />
+          </div>
+        ) : materials.length === 0 ? (
+          <GlassCard className="p-8 text-center">
+            <div className="text-4xl mb-3">📚</div>
+            <p className="text-white font-semibold mb-1">Belum ada materi</p>
+            <p className="text-slate-400 text-sm">Tunggu guru menambahkan materi latihan</p>
           </GlassCard>
-        </motion.div>
-      </section>
+        ) : (
+          <div className="space-y-3">
+            {materials.map((material, index) => (
+              <motion.div
+                key={material.id}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.06 }}
+              >
+                <GlassCard className="p-4 sm:p-5 border-cyan-500/20 hover:border-cyan-400/40 transition-colors">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    {/* Number badge */}
+                    <div className="w-14 h-14 rounded-xl bg-black/50 border border-cyan-400/30 flex items-center justify-center flex-shrink-0 shadow-[inset_0_0_10px_rgba(6,182,212,0.15)]">
+                      <span className="text-2xl font-bold text-cyan-300">{material.order}</span>
+                    </div>
+
+                    <div className="flex-1 min-w-0 w-full">
+                      <h3 className="text-base sm:text-lg font-bold text-white mb-2 truncate">
+                        {material.title}
+                      </h3>
+                      {/* Progress bar */}
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-xs text-slate-400">Progress latihan</span>
+                        <span className="text-xs font-bold text-cyan-300">{material.progress}%</span>
+                      </div>
+                      <ProgressBar value={material.progress} size="sm" />
+                    </div>
+
+                    {/* Start button */}
+                    <div className="w-full sm:w-auto flex-shrink-0">
+                      <Link href={`/student/practice/${material.id}/start`}>
+                        <button className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-400 to-emerald-400 text-slate-900 font-bold text-sm shadow-[0_0_16px_-4px_rgba(6,182,212,0.6)] hover:shadow-[0_0_22px_-4px_rgba(6,182,212,0.9)] transition-shadow whitespace-nowrap">
+                          🚀 Mulai
+                        </button>
+                      </Link>
+                    </div>
+                  </div>
+                </GlassCard>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
     </TowerBackground>
   )
 }

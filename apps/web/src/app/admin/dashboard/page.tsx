@@ -36,6 +36,8 @@ export default function AdminDashboardPage() {
     { href: '/admin/questions', icon: '❓', title: 'Kelola Soal', desc: 'Upload dan kelola bank soal' },
     { href: '/admin/achievements', icon: '🏆', title: 'Achievements', desc: 'Kelola badge dan reward' },
     { href: '/admin/users', icon: '👥', title: 'Users', desc: 'Kelola guru dan siswa' },
+    // ✅ FIX #8: Tambah menu Export & Rekap
+    { href: '/admin/reports', icon: '📊', title: 'Export & Rekap', desc: 'Download data latihan & penelitian siswa' },
   ]
 
   return (
@@ -56,13 +58,13 @@ export default function AdminDashboardPage() {
           </button>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {menuItems.map((item, index) => (
             <motion.div
               key={item.href}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
+              transition={{ delay: index * 0.08 }}
             >
               <Link href={item.href}>
                 <GlassCard hover className="p-6">
