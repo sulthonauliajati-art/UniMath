@@ -54,41 +54,52 @@ export async function GET(request: NextRequest) {
       .from(users)
       .where(eq(users.role, 'STUDENT'))
 
-    // ✅ FIX #14: Ambil statistik latihan per siswa
-    const students = await Promise.all(
-      studentsRaw.map(async (s) => {
-        const [sessionStats] = await db
-          .select({
-            totalSessions: sql<number>`COUNT(DISTINCT ${practiceSessions.id})`,
-            highestFloor: sql<number>`COALESCE(MAX(${practiceSessions.floor}), 0)`,
-            lastPracticeAt: sql<string>`MAX(${practiceSessions.startedAt})`,
-          })
-          .from(practiceSessions)
-          .where(eq(practiceSessions.studentUserId, s.id))
+    // ⚡ OPTIMASI: Ganti N+1 (58 siswa × 2 queries = 116 queries) → 2 batch queries GROUP BY
+    // Sebelum: setiap siswa dapat 2 query terpisah → full scan practice_sessions & practice_attempts
+    // Sesudah: 2 query untuk semua siswa sekaligus dengan GROUP BY + index student_user_id
 
-        const [attemptStats] = await db
-          .select({
-            totalAttempts: sql<number>`COUNT(*)`,
-            correctAttempts: sql<number>`COALESCE(SUM(CASE WHEN ${practiceAttempts.isCorrect} = 1 THEN 1 ELSE 0 END), 0)`,
-          })
-          .from(practiceAttempts)
-          .innerJoin(practiceSessions, eq(practiceAttempts.sessionId, practiceSessions.id))
-          .where(eq(practiceSessions.studentUserId, s.id))
-
-        const total = attemptStats?.totalAttempts || 0
-        const correct = attemptStats?.correctAttempts || 0
-        const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0
-
-        return {
-          ...s,
-          totalSessions: sessionStats?.totalSessions || 0,
-          highestFloor: sessionStats?.highestFloor || 0,
-          accuracy,
-          totalAttempts: total,
-          lastPracticeAt: sessionStats?.lastPracticeAt || null,
-        }
+    // Batch 1: Session stats semua siswa sekaligus
+    const sessionStatsBatch = await db
+      .select({
+        studentId: practiceSessions.studentUserId,
+        totalSessions: sql<number>`COUNT(DISTINCT ${practiceSessions.id})`,
+        highestFloor: sql<number>`COALESCE(MAX(${practiceSessions.floor}), 0)`,
+        lastPracticeAt: sql<string>`MAX(${practiceSessions.startedAt})`,
       })
-    )
+      .from(practiceSessions)
+      .groupBy(practiceSessions.studentUserId)
+
+    const sessionStatsMap = new Map(sessionStatsBatch.map(s => [s.studentId, s]))
+
+    // Batch 2: Attempt stats semua siswa sekaligus
+    const attemptStatsBatch = await db
+      .select({
+        studentId: practiceSessions.studentUserId,
+        totalAttempts: sql<number>`COUNT(*)`,
+        correctAttempts: sql<number>`COALESCE(SUM(CASE WHEN ${practiceAttempts.isCorrect} = 1 THEN 1 ELSE 0 END), 0)`,
+      })
+      .from(practiceAttempts)
+      .innerJoin(practiceSessions, eq(practiceAttempts.sessionId, practiceSessions.id))
+      .groupBy(practiceSessions.studentUserId)
+
+    const attemptStatsMap = new Map(attemptStatsBatch.map(a => [a.studentId, a]))
+
+    // Gabungkan dari in-memory maps — zero additional DB calls
+    const students = studentsRaw.map(s => {
+      const ss = sessionStatsMap.get(s.id)
+      const as = attemptStatsMap.get(s.id)
+      const total = as?.totalAttempts || 0
+      const correct = as?.correctAttempts || 0
+      const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0
+      return {
+        ...s,
+        totalSessions: ss?.totalSessions || 0,
+        highestFloor: ss?.highestFloor || 0,
+        accuracy,
+        totalAttempts: total,
+        lastPracticeAt: ss?.lastPracticeAt || null,
+      }
+    })
 
     return NextResponse.json({ teachers, students })
   } catch (error) {

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { db } from '@/lib/db/client'
 import { questions, materials, practiceSessions, practiceAttempts } from '@/lib/db/schema'
-import { eq, desc, and, or, notInArray } from 'drizzle-orm'
+import { eq, desc, and, or } from 'drizzle-orm'
 
 const DIFFICULTY_LABELS: Record<number, string> = {
   1: 'Mudah',
@@ -24,9 +24,42 @@ function formatQuestionForClient(q: typeof questions.$inferSelect) {
   }
 }
 
+/**
+ * ⚡ OPTIMASI: Sama dengan getNewQuestion di answer/route.ts
+ * 1 query → filter di memori. Eliminasi 3 DB round-trips.
+ */
+async function pickQuestion(
+  materialId: string,
+  difficulty: number,
+  usedIds: Set<string>
+) {
+  const allQ = await db
+    .select()
+    .from(questions)
+    .where(
+      and(
+        eq(questions.materialId, materialId),
+        or(eq(questions.mode, 'PRACTICE'), eq(questions.mode, 'ALL'))
+      )
+    )
+
+  if (allQ.length === 0) return null
+
+  const atTargetUnused = allQ.filter(q => q.difficulty === difficulty && !usedIds.has(q.id))
+  if (atTargetUnused.length > 0) return atTargetUnused[Math.floor(Math.random() * atTargetUnused.length)]
+
+  const anyUnused = allQ.filter(q => !usedIds.has(q.id))
+  if (anyUnused.length > 0) return anyUnused[Math.floor(Math.random() * anyUnused.length)]
+
+  const atTarget = allQ.filter(q => q.difficulty === difficulty)
+  if (atTarget.length > 0) return atTarget[Math.floor(Math.random() * atTarget.length)]
+
+  return allQ[Math.floor(Math.random() * allQ.length)]
+}
+
 export async function GET(request: NextRequest) {
   try {
-    // Resolve userId via multiple auth methods — konsisten dengan /api/practice/start
+    // Resolve userId via multiple auth methods
     const cookieStore = await cookies()
     let userId = ''
 
@@ -48,7 +81,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // 3. Cookie 'user' legacy (dengan validasi anonymous)
+    // 3. Cookie 'user' legacy
     if (!userId) {
       const userCookie = cookieStore.get('user')
       if (!userCookie) {
@@ -69,7 +102,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: { message: 'Unauthorized' } }, { status: 401 })
     }
 
-    // Find the latest active session
+    // ⚡ OPTIMASI: Pakai index practice_sessions(student_user_id, status)
     const activeSessions = await db.select()
       .from(practiceSessions)
       .where(and(
@@ -85,82 +118,40 @@ export async function GET(request: NextRequest) {
 
     const session = activeSessions[0]
 
-    // Fetch the material
-    const [material] = await db.select().from(materials).where(eq(materials.id, session.materialId)).limit(1)
+    // ⚡ OPTIMASI: Fetch material (PK lookup = 1 row)
+    const [material] = await db.select().from(materials)
+      .where(eq(materials.id, session.materialId))
+      .limit(1)
 
-    // Fetch attempts for stats
+    // ⚡ OPTIMASI: Batasi sessionAttempts dengan LIMIT
+    // Cukup untuk stats dan rotasi soal — tidak perlu semua attempt historis
     const sessionAttempts = await db.select()
       .from(practiceAttempts)
       .where(eq(practiceAttempts.sessionId, session.id))
       .orderBy(desc(practiceAttempts.createdAt))
+      .limit(200) // Cukup untuk 200 soal — lebih dari cukup per sesi
 
     let currentQuestion = null
 
-    // Try to resume with currentQuestionId stored in session
+    // Coba resume dengan currentQuestionId yang sudah disimpan
     if (session.currentQuestionId) {
-      const questionRows = await db.select().from(questions)
+      const [q] = await db.select().from(questions)
         .where(eq(questions.id, session.currentQuestionId))
         .limit(1)
-      if (questionRows.length > 0) {
-        currentQuestion = questionRows[0]
-      }
+      if (q) currentQuestion = q
     }
 
-    // If no currentQuestionId or not found, pick a new one
+    // Jika tidak ada currentQuestionId, pick soal baru
     if (!currentQuestion) {
-      const usedQuestionIds = Array.from(new Set(sessionAttempts.map(a => a.questionId)))
-      const targetDifficulty = session.currentDifficulty || 2
+      const usedIds = new Set(sessionAttempts.map(a => a.questionId))
+      currentQuestion = await pickQuestion(session.materialId, session.currentDifficulty || 2, usedIds)
 
-      let available = await db.select().from(questions)
-        .where(
-          usedQuestionIds.length > 0
-            ? and(
-                eq(questions.materialId, session.materialId),
-                eq(questions.difficulty, targetDifficulty),
-                or(eq(questions.mode, 'PRACTICE'), eq(questions.mode, 'ALL')),
-                notInArray(questions.id, usedQuestionIds)
-              )
-            : and(
-                eq(questions.materialId, session.materialId),
-                eq(questions.difficulty, targetDifficulty),
-                or(eq(questions.mode, 'PRACTICE'), eq(questions.mode, 'ALL'))
-              )
-        )
-
-      // Fallback: any unused PRACTICE question
-      if (available.length === 0) {
-        available = await db.select().from(questions)
-          .where(
-            usedQuestionIds.length > 0
-              ? and(
-                  eq(questions.materialId, session.materialId),
-                  or(eq(questions.mode, 'PRACTICE'), eq(questions.mode, 'ALL')),
-                  notInArray(questions.id, usedQuestionIds)
-                )
-              : and(
-                  eq(questions.materialId, session.materialId),
-                  or(eq(questions.mode, 'PRACTICE'), eq(questions.mode, 'ALL'))
-                )
-          )
-      }
-
-      // Fallback: allow repeats
-      if (available.length === 0) {
-        available = await db.select().from(questions)
-          .where(
-            and(
-              eq(questions.materialId, session.materialId),
-              or(eq(questions.mode, 'PRACTICE'), eq(questions.mode, 'ALL'))
-            )
-          )
-      }
-
-      if (available.length > 0) {
-        currentQuestion = available[Math.floor(Math.random() * available.length)]
-        // Update session with the new question
-        await db.update(practiceSessions)
+      if (currentQuestion) {
+        // Update session dengan soal baru (best-effort, tidak blocking)
+        db.update(practiceSessions)
           .set({ currentQuestionId: currentQuestion.id })
           .where(eq(practiceSessions.id, session.id))
+          .catch(err => console.error('Update currentQuestionId error:', err))
       }
     }
 
@@ -168,7 +159,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: { message: 'No questions available' } }, { status: 404 })
     }
 
-    // Stats for the client
+    // Stats
     const correctAnswers = sessionAttempts.filter(a => a.isCorrect).length
     const totalAttempts = sessionAttempts.length
 
@@ -180,7 +171,6 @@ export async function GET(request: NextRequest) {
       consecutiveWrong: session.consecutiveWrong,
       currentDifficulty: session.currentDifficulty,
       difficultyLabel: DIFFICULTY_LABELS[session.currentDifficulty] || 'Sedang',
-      // ✅ FIX: Kembalikan currentStreak agar play page bisa restore streak saat resume
       currentStreak: session.currentStreak || 0,
       mode: 'practice',
       question: formatQuestionForClient(currentQuestion),
