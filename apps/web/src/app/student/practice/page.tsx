@@ -1,15 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { TowerBackground, GlassCard, StarryBackground } from '@/components/ui'
-import { ProgressBar } from '@/components/ui/ProgressBar'
+import { TowerBackground } from '@/components/ui'
 import { useAuth } from '@/lib/auth/context'
-import { LoadingScreen } from '@/components/ui/LoadingScreen'
 
-interface Material {
+interface MaterialInfo {
   id: string
   title: string
   order: number
@@ -17,15 +15,23 @@ interface Material {
 }
 
 /**
- * ✅ FIX #3 & #15: Halaman /student/practice sekarang menampilkan DAFTAR MATERI
- * untuk dipilih siswa secara eksplisit — bukan langsung memulai dengan materi pertama.
- * Setiap materi memiliki tombol "Mulai Latihan" yang mengarah ke start page materi itu.
+ * Halaman /student/practice
+ *
+ * Flow yang benar:
+ * 1. Cek apakah ada session AKTIF yang bisa dilanjutkan
+ * 2. Jika ada → langsung redirect ke /student/practice/[materialId]/play
+ * 3. Jika tidak ada → cari materi yang paling sesuai progress siswa (materi pertama yang
+ *    belum selesai, berurutan dari order terkecil) → redirect ke start page materi itu
+ *
+ * Siswa TIDAK memilih materi secara manual.
+ * Semua diputuskan sistem berdasarkan progress.
  */
 export default function PracticePage() {
   const router = useRouter()
-  const { user, isLoading } = useAuth()
-  const [materials, setMaterials] = useState<Material[]>([])
-  const [loading, setLoading] = useState(true)
+  const { user, token, isLoading } = useAuth()
+  const [status, setStatus] = useState<'checking' | 'starting' | 'error' | 'no_material'>('checking')
+  const [errorMsg, setErrorMsg] = useState('')
+  const [currentMaterial, setCurrentMaterial] = useState<MaterialInfo | null>(null)
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'STUDENT')) {
@@ -33,99 +39,214 @@ export default function PracticePage() {
     }
   }, [user, isLoading, router])
 
-  useEffect(() => {
-    async function fetchMaterials() {
-      try {
-        const res = await fetch('/api/student/materials')
-        const data = await res.json()
-        setMaterials(data.materials || [])
-      } catch (error) {
-        console.error('Failed to fetch materials:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-    if (user) fetchMaterials()
-  }, [user])
+  const resolveAndRedirect = useCallback(async () => {
+    if (!user) return
 
+    try {
+      const headers: Record<string, string> = {}
+      if (token) headers['Authorization'] = `Bearer ${token}`
+
+      // 1️⃣ Cek apakah ada session AKTIF (bisa dilanjutkan)
+      const currentRes = await fetch('/api/practice/current', { headers })
+
+      if (currentRes.ok) {
+        const data = await currentRes.json()
+        if (data.sessionId && data.materialId) {
+          // Ada session aktif — simpan ke sessionStorage dan lanjut main
+          sessionStorage.setItem('practiceSession', JSON.stringify({
+            sessionId: data.sessionId,
+            floor: data.floor || 1,
+            consecutiveWrong: data.consecutiveWrong || 0,
+            currentDifficulty: data.currentDifficulty || 2,
+            difficultyLabel: data.difficultyLabel || 'Sedang',
+            question: data.question,
+            materialId: data.materialId,
+            materialName: data.materialName,
+            stats: data.stats,
+            streak: data.currentStreak || 0,
+            sessionXP: 0,
+          }))
+          router.replace(`/student/practice/${data.materialId}/play`)
+          return
+        }
+      }
+
+      // 2️⃣ Tidak ada session aktif → cari materi yang sesuai progress
+      setStatus('starting')
+      const matsRes = await fetch('/api/student/materials', { headers })
+
+      if (!matsRes.ok) {
+        setStatus('error')
+        setErrorMsg('Gagal memuat materi. Coba lagi.')
+        return
+      }
+
+      const matsData = await matsRes.json()
+      const mats: MaterialInfo[] = (matsData.materials || [])
+        .sort((a: MaterialInfo, b: MaterialInfo) => a.order - b.order)
+
+      if (mats.length === 0) {
+        setStatus('no_material')
+        return
+      }
+
+      // Pilih materi pertama yang belum selesai (progress < 100%)
+      // Jika semua sudah 100%, ulang dari materi pertama
+      const nextMaterial = mats.find(m => m.progress < 100) || mats[0]
+      setCurrentMaterial(nextMaterial)
+
+      // 3️⃣ Auto-start practice untuk materi yang dipilih sistem
+      const startHeaders: Record<string, string> = { 'Content-Type': 'application/json' }
+      if (token) startHeaders['Authorization'] = `Bearer ${token}`
+
+      const startRes = await fetch('/api/practice/start', {
+        method: 'POST',
+        headers: startHeaders,
+        body: JSON.stringify({ materialId: nextMaterial.id }),
+      })
+
+      const startData = await startRes.json()
+
+      if (!startRes.ok || startData.error) {
+        setStatus('error')
+        setErrorMsg(startData.error?.message || 'Gagal memulai latihan.')
+        return
+      }
+
+      if (startData.sessionId) {
+        sessionStorage.setItem('practiceSession', JSON.stringify({
+          ...startData,
+          materialName: nextMaterial.title,
+        }))
+        router.replace(`/student/practice/${nextMaterial.id}/play`)
+      } else {
+        setStatus('error')
+        setErrorMsg('Session tidak valid. Coba lagi.')
+      }
+    } catch (err) {
+      console.error('Practice resolve error:', err)
+      setStatus('error')
+      setErrorMsg('Terjadi kesalahan jaringan. Coba lagi.')
+    }
+  }, [user, token, router])
+
+  useEffect(() => {
+    if (!isLoading && user?.role === 'STUDENT') {
+      resolveAndRedirect()
+    }
+  }, [isLoading, user, resolveAndRedirect])
+
+  // Loading / transitioning state
   if (isLoading || !user) {
-    return <LoadingScreen />
+    return (
+      <TowerBackground variant="practice">
+        <div className="min-h-[100dvh] flex items-center justify-center">
+          <div className="text-white/80 text-sm animate-pulse">Memuat…</div>
+        </div>
+      </TowerBackground>
+    )
   }
 
+  if (status === 'no_material') {
+    return (
+      <TowerBackground variant="practice">
+        <div className="min-h-[100dvh] flex items-center justify-center px-6">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center max-w-sm"
+          >
+            <div className="text-6xl mb-4">📚</div>
+            <h2 className="text-white text-xl font-bold mb-2">Belum ada materi</h2>
+            <p className="text-slate-400 text-sm mb-6">
+              Guru belum menambahkan materi latihan. Silakan tunggu atau hubungi gurumu.
+            </p>
+            <Link href="/student/dashboard">
+              <button className="px-6 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-sm font-semibold hover:bg-white/20 transition-all">
+                ← Kembali ke Dashboard
+              </button>
+            </Link>
+          </motion.div>
+        </div>
+      </TowerBackground>
+    )
+  }
+
+  if (status === 'error') {
+    return (
+      <TowerBackground variant="practice">
+        <div className="min-h-[100dvh] flex items-center justify-center px-6">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center max-w-sm"
+          >
+            <div className="text-6xl mb-4">⚠️</div>
+            <h2 className="text-white text-xl font-bold mb-2">Terjadi Kesalahan</h2>
+            <p className="text-red-300 text-sm mb-6">{errorMsg}</p>
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={resolveAndRedirect}
+                className="px-6 py-2.5 rounded-xl bg-cyan-500 text-slate-900 text-sm font-bold hover:bg-cyan-400 transition-all"
+              >
+                🔄 Coba Lagi
+              </button>
+              <Link href="/student/dashboard">
+                <button className="px-6 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-sm font-semibold hover:bg-white/20 transition-all">
+                  ← Dashboard
+                </button>
+              </Link>
+            </div>
+          </motion.div>
+        </div>
+      </TowerBackground>
+    )
+  }
+
+  // Default: 'checking' | 'starting' — tampilkan loading dengan info materi jika sudah tahu
   return (
     <TowerBackground variant="practice">
-      <div className="relative z-20 w-full max-w-2xl mx-auto px-4 pt-8 pb-10">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Link
-            href="/student/dashboard"
-            className="w-10 h-10 flex items-center justify-center rounded-xl border border-cyan-400/30 bg-black/40 text-white hover:bg-cyan-500/10 transition-colors flex-shrink-0"
+      <div className="min-h-[100dvh] flex items-center justify-center px-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center"
+        >
+          {/* Animated tower icon */}
+          <motion.div
+            animate={{ y: [-4, 4, -4] }}
+            transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
+            className="text-7xl mb-6"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </Link>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white">Pilih Materi Latihan</h1>
-            <p className="text-sm text-slate-400 mt-0.5">
-              Pilih materi yang ingin kamu latih sekarang
-            </p>
-          </div>
-        </div>
+            🏢
+          </motion.div>
 
-        {/* Materials List */}
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <LoadingScreen fullScreen={false} />
-          </div>
-        ) : materials.length === 0 ? (
-          <GlassCard className="p-8 text-center">
-            <div className="text-4xl mb-3">📚</div>
-            <p className="text-white font-semibold mb-1">Belum ada materi</p>
-            <p className="text-slate-400 text-sm">Tunggu guru menambahkan materi latihan</p>
-          </GlassCard>
-        ) : (
-          <div className="space-y-3">
-            {materials.map((material, index) => (
-              <motion.div
-                key={material.id}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.06 }}
-              >
-                <GlassCard className="p-4 sm:p-5 border-cyan-500/20 hover:border-cyan-400/40 transition-colors">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                    {/* Number badge */}
-                    <div className="w-14 h-14 rounded-xl bg-black/50 border border-cyan-400/30 flex items-center justify-center flex-shrink-0 shadow-[inset_0_0_10px_rgba(6,182,212,0.15)]">
-                      <span className="text-2xl font-bold text-cyan-300">{material.order}</span>
-                    </div>
+          {currentMaterial ? (
+            <>
+              <h2 className="text-white text-xl font-bold mb-1">
+                Memulai Latihan…
+              </h2>
+              <p className="text-cyan-300 text-sm font-medium mb-1">
+                Materi {currentMaterial.order}: {currentMaterial.title}
+              </p>
+              <p className="text-slate-400 text-xs">
+                Progress sebelumnya: {currentMaterial.progress}%
+              </p>
+            </>
+          ) : (
+            <>
+              <h2 className="text-white text-xl font-bold mb-2">
+                {status === 'checking' ? 'Memeriksa sesi latihan…' : 'Menyiapkan latihan…'}
+              </h2>
+              <p className="text-slate-400 text-sm">Sebentar lagi dimulai</p>
+            </>
+          )}
 
-                    <div className="flex-1 min-w-0 w-full">
-                      <h3 className="text-base sm:text-lg font-bold text-white mb-2 truncate">
-                        {material.title}
-                      </h3>
-                      {/* Progress bar */}
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-xs text-slate-400">Progress latihan</span>
-                        <span className="text-xs font-bold text-cyan-300">{material.progress}%</span>
-                      </div>
-                      <ProgressBar value={material.progress} size="sm" />
-                    </div>
-
-                    {/* Start button */}
-                    <div className="w-full sm:w-auto flex-shrink-0">
-                      <Link href={`/student/practice/${material.id}/start`}>
-                        <button className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-400 to-emerald-400 text-slate-900 font-bold text-sm shadow-[0_0_16px_-4px_rgba(6,182,212,0.6)] hover:shadow-[0_0_22px_-4px_rgba(6,182,212,0.9)] transition-shadow whitespace-nowrap">
-                          🚀 Mulai
-                        </button>
-                      </Link>
-                    </div>
-                  </div>
-                </GlassCard>
-              </motion.div>
-            ))}
+          {/* Spinner */}
+          <div className="mt-6 flex justify-center">
+            <div className="w-8 h-8 border-2 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin" />
           </div>
-        )}
+        </motion.div>
       </div>
     </TowerBackground>
   )
