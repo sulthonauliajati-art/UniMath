@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core'
+import { sqliteTable, text, integer, index, uniqueIndex } from 'drizzle-orm/sqlite-core'
 
 // Users table - teachers, students, and admin
 export const users = sqliteTable('users', {
@@ -12,7 +12,12 @@ export const users = sqliteTable('users', {
   avatarUrl: text('avatar_url'),
   totalPoints: integer('total_points').default(0),
   createdAt: text('created_at').notNull(),
-})
+}, (table) => ({
+  // Index untuk filter by role (admin queries)
+  roleIdx: index('users_role_idx').on(table.role),
+  // Index untuk cari siswa by NISN
+  nisnIdx: index('users_nisn_idx').on(table.nisn),
+}))
 
 // Teacher profiles
 export const teacherProfiles = sqliteTable('teacher_profiles', {
@@ -48,7 +53,11 @@ export const classes = sqliteTable('classes', {
 export const classStudents = sqliteTable('class_students', {
   classId: text('class_id').notNull().references(() => classes.id),
   studentUserId: text('student_user_id').notNull().references(() => users.id),
-})
+}, (table) => ({
+  // Index untuk lookup: siswa mana yang ada di kelas tertentu
+  studentIdx: index('class_students_student_idx').on(table.studentUserId),
+  classIdx: index('class_students_class_idx').on(table.classId),
+}))
 
 
 // Materials
@@ -94,7 +103,12 @@ export const questions = sqliteTable('questions', {
   hint3: text('hint3'),
   explanation: text('explanation'),
   remedialMaterialId: text('remedial_material_id'),
-})
+}, (table) => ({
+  // ⚡ CRITICAL: Query soal by materialId + difficulty + mode terjadi SETIAP jawaban
+  materialDifficultyIdx: index('questions_material_difficulty_idx').on(table.materialId, table.difficulty, table.mode),
+  // Index untuk cari soal by materi saja
+  materialIdx: index('questions_material_idx').on(table.materialId),
+}))
 
 // Material Contents — konten materi belajar (SHORT & FULL per material)
 export const materialContents = sqliteTable('material_contents', {
@@ -129,16 +143,23 @@ export const practiceSessions = sqliteTable('practice_sessions', {
   studentUserId: text('student_user_id').notNull().references(() => users.id),
   materialId: text('material_id').notNull().references(() => materials.id),
   floor: integer('floor').notNull().default(1),
-  consecutiveWrong: integer('consecutive_wrong').notNull().default(0), // salah berturut-turut lintas soal
-  currentDifficulty: integer('current_difficulty').notNull().default(2), // 1=Mudah, 2=Sedang, 3=Sulit. Selalu mulai di 2
-  currentStreak: integer('current_streak').notNull().default(0), // streak jawaban benar berturut-turut (untuk XP multiplier)
-  currentQuestionId: text('current_question_id'), // ID soal yang sedang aktif
+  consecutiveWrong: integer('consecutive_wrong').notNull().default(0),
+  currentDifficulty: integer('current_difficulty').notNull().default(2),
+  currentStreak: integer('current_streak').notNull().default(0),
+  currentQuestionId: text('current_question_id'),
   startedAt: text('started_at').notNull(),
   endedAt: text('ended_at'),
   status: text('status', { enum: ['ACTIVE', 'COMPLETED', 'ABANDONED', 'REMEDIAL_REQUIRED'] })
     .notNull()
     .default('ACTIVE'),
-})
+}, (table) => ({
+  // ⚡ CRITICAL: Paling sering di-query — cari session AKTIF milik siswa
+  studentStatusIdx: index('practice_sessions_student_status_idx').on(table.studentUserId, table.status),
+  // Index untuk cari session by siswa + materi (start/resume)
+  studentMaterialIdx: index('practice_sessions_student_material_idx').on(table.studentUserId, table.materialId),
+  // Index untuk aggregate stats (admin dashboard)
+  studentIdx: index('practice_sessions_student_idx').on(table.studentUserId),
+}))
 
 // Practice Attempts
 export const practiceAttempts = sqliteTable('practice_attempts', {
@@ -148,13 +169,18 @@ export const practiceAttempts = sqliteTable('practice_attempts', {
   questionId: text('question_id').notNull().references(() => questions.id),
   answer: text('answer', { enum: ['A', 'B', 'C', 'D'] }).notNull(),
   isCorrect: integer('is_correct', { mode: 'boolean' }).notNull(),
-  xpAwarded: integer('xp_awarded').notNull().default(0), // XP yang diberikan pada attempt ini (0 jika salah)
-  hintCountAtAnswer: integer('hint_count_at_answer').default(0), // jumlah hint yang sudah dilihat saat menjawab
-  difficultyAtAnswer: integer('difficulty_at_answer').notNull(), // tingkat kesulitan saat menjawab
+  xpAwarded: integer('xp_awarded').notNull().default(0),
+  hintCountAtAnswer: integer('hint_count_at_answer').default(0),
+  difficultyAtAnswer: integer('difficulty_at_answer').notNull(),
   isRemedialSession: integer('is_remedial_session', { mode: 'boolean' }).default(false),
   responseMs: integer('response_ms').notNull(),
   createdAt: text('created_at').notNull(),
-})
+}, (table) => ({
+  // ⚡ CRITICAL: Setiap jawaban query semua attempt by sessionId untuk stats
+  sessionIdx: index('practice_attempts_session_idx').on(table.sessionId),
+  // Index untuk admin export — query by session + isCorrect
+  sessionCorrectIdx: index('practice_attempts_session_correct_idx').on(table.sessionId, table.isCorrect),
+}))
 
 // Test Sessions (Strict)
 export const testSessions = sqliteTable('test_sessions', {
@@ -164,7 +190,9 @@ export const testSessions = sqliteTable('test_sessions', {
   testType: text('test_type', { enum: ['PRETEST', 'POSTTEST'] }).notNull(),
   startedAt: text('started_at').notNull(),
   completedAt: text('completed_at'),
-})
+}, (table) => ({
+  studentTypeIdx: index('test_sessions_student_type_idx').on(table.studentUserId, table.testType),
+}))
 
 // Test Attempts (Strict)
 export const testAttempts = sqliteTable('test_attempts', {
@@ -175,7 +203,9 @@ export const testAttempts = sqliteTable('test_attempts', {
   isCorrect: integer('is_correct', { mode: 'boolean' }),
   responseMs: integer('response_ms'),
   createdAt: text('created_at').notNull(),
-})
+}, (table) => ({
+  sessionIdx: index('test_attempts_session_idx').on(table.sessionId),
+}))
 
 // Auth Tokens
 export const authTokens = sqliteTable('auth_tokens', {
@@ -183,7 +213,12 @@ export const authTokens = sqliteTable('auth_tokens', {
   userId: text('user_id').notNull().references(() => users.id),
   role: text('role', { enum: ['STUDENT', 'TEACHER', 'ADMIN'] }).notNull(),
   expiresAt: text('expires_at').notNull(),
-})
+}, (table) => ({
+  // ⚡ CRITICAL: Tiap request HTTP validate token via DB — harus cepat
+  // token sudah PRIMARY KEY (index otomatis), tapi tambahkan index by userId
+  // untuk revokeAllUserTokens (DELETE WHERE user_id = ?)
+  userIdIdx: index('auth_tokens_user_id_idx').on(table.userId),
+}))
 
 // Password Reset OTP
 export const passwordResetOtp = sqliteTable('password_reset_otp', {

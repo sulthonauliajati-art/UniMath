@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db/client'
 import { questions, materials, practiceSessions, practiceAttempts, users } from '@/lib/db/schema'
-import { eq, and, notInArray, or, sql } from 'drizzle-orm'
+import { eq, and, or, sql } from 'drizzle-orm'
 
 const DIFFICULTY_LABELS: Record<number, string> = {
   1: 'Mudah',
@@ -10,81 +10,67 @@ const DIFFICULTY_LABELS: Record<number, string> = {
 }
 
 /**
- * Fetch a new PRACTICE question at the given difficulty, excluding already-used question IDs.
- * Falls back to any difficulty if none found at target, then resets exclusion list if truly empty.
+ * ⚡ OPTIMASI: Ambil SEMUA soal untuk materi tertentu dalam SATU query,
+ * lalu filter di memori (JavaScript) — eliminasi 3-4 DB round-trips menjadi 1.
+ *
+ * Dengan index questions_material_difficulty_idx, query ini sangat cepat
+ * dan tidak tergantung ukuran tabel total.
  */
 async function getNewQuestion(
   materialId: string,
   difficulty: number,
   excludeIds: string[]
 ) {
-  // 1. Try exact difficulty, excluding used
-  let available = await db
+  // Satu query: ambil semua soal PRACTICE untuk materi ini (sudah di-index)
+  const allQuestions = await db
     .select()
     .from(questions)
     .where(
-      excludeIds.length > 0
-        ? and(
-            eq(questions.materialId, materialId),
-            eq(questions.difficulty, difficulty),
-            or(eq(questions.mode, 'PRACTICE'), eq(questions.mode, 'ALL')),
-            notInArray(questions.id, excludeIds)
-          )
-        : and(
-            eq(questions.materialId, materialId),
-            eq(questions.difficulty, difficulty),
-            or(eq(questions.mode, 'PRACTICE'), eq(questions.mode, 'ALL'))
-          )
+      and(
+        eq(questions.materialId, materialId),
+        or(eq(questions.mode, 'PRACTICE'), eq(questions.mode, 'ALL'))
+      )
     )
 
-  // 2. If no unused at target difficulty, try any PRACTICE question not yet used
-  if (available.length === 0) {
-    available = await db
-      .select()
-      .from(questions)
-      .where(
-        excludeIds.length > 0
-          ? and(
-              eq(questions.materialId, materialId),
-              or(eq(questions.mode, 'PRACTICE'), eq(questions.mode, 'ALL')),
-              notInArray(questions.id, excludeIds)
-            )
-          : and(
-              eq(questions.materialId, materialId),
-              or(eq(questions.mode, 'PRACTICE'), eq(questions.mode, 'ALL'))
-            )
-      )
-  }
+  if (allQuestions.length === 0) return null
 
-  // 3. If ALL used, reset (allow repeats) but try target difficulty first
-  if (available.length === 0) {
-    available = await db
-      .select()
-      .from(questions)
-      .where(
-        and(
-          eq(questions.materialId, materialId),
-          eq(questions.difficulty, difficulty),
-          or(eq(questions.mode, 'PRACTICE'), eq(questions.mode, 'ALL'))
-        )
-      )
-  }
+  const excludeSet = new Set(excludeIds)
 
-  // 4. Absolute fallback: any PRACTICE question for this material
-  if (available.length === 0) {
-    available = await db
-      .select()
-      .from(questions)
-      .where(
-        and(
-          eq(questions.materialId, materialId),
-          or(eq(questions.mode, 'PRACTICE'), eq(questions.mode, 'ALL'))
-        )
-      )
-  }
+  // Filter di memori — zero additional DB calls
+  const atTargetUnused = allQuestions.filter(q => q.difficulty === difficulty && !excludeSet.has(q.id))
+  if (atTargetUnused.length > 0) return atTargetUnused[Math.floor(Math.random() * atTargetUnused.length)]
 
-  if (available.length === 0) return null
-  return available[Math.floor(Math.random() * available.length)]
+  const anyUnused = allQuestions.filter(q => !excludeSet.has(q.id))
+  if (anyUnused.length > 0) return anyUnused[Math.floor(Math.random() * anyUnused.length)]
+
+  // Semua sudah dipakai — boleh ulang
+  const atTarget = allQuestions.filter(q => q.difficulty === difficulty)
+  if (atTarget.length > 0) return atTarget[Math.floor(Math.random() * atTarget.length)]
+
+  return allQuestions[Math.floor(Math.random() * allQuestions.length)]
+}
+
+/**
+ * ⚡ RETRY: SQLite (Turso) hanya bisa 1 write bersamaan.
+ * Jika ada timeout/locked, coba lagi sampai maxRetries kali.
+ */
+async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3, delayMs = 100): Promise<T> {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn()
+    } catch (err: unknown) {
+      const isLast = attempt === maxRetries
+      const errMsg = err instanceof Error ? err.message : String(err)
+      const isRetryable = errMsg.includes('SQLITE_BUSY') ||
+                          errMsg.includes('database is locked') ||
+                          errMsg.includes('timeout') ||
+                          errMsg.includes('BLOCKED')
+      if (isLast || !isRetryable) throw err
+      // Exponential backoff: 100ms, 200ms, 400ms...
+      await new Promise(r => setTimeout(r, delayMs * attempt))
+    }
+  }
+  throw new Error('Max retries exceeded')
 }
 
 function formatQuestionForClient(q: typeof questions.$inferSelect) {
@@ -156,11 +142,13 @@ export async function POST(request: NextRequest) {
 
     const isCorrect = answer === question.correct
 
-    // Collect all used question IDs in this session for rotation
+    // Collect used question IDs untuk rotasi soal
+    // ⚡ LIMIT 100: cegah scan semua attempt historis — cukup untuk rotasi soal
     const usedAttempts = await db
       .select({ questionId: practiceAttempts.questionId })
       .from(practiceAttempts)
       .where(eq(practiceAttempts.sessionId, sessionId))
+      .limit(100)
 
     const usedQuestionIds = Array.from(new Set(usedAttempts.map((a) => a.questionId)))
     usedQuestionIds.push(questionId) // also exclude current question
@@ -192,8 +180,9 @@ export async function POST(request: NextRequest) {
       // Get next question at new difficulty
       const nextQ = await getNewQuestion(session.materialId, nextDifficulty, usedQuestionIds)
 
-      // Persist attempt with XP
-      await db.insert(practiceAttempts).values({
+      // ⚡ RETRY: Persist attempt + update session dalam satu blok dengan retry
+      // agar tidak kehilangan data saat SQLite write queue penuh
+      await withRetry(() => db.insert(practiceAttempts).values({
         id: attemptId,
         sessionId,
         floor: session.floor,
@@ -206,10 +195,11 @@ export async function POST(request: NextRequest) {
         isRemedialSession: session.status === 'REMEDIAL_REQUIRED',
         responseMs: responseMs || 0,
         createdAt: new Date().toISOString(),
-      })
+      }))
 
-      // Update session: reset consecutive wrong, raise floor & difficulty & streak
-      await db
+      // ⚡ RETRY: Update session floor — ini yang menyebabkan "balik ke lantai 1"
+      // jika write gagal tanpa retry!
+      await withRetry(() => db
         .update(practiceSessions)
         .set({
           floor: newFloor,
@@ -219,14 +209,16 @@ export async function POST(request: NextRequest) {
           currentQuestionId: nextQ?.id || null,
         })
         .where(eq(practiceSessions.id, sessionId))
+      )
 
-      // Persist XP to user immediately — never lost even if browser closes
-      await db
+      // ⚡ RETRY: Persist XP — tidak boleh hilang
+      await withRetry(() => db
         .update(users)
         .set({
           totalPoints: sql`COALESCE(total_points, 0) + ${xpGain}`,
         })
         .where(eq(users.id, session.studentUserId))
+      )
 
       return NextResponse.json({
         isCorrect: true,
@@ -244,8 +236,8 @@ export async function POST(request: NextRequest) {
     // CASE 2: WRONG ANSWER
     // ──────────────────────────────────────────────────────────────────
 
-    // Persist attempt (0 XP for wrong)
-    await db.insert(practiceAttempts).values({
+    // ⚡ RETRY: Persist attempt (0 XP for wrong)
+    await withRetry(() => db.insert(practiceAttempts).values({
       id: attemptId,
       sessionId,
       floor: session.floor,
@@ -258,7 +250,7 @@ export async function POST(request: NextRequest) {
       isRemedialSession: session.status === 'REMEDIAL_REQUIRED',
       responseMs: responseMs || 0,
       createdAt: new Date().toISOString(),
-    })
+    }))
 
     const newConsecutiveWrong = session.consecutiveWrong + 1
 
@@ -267,16 +259,17 @@ export async function POST(request: NextRequest) {
 
     // ── CASE 2a: 3 consecutive wrong → WAJIB BELAJAR ──
     if (newConsecutiveWrong >= 3) {
-      await db
+      await withRetry(() => db
         .update(practiceSessions)
         .set({
           status: 'REMEDIAL_REQUIRED',
           consecutiveWrong: newConsecutiveWrong,
-          currentStreak: 0, // reset streak on wrong
+          currentStreak: 0,
           currentDifficulty: nextDifficulty,
-          currentQuestionId: null, // will get new question after remedial
+          currentQuestionId: null,
         })
         .where(eq(practiceSessions.id, sessionId))
+      )
 
       return NextResponse.json({
         isCorrect: false,
@@ -296,16 +289,17 @@ export async function POST(request: NextRequest) {
     // Get NEW question at the lowered difficulty
     const nextQ = await getNewQuestion(session.materialId, nextDifficulty, usedQuestionIds)
 
-    // Update session
-    await db
+    // ⚡ RETRY: Update session
+    await withRetry(() => db
       .update(practiceSessions)
       .set({
         consecutiveWrong: newConsecutiveWrong,
-        currentStreak: 0, // reset streak on wrong
+        currentStreak: 0,
         currentDifficulty: nextQ ? nextQ.difficulty : nextDifficulty,
         currentQuestionId: nextQ?.id || null,
       })
       .where(eq(practiceSessions.id, sessionId))
+    )
 
     // Determine which hint to show FOR THE QUESTION THE STUDENT IS ABOUT TO SEE.
     // The hint tier escalates with consecutive wrongs so a struggling student
