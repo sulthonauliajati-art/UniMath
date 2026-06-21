@@ -17,6 +17,7 @@ interface QuestionForClient {
   optB: string
   optC: string
   optD: string
+  optE: string
 }
 
 interface GameState {
@@ -393,6 +394,7 @@ export default function GamePlayPage() {
     { key: 'B', text: gameState.question.optB },
     { key: 'C', text: gameState.question.optC },
     { key: 'D', text: gameState.question.optD },
+    ...(gameState.question.optE ? [{ key: 'E', text: gameState.question.optE }] : []),
   ]
 
   const progressPct = Math.min(100, Math.round(((gameState.floor - 1) / TOTAL_FLOORS) * 100))

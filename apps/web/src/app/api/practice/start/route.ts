@@ -22,6 +22,7 @@ function formatQuestionForClient(q: typeof questions.$inferSelect) {
     optB: q.optB,
     optC: q.optC,
     optD: q.optD,
+    optE: q.optE || '',
   }
 }
 

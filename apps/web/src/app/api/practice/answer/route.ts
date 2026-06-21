@@ -84,6 +84,7 @@ function formatQuestionForClient(q: typeof questions.$inferSelect) {
     optB: q.optB,
     optC: q.optC,
     optD: q.optD,
+    optE: q.optE || '',
   }
 }
 
@@ -108,6 +109,15 @@ export async function POST(request: NextRequest) {
     if (!sessionId || !questionId || !answer) {
       return NextResponse.json(
         { error: { code: 'VALIDATION_ERROR', message: 'Data tidak lengkap' } },
+        { status: 400 }
+      )
+    }
+
+    // Validasi answer hanya boleh A, B, C, D, atau E
+    const validAnswers = new Set(['A', 'B', 'C', 'D', 'E'])
+    if (!validAnswers.has(String(answer).toUpperCase())) {
+      return NextResponse.json(
+        { error: { code: 'VALIDATION_ERROR', message: 'Jawaban tidak valid. Gunakan A, B, C, D, atau E.' } },
         { status: 400 }
       )
     }

@@ -5,29 +5,26 @@ import { eq } from 'drizzle-orm'
 import { validateToken } from '@/lib/auth/utils'
 
 /* ═══════════════════════════════════════════════════════════════════
- * Canonical CSV format for question upload.
+ * Canonical CSV format for question upload (v2 — dengan optE wajib).
  *
- * Header (order-sensitive — columns are read positionally, but header
- * MUST exist as row 0 so that users can map fields):
+ * Header (order-sensitive — kolom dibaca secara posisi):
  *
  *   0  mode                PRACTICE | PRETEST | POSTTEST | ALL
  *   1  indicator           I1 | I2 | I3 | I4
- *   2  difficulty          1 | 2 | 3   (or MUDAH | SEDANG | SULIT)
+ *   2  difficulty          1 | 2 | 3   (atau MUDAH | SEDANG | SULIT)
  *   3  questionType        PG | URAIAN
- *   4  question            text
- *   5  optA, 6 optB, 7 optC, 8 optD   (required for PG, empty ok for URAIAN)
- *   9  correct             A | B | C | D   (required for PG)
- *  10 hint1, 11 hint2, 12 hint3       (optional)
- *  13 explanation                     (optional)
- *  14 remedialMaterialId              (optional; referenced when wrong 3×)
+ *   4  question            teks soal
+ *   5  optA, 6 optB, 7 optC, 8 optD   (wajib untuk PG)
+ *   9  optE                             (wajib untuk PG — opsi ke-5)
+ *  10  correct             A | B | C | D | E   (wajib untuk PG)
+ *  11  hint1, 12 hint2, 13 hint3       (opsional)
+ *  14  explanation                     (opsional)
+ *  15  remedialMaterialId              (opsional)
  *
- * Value normalization (case-insensitive for all enum-like fields):
- *   practice, Practice, PRACTICE → PRACTICE
- *   pg, Pg, PG                   → PG
- *   mudah, MUDAH, Mudah          → 1    (also accepts 1,2,3 directly)
+ * BACKWARD COMPATIBILITY:
+ *   Format lama (15 kolom, tanpa optE) masih diterima jika header kolom 9
+ *   adalah "correct" bukan "optE". Dalam hal ini optE diisi string kosong.
  *
- * Error reporting: PER-ROW. Every failure references the human-readable
- * row number (header is row 1, first data row is row 2, etc).
  * ══════════════════════════════════════════════════════════════════ */
 
 async function validateAdmin(request: NextRequest) {
@@ -42,8 +39,7 @@ async function validateAdmin(request: NextRequest) {
 
 /**
  * RFC-4180-ish multi-line CSV parser: handles quoted fields, embedded
- * commas, embedded newlines, and escaped quotes (""). Shared pattern with
- * src/lib/db/import-material-contents.ts.
+ * commas, embedded newlines, and escaped quotes ("").
  */
 function parseCSVMultiline(text: string): string[][] {
   const records: string[][] = []
@@ -51,7 +47,6 @@ function parseCSVMultiline(text: string): string[][] {
   let inQuotes = false
   let fields: string[] = []
 
-  // Strip UTF-8 BOM if present, normalize line endings.
   const chars = text.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n')
 
   for (let i = 0; i < chars.length; i++) {
@@ -151,29 +146,27 @@ function normalizeQuestionType(raw: string): 'PG' | 'URAIAN' | null {
   return TYPE_MAP[key] ?? null
 }
 
-function normalizeCorrect(raw: string): 'A' | 'B' | 'C' | 'D' | null {
+function normalizeCorrect(raw: string): 'A' | 'B' | 'C' | 'D' | 'E' | null {
   const key = raw.trim().toUpperCase()
-  return (['A', 'B', 'C', 'D'] as const).includes(key as 'A') ? (key as 'A' | 'B' | 'C' | 'D') : null
+  return (['A', 'B', 'C', 'D', 'E'] as const).includes(key as 'A')
+    ? (key as 'A' | 'B' | 'C' | 'D' | 'E')
+    : null
 }
 
 /* ── Handler ──────────────────────────────────────────────────── */
 
-const EXPECTED_HEADERS = [
-  'mode',
-  'indicator',
-  'difficulty',
-  'questionType',
-  'question',
-  'optA',
-  'optB',
-  'optC',
-  'optD',
-  'correct',
-  'hint1',
-  'hint2',
-  'hint3',
-  'explanation',
-  'remedialMaterialId',
+// Header v2 (dengan optE) — 16 kolom
+const EXPECTED_HEADERS_V2 = [
+  'mode', 'indicator', 'difficulty', 'questionType', 'question',
+  'optA', 'optB', 'optC', 'optD', 'optE', 'correct',
+  'hint1', 'hint2', 'hint3', 'explanation', 'remedialMaterialId',
+]
+
+// Header v1 (tanpa optE, backward compat) — 15 kolom
+const EXPECTED_HEADERS_V1 = [
+  'mode', 'indicator', 'difficulty', 'questionType', 'question',
+  'optA', 'optB', 'optC', 'optD', 'correct',
+  'hint1', 'hint2', 'hint3', 'explanation', 'remedialMaterialId',
 ]
 
 export async function POST(request: NextRequest) {
@@ -202,7 +195,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: { message: 'Material ID wajib dipilih' } }, { status: 400 })
     }
 
-    // Verify material exists to avoid FK failure later
     const [materialRow] = await db
       .select({ id: materials.id })
       .from(materials)
@@ -226,24 +218,33 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate header presence (warn, don't fail). We read positionally so
-    // even if header is wrong, we try to parse; but we warn the admin.
-    const headerRow = records[0].map((h) => h.trim())
+    // ── Deteksi format v1 atau v2 berdasarkan header ─────────────────────
+    const headerRow = records[0].map((h) => h.trim().toLowerCase())
+    const isV2 = headerRow[9]?.toLowerCase() === 'opte'
+    const isV1 = headerRow[9]?.toLowerCase() === 'correct'
+
+    const expectedHeaders = isV2 ? EXPECTED_HEADERS_V2 : EXPECTED_HEADERS_V1
     const headerWarnings: string[] = []
-    EXPECTED_HEADERS.forEach((expected, idx) => {
+
+    expectedHeaders.forEach((expected, idx) => {
       if (headerRow[idx]?.toLowerCase() !== expected.toLowerCase()) {
         headerWarnings.push(
-          `Kolom ${idx + 1} seharusnya "${expected}" tetapi ditemukan "${headerRow[idx] || ''}".`
+          `Kolom ${idx + 1} seharusnya "${expected}" tetapi ditemukan "${records[0][idx] || ''}".`
         )
       }
     })
 
+    if (!isV2 && !isV1) {
+      headerWarnings.push(
+        'Format header tidak dikenali. Pastikan kolom ke-10 adalah "optE" (format v2) atau "correct" (format v1 lama).'
+      )
+    }
+
     const dataRows = records.slice(1)
     const errors: string[] = []
     const rowsToInsert: Array<typeof questions.$inferInsert> = []
-    const seenQuestions = new Set<string>() // in-file dup detection
+    const seenQuestions = new Set<string>()
 
-    // Fetch existing question texts for this material to prevent dup inserts
     const existingTexts = await db
       .select({ question: questions.question })
       .from(questions)
@@ -251,14 +252,14 @@ export async function POST(request: NextRequest) {
     const existingQuestionTexts = new Set(existingTexts.map((r) => r.question.trim().toLowerCase()))
 
     dataRows.forEach((row, idx) => {
-      const rowNum = idx + 2 // human-readable line number
+      const rowNum = idx + 2
 
-      // Skip fully empty rows
       if (row.every((cell) => !cell.trim())) return
 
+      // Minimum 10 kolom (sampai optD + either correct v1 atau optE v2)
       if (row.length < 10) {
         errors.push(
-          `Baris ${rowNum}: minimal 10 kolom (sampai "correct") diperlukan — ditemukan ${row.length}.`
+          `Baris ${rowNum}: minimal 10 kolom diperlukan — ditemukan ${row.length}.`
         )
         return
       }
@@ -272,14 +273,28 @@ export async function POST(request: NextRequest) {
       const optB = (row[6] || '').trim()
       const optC = (row[7] || '').trim()
       const optD = (row[8] || '').trim()
-      const correct = normalizeCorrect(row[9] || '')
-      const hint1 = (row[10] || '').trim() || null
-      const hint2 = (row[11] || '').trim() || null
-      const hint3 = (row[12] || '').trim() || null
-      const explanation = (row[13] || '').trim() || null
-      const remedialMaterialId = (row[14] || '').trim() || null
 
-      // Per-field validation
+      // Format v2: posisi 9=optE, 10=correct; v1: posisi 9=correct
+      let optE = ''
+      let correct: 'A' | 'B' | 'C' | 'D' | 'E' | null = null
+
+      if (isV2) {
+        optE = (row[9] || '').trim()
+        correct = normalizeCorrect(row[10] || '')
+      } else {
+        // v1 format: optE kosong, correct di posisi 9
+        optE = ''
+        correct = normalizeCorrect(row[9] || '')
+      }
+
+      const hint1Idx = isV2 ? 11 : 10
+      const hint1 = (row[hint1Idx] || '').trim() || null
+      const hint2 = (row[hint1Idx + 1] || '').trim() || null
+      const hint3 = (row[hint1Idx + 2] || '').trim() || null
+      const explanation = (row[hint1Idx + 3] || '').trim() || null
+      const remedialMaterialId = (row[hint1Idx + 4] || '').trim() || null
+
+      // Validasi
       if (!mode) {
         errors.push(`Baris ${rowNum}: mode "${row[0]}" tidak valid. Gunakan PRACTICE/PRETEST/POSTTEST/ALL.`)
       }
@@ -297,12 +312,20 @@ export async function POST(request: NextRequest) {
         if (!optA || !optB || !optC || !optD) {
           errors.push(`Baris ${rowNum}: opsi A/B/C/D wajib diisi untuk soal PG.`)
         }
+        if (!optE) {
+          errors.push(`Baris ${rowNum}: opsi E wajib diisi untuk soal PG (kolom optE kosong).`)
+        }
         if (!correct) {
-          errors.push(`Baris ${rowNum}: kunci jawaban "${row[9]}" harus A/B/C/D untuk soal PG.`)
+          errors.push(
+            `Baris ${rowNum}: kunci jawaban "${isV2 ? row[10] : row[9]}" harus A/B/C/D/E untuk soal PG.`
+          )
+        }
+        // Validasi konsistensi: jika jawaban E, optE harus ada
+        if (correct === 'E' && !optE) {
+          errors.push(`Baris ${rowNum}: kunci jawaban "E" tetapi optE kosong.`)
         }
       }
 
-      // Duplicate detection (in-file & vs existing DB rows)
       const normalizedKey = question.toLowerCase()
       if (seenQuestions.has(normalizedKey)) {
         errors.push(`Baris ${rowNum}: soal ini duplikat di dalam file.`)
@@ -312,20 +335,20 @@ export async function POST(request: NextRequest) {
         seenQuestions.add(normalizedKey)
       }
 
-      // If any error pushed for this row, skip insert
-      if (
+      const isValid =
         mode &&
         indicator &&
         difficulty !== null &&
         question &&
-        (questionType !== 'PG' || (optA && optB && optC && optD && correct)) &&
+        (questionType !== 'PG' || (optA && optB && optC && optD && optE && correct)) &&
         !existingQuestionTexts.has(normalizedKey) &&
         !errors.some((e) => e.startsWith(`Baris ${rowNum}:`))
-      ) {
+
+      if (isValid) {
         rowsToInsert.push({
           id: `Q${Date.now().toString(36)}_${idx.toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
           materialId,
-          mode,
+          mode: mode!,
           indicator: indicator as 'I1' | 'I2' | 'I3' | 'I4',
           difficulty: difficulty as number,
           questionType,
@@ -334,7 +357,8 @@ export async function POST(request: NextRequest) {
           optB,
           optC,
           optD,
-          correct: (correct || 'A') as 'A' | 'B' | 'C' | 'D',
+          optE,
+          correct: (correct || 'A') as 'A' | 'B' | 'C' | 'D' | 'E',
           hint1,
           hint2,
           hint3,
@@ -344,7 +368,6 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // If there are errors, return them all; nothing is inserted unless dryRun is explicit success
     if (errors.length > 0) {
       return NextResponse.json(
         {
@@ -391,6 +414,7 @@ export async function POST(request: NextRequest) {
       success: true,
       count: rowsToInsert.length,
       headerWarnings,
+      formatDetected: isV2 ? 'v2 (dengan optE)' : 'v1 lama (tanpa optE — optE diisi kosong)',
     })
   } catch (error) {
     console.error('Upload questions error:', error)

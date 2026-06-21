@@ -50,6 +50,8 @@ export default function AdminQuestionsPage() {
   const [selectedMaterial, setSelectedMaterial] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
+  const [exporting, setExporting] = useState(false)
+  const [exportFilter, setExportFilter] = useState<string>('__ALL__')
   const [validationErrors, setValidationErrors] = useState<string[]>([])
   const [headerWarnings, setHeaderWarnings] = useState<string[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -180,15 +182,45 @@ export default function AdminQuestionsPage() {
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = 'unimath_template_soal.csv'
+      a.download = 'unimath_template_soal_v2.csv'
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
-      showToast('Template CSV berhasil diunduh', 'success')
+      showToast('Template CSV v2 (A–E) berhasil diunduh', 'success')
     } catch (error) {
       console.error('Template download error:', error)
       showToast('Gagal mengunduh template', 'error')
+    }
+  }
+
+  const exportQuestions = async () => {
+    if (!token) return
+    setExporting(true)
+    try {
+      const params = exportFilter !== '__ALL__' ? `?materialId=${exportFilter}` : ''
+      const res = await fetch(`/api/admin/questions/export${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) throw new Error('Gagal mengekspor soal')
+      const blob = await res.blob()
+      const now = new Date().toISOString().slice(0, 10)
+      const suffix = exportFilter !== '__ALL__' ? `_${exportFilter}` : '_semua'
+      const filename = `unimath_soal_export${suffix}_${now}.csv`
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      showToast(`Export soal berhasil: ${filename}`, 'success')
+    } catch (error) {
+      console.error('Export error:', error)
+      showToast('Gagal mengekspor soal', 'error')
+    } finally {
+      setExporting(false)
     }
   }
 
@@ -296,7 +328,7 @@ export default function AdminQuestionsPage() {
             </div>
           )}
 
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap items-center">
             <NeonButton variant="secondary" onClick={downloadTemplate}>
               📥 Download Template CSV
             </NeonButton>
@@ -307,16 +339,44 @@ export default function AdminQuestionsPage() {
             )}
           </div>
 
+          {/* ── Export Section ──────────────────────────────────── */}
+          <div className="mt-4 p-4 bg-green-900/10 border border-green-500/20 rounded-lg">
+            <p className="text-sm text-green-300 font-semibold mb-3">📤 Export Soal ke CSV (Arsip Lengkap)</p>
+            <div className="flex gap-2 flex-wrap items-center">
+              <select
+                value={exportFilter}
+                onChange={(e) => setExportFilter(e.target.value)}
+                className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:border-green-400 focus:outline-none transition-colors"
+              >
+                <option value="__ALL__" className="bg-uni-bg">📦 Semua Materi</option>
+                {materials.map((mat) => (
+                  <option key={mat.id} value={mat.id} className="bg-uni-bg">
+                    {mat.title} ({mat.questionCount} soal)
+                  </option>
+                ))}
+              </select>
+              <NeonButton
+                variant="secondary"
+                onClick={exportQuestions}
+                disabled={exporting}
+              >
+                {exporting ? '⏳ Mengekspor...' : '⬇️ Export CSV'}
+              </NeonButton>
+            </div>
+            <p className="text-xs text-text-muted mt-2">
+              File export berisi kolom lengkap: id, judulMateri, semua opsi A–E, kunci jawaban, hint, dll.
+            </p>
+          </div>
+
           <details className="mt-4 p-4 bg-uni-bg-secondary/30 rounded-lg" open>
             <summary className="cursor-pointer text-sm text-text-secondary font-semibold">
-              📖 Panduan Format CSV (klik untuk tutup)
+              📖 Panduan Format CSV v2 (klik untuk tutup)
             </summary>
             <div className="mt-3 space-y-3">
               <div>
-                <p className="text-xs text-text-secondary mb-1">Urutan kolom (header wajib ada di baris 1):</p>
+                <p className="text-xs text-text-secondary mb-1">Urutan kolom v2 (header wajib ada di baris 1) — <b className="text-uni-primary">16 kolom</b>:</p>
                 <code className="block text-[11px] text-uni-primary bg-black/40 p-2 rounded break-all">
-                  mode, indicator, difficulty, questionType, question, optA, optB, optC, optD,
-                  correct, hint1, hint2, hint3, explanation, remedialMaterialId
+                  mode, indicator, difficulty, questionType, question, optA, optB, optC, optD, <b>optE</b>, correct, hint1, hint2, hint3, explanation, remedialMaterialId
                 </code>
               </div>
               <ul className="text-xs text-text-muted space-y-1 list-disc list-inside">
@@ -333,7 +393,10 @@ export default function AdminQuestionsPage() {
                   <b className="text-text-secondary">questionType</b>: PG atau URAIAN
                 </li>
                 <li>
-                  <b className="text-text-secondary">correct</b>: A/B/C/D untuk PG (boleh kosong untuk URAIAN)
+                  <b className="text-green-400">optE</b>: opsi E — <b className="text-green-300">WAJIB untuk soal PG</b> (posisi ke-10, sebelum correct)
+                </li>
+                <li>
+                  <b className="text-text-secondary">correct</b>: A/B/C/D/<b className="text-green-400">E</b> untuk PG (boleh kosong untuk URAIAN)
                 </li>
                 <li>
                   <b className="text-text-secondary">hint1/2/3</b>: dipakai saat siswa salah 1/2/3 kali (boleh kosong)
@@ -342,6 +405,7 @@ export default function AdminQuestionsPage() {
                   <b className="text-text-secondary">remedialMaterialId</b>: materi remedial kalau salah 3x (boleh kosong)
                 </li>
                 <li>Huruf besar/kecil enum tidak dibedakan (mudah/MUDAH sama-sama valid).</li>
+                <li className="text-yellow-300/80">⚠️ Format lama (tanpa optE, 15 kolom) masih diterima — optE akan diisi kosong otomatis.</li>
               </ul>
             </div>
           </details>
