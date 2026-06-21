@@ -108,7 +108,8 @@ export default function AdminQuestionsPage() {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (fileInputRef.current) fileInputRef.current.value = ''
-    if (!file || !selectedMaterial || !token) return
+    const isBulk = selectedMaterial === '__BULK__'
+    if (!file || (!isBulk && !selectedMaterial) || !token) return
 
     if (!file.name.toLowerCase().endsWith('.csv')) {
       showToast('File harus berformat .csv', 'error')
@@ -121,7 +122,8 @@ export default function AdminQuestionsPage() {
 
     const formData = new FormData()
     formData.append('file', file)
-    formData.append('materialId', selectedMaterial)
+    // Bulk mode: kirim materialId kosong — backend baca dari kolom CSV
+    formData.append('materialId', isBulk ? '' : selectedMaterial)
 
     try {
       const res = await fetch('/api/admin/questions/upload', {
@@ -141,14 +143,19 @@ export default function AdminQuestionsPage() {
       }
 
       const skipped = data.skippedDuplicates || 0
-      const msg = skipped > 0
-        ? `✅ ${data.count} soal berhasil diimpor (${skipped} soal duplikat dilewati)`
-        : `✅ ${data.count} soal berhasil diimpor`
-      showToast(msg, 'success', 6000)
+      let msg = `✅ ${data.count} soal berhasil diimpor`
+      if (skipped > 0) msg += ` (${skipped} duplikat dilewati)`
+      if (data.byMaterial && Object.keys(data.byMaterial).length > 1) {
+        const breakdown = Object.entries(data.byMaterial as Record<string, number>)
+          .map(([id, n]) => `${id}: ${n}`)
+          .join(', ')
+        msg += `\n📍 ${breakdown}`
+      }
+      showToast(msg, 'success', 8000)
       if (Array.isArray(data.headerWarnings) && data.headerWarnings.length > 0) {
         setHeaderWarnings(data.headerWarnings)
       }
-      await fetchQuestions(selectedMaterial)
+      if (!isBulk) await fetchQuestions(selectedMaterial)
       await fetchMaterials()
     } catch (error) {
       console.error('Upload error:', error)
@@ -262,6 +269,13 @@ export default function AdminQuestionsPage() {
                 onChange={(e) => setSelectedMaterial(e.target.value)}
                 className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:border-uni-primary focus:outline-none transition-colors"
               >
+                {/* Opsi bulk import — deteksi otomatis dari file export 20 kolom */}
+                <option value="__BULK__" className="bg-uni-bg font-bold">
+                  📦 Semua Materi (dari file export 20 kolom)
+                </option>
+                <option value="" disabled className="bg-uni-bg text-gray-500">
+                  ── atau pilih 1 materi ──
+                </option>
                 {materials.length === 0 && <option value="">(belum ada materi)</option>}
                 {materials.map((mat) => (
                   <option key={mat.id} value={mat.id} className="bg-uni-bg">
@@ -269,6 +283,11 @@ export default function AdminQuestionsPage() {
                   </option>
                 ))}
               </select>
+              {selectedMaterial === '__BULK__' && (
+                <p className="text-xs text-cyan-400 mt-1.5">
+                  ⚡ Mode multi-materi: materialId dibaca otomatis dari kolom CSV
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-sm text-text-secondary mb-2">Upload File CSV</label>
