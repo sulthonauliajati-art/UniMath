@@ -5,41 +5,47 @@ import { eq } from 'drizzle-orm'
 import { validateToken } from '@/lib/auth/utils'
 
 /* ═══════════════════════════════════════════════════════════════════
- * Canonical CSV format for question upload (v2 — dengan optE wajib).
+ * Format CSV yang didukung (auto-detect dari header):
  *
- * Header (order-sensitive — kolom dibaca secara posisi):
+ * vExport (20 kolom) — hasil export dari admin panel:
+ *   0  id              (diabaikan — ID baru di-generate)
+ *   1  materialId      ← DIBACA dari CSV, dropdown diabaikan → multi-materi!
+ *   2  judulMateri     (diabaikan)
+ *   3  mode
+ *   4  indicator
+ *   5  difficulty
+ *   6  difficultyLabel (diabaikan)
+ *   7  questionType
+ *   8  question
+ *   9  optA  10 optB  11 optC  12 optD  13 optE
+ *  14  correct
+ *  15  hint1  16 hint2  17 hint3
+ *  18  explanation
+ *  19  remedialMaterialId
  *
- *   0  mode                PRACTICE | PRETEST | POSTTEST | ALL
- *   1  indicator           I1 | I2 | I3 | I4
- *   2  difficulty          1 | 2 | 3   (atau MUDAH | SEDANG | SULIT)
- *   3  questionType        PG | URAIAN
- *   4  question            teks soal
- *   5  optA, 6 optB, 7 optC, 8 optD   (wajib untuk PG)
- *   9  optE                             (wajib untuk PG — opsi ke-5)
- *  10  correct             A | B | C | D | E   (wajib untuk PG)
- *  11  hint1, 12 hint2, 13 hint3       (opsional)
- *  14  explanation                     (opsional)
- *  15  remedialMaterialId              (opsional)
+ * v2 (16 kolom) — template import standard dengan optE:
+ *   mode, indicator, difficulty, questionType, question,
+ *   optA, optB, optC, optD, optE, correct,
+ *   hint1, hint2, hint3, explanation, remedialMaterialId
  *
- * BACKWARD COMPATIBILITY:
- *   Format lama (15 kolom, tanpa optE) masih diterima jika header kolom 9
- *   adalah "correct" bukan "optE". Dalam hal ini optE diisi string kosong.
- *
+ * v1 (15 kolom) — format lama tanpa optE (backward compat):
+ *   mode, indicator, difficulty, questionType, question,
+ *   optA, optB, optC, optD, correct,
+ *   hint1, hint2, hint3, explanation, remedialMaterialId
  * ══════════════════════════════════════════════════════════════════ */
 
 async function validateAdmin(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
   const token = authHeader?.replace('Bearer ', '')
   if (!token) return null
-
   const tokenData = await validateToken(token)
   if (!tokenData.valid || tokenData.role !== 'ADMIN') return null
   return tokenData
 }
 
 /**
- * RFC-4180-ish multi-line CSV parser: handles quoted fields, embedded
- * commas, embedded newlines, and escaped quotes ("").
+ * RFC-4180-ish multi-line CSV parser.
+ * Handles quoted fields, embedded commas, embedded newlines, escaped quotes ("").
  */
 function parseCSVMultiline(text: string): string[][] {
   const records: string[][] = []
@@ -55,12 +61,8 @@ function parseCSVMultiline(text: string): string[][] {
 
     if (inQuotes) {
       if (char === '"') {
-        if (nextChar === '"') {
-          current += '"'
-          i++
-        } else {
-          inQuotes = false
-        }
+        if (nextChar === '"') { current += '"'; i++ }
+        else { inQuotes = false }
       } else {
         current += char
       }
@@ -72,9 +74,7 @@ function parseCSVMultiline(text: string): string[][] {
         current = ''
       } else if (char === '\n') {
         fields.push(current)
-        if (fields.length > 1 || fields[0] !== '') {
-          records.push(fields)
-        }
+        if (fields.length > 1 || fields[0] !== '') records.push(fields)
         fields = []
         current = ''
       } else {
@@ -85,9 +85,7 @@ function parseCSVMultiline(text: string): string[][] {
 
   if (current || fields.length > 0) {
     fields.push(current)
-    if (fields.length > 1 || fields[0] !== '') {
-      records.push(fields)
-    }
+    if (fields.length > 1 || fields[0] !== '') records.push(fields)
   }
 
   return records
@@ -96,43 +94,24 @@ function parseCSVMultiline(text: string): string[][] {
 /* ── Normalizers ───────────────────────────────────────────────── */
 
 const MODE_MAP: Record<string, 'PRACTICE' | 'PRETEST' | 'POSTTEST' | 'ALL'> = {
-  PRACTICE: 'PRACTICE',
-  PRETEST: 'PRETEST',
-  PRE_TEST: 'PRETEST',
-  POSTTEST: 'POSTTEST',
-  POST_TEST: 'POSTTEST',
-  ALL: 'ALL',
+  PRACTICE: 'PRACTICE', PRETEST: 'PRETEST', PRE_TEST: 'PRETEST',
+  POSTTEST: 'POSTTEST', POST_TEST: 'POSTTEST', ALL: 'ALL',
 }
-
 const INDICATOR_SET = new Set(['I1', 'I2', 'I3', 'I4'])
-
 const DIFFICULTY_TEXT_MAP: Record<string, number> = {
-  MUDAH: 1,
-  EASY: 1,
-  SEDANG: 2,
-  MEDIUM: 2,
-  SULIT: 3,
-  HARD: 3,
+  MUDAH: 1, EASY: 1, SEDANG: 2, MEDIUM: 2, SULIT: 3, HARD: 3,
 }
-
 const TYPE_MAP: Record<string, 'PG' | 'URAIAN'> = {
-  PG: 'PG',
-  PILIHAN_GANDA: 'PG',
-  'PILIHAN GANDA': 'PG',
-  URAIAN: 'URAIAN',
-  ESSAY: 'URAIAN',
+  PG: 'PG', PILIHAN_GANDA: 'PG', 'PILIHAN GANDA': 'PG', URAIAN: 'URAIAN', ESSAY: 'URAIAN',
 }
 
 function normalizeMode(raw: string): 'PRACTICE' | 'PRETEST' | 'POSTTEST' | 'ALL' | null {
-  const key = raw.trim().toUpperCase()
-  return MODE_MAP[key] ?? null
+  return MODE_MAP[raw.trim().toUpperCase()] ?? null
 }
-
 function normalizeIndicator(raw: string): string | null {
   const key = raw.trim().toUpperCase()
   return INDICATOR_SET.has(key) ? key : null
 }
-
 function normalizeDifficulty(raw: string): number | null {
   const trimmed = raw.trim().toUpperCase()
   if (!trimmed) return null
@@ -140,12 +119,9 @@ function normalizeDifficulty(raw: string): number | null {
   if (!isNaN(asNumber) && [1, 2, 3].includes(asNumber)) return asNumber
   return DIFFICULTY_TEXT_MAP[trimmed] ?? null
 }
-
 function normalizeQuestionType(raw: string): 'PG' | 'URAIAN' | null {
-  const key = raw.trim().toUpperCase()
-  return TYPE_MAP[key] ?? null
+  return TYPE_MAP[raw.trim().toUpperCase()] ?? null
 }
-
 function normalizeCorrect(raw: string): 'A' | 'B' | 'C' | 'D' | 'E' | null {
   const key = raw.trim().toUpperCase()
   return (['A', 'B', 'C', 'D', 'E'] as const).includes(key as 'A')
@@ -153,21 +129,7 @@ function normalizeCorrect(raw: string): 'A' | 'B' | 'C' | 'D' | 'E' | null {
     : null
 }
 
-/* ── Handler ──────────────────────────────────────────────────── */
-
-// Header v2 (dengan optE) — 16 kolom
-const EXPECTED_HEADERS_V2 = [
-  'mode', 'indicator', 'difficulty', 'questionType', 'question',
-  'optA', 'optB', 'optC', 'optD', 'optE', 'correct',
-  'hint1', 'hint2', 'hint3', 'explanation', 'remedialMaterialId',
-]
-
-// Header v1 (tanpa optE, backward compat) — 15 kolom
-const EXPECTED_HEADERS_V1 = [
-  'mode', 'indicator', 'difficulty', 'questionType', 'question',
-  'optA', 'optB', 'optC', 'optD', 'correct',
-  'hint1', 'hint2', 'hint3', 'explanation', 'remedialMaterialId',
-]
+/* ── POST Handler ─────────────────────────────────────────────── */
 
 export async function POST(request: NextRequest) {
   try {
@@ -185,27 +147,11 @@ export async function POST(request: NextRequest) {
     }
 
     const file = formData.get('file')
-    const materialId = String(formData.get('materialId') || '').trim()
+    const materialIdFromDropdown = String(formData.get('materialId') || '').trim()
     const dryRun = String(formData.get('dryRun') || '') === '1'
 
     if (!file || !(file instanceof File)) {
       return NextResponse.json({ error: { message: 'File CSV wajib disertakan' } }, { status: 400 })
-    }
-    if (!materialId) {
-      return NextResponse.json({ error: { message: 'Material ID wajib dipilih' } }, { status: 400 })
-    }
-
-    const [materialRow] = await db
-      .select({ id: materials.id })
-      .from(materials)
-      .where(eq(materials.id, materialId))
-      .limit(1)
-
-    if (!materialRow) {
-      return NextResponse.json(
-        { error: { message: `Materi "${materialId}" tidak ditemukan` } },
-        { status: 400 }
-      )
     }
 
     const text = await file.text()
@@ -218,163 +164,203 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // ── Deteksi format v1 atau v2 berdasarkan header ─────────────────────
+    // ── Auto-detect format ──────────────────────────────────────────────
     const headerRow = records[0].map((h) => h.trim().toLowerCase())
-    const isV2 = headerRow[9]?.toLowerCase() === 'opte'
-    const isV1 = headerRow[9]?.toLowerCase() === 'correct'
 
-    const expectedHeaders = isV2 ? EXPECTED_HEADERS_V2 : EXPECTED_HEADERS_V1
-    const headerWarnings: string[] = []
+    // vExport: kolom[0]='id', kolom[1]='materialid'
+    const isVExport = headerRow[0] === 'id' && headerRow[1] === 'materialid'
+    // v2: kolom[9]='opte'
+    const isV2 = !isVExport && headerRow[9]?.toLowerCase() === 'opte'
+    // v1: kolom[9]='correct'
+    const isV1 = !isVExport && !isV2 && headerRow[9]?.toLowerCase() === 'correct'
 
-    expectedHeaders.forEach((expected, idx) => {
-      if (headerRow[idx]?.toLowerCase() !== expected.toLowerCase()) {
-        headerWarnings.push(
-          `Kolom ${idx + 1} seharusnya "${expected}" tetapi ditemukan "${records[0][idx] || ''}".`
-        )
-      }
-    })
-
-    if (!isV2 && !isV1) {
-      headerWarnings.push(
-        'Format header tidak dikenali. Pastikan kolom ke-10 adalah "optE" (format v2) atau "correct" (format v1 lama).'
+    if (!isVExport && !isV2 && !isV1) {
+      return NextResponse.json(
+        { error: { message: 'Format header tidak dikenali. Gunakan file export dari admin (20 kolom) atau template import (16 kolom).' } },
+        { status: 400 }
       )
     }
 
+    // Format v1/v2: wajib pilih materi dari dropdown
+    if (!isVExport && !materialIdFromDropdown) {
+      return NextResponse.json(
+        { error: { message: 'Pilih materi dari dropdown. Atau gunakan file export 20 kolom untuk import semua materi sekaligus.' } },
+        { status: 400 }
+      )
+    }
+
+    // Validasi materialId dropdown untuk v1/v2
+    if (!isVExport && materialIdFromDropdown) {
+      const [materialRow] = await db
+        .select({ id: materials.id })
+        .from(materials)
+        .where(eq(materials.id, materialIdFromDropdown))
+        .limit(1)
+      if (!materialRow) {
+        return NextResponse.json(
+          { error: { message: `Materi "${materialIdFromDropdown}" tidak ditemukan` } },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Semua materialId valid dari DB
+    const allMaterials = await db.select({ id: materials.id }).from(materials)
+    const validMaterialIds = new Set(allMaterials.map((m) => m.id))
+
+    // Pre-load soal existing: key = materialId||mode||question
+    const existingAll = await db
+      .select({ question: questions.question, mode: questions.mode, materialId: questions.materialId })
+      .from(questions)
+    const existingSet = new Set(
+      existingAll.map((r) => `${r.materialId}||${r.mode.toLowerCase()}||${r.question.trim().toLowerCase()}`)
+    )
+
     const dataRows = records.slice(1)
     const errors: string[] = []
-    const skippedDuplicates: string[] = []   // baris duplikat dalam file — di-skip, bukan error
+    const skippedDuplicates: string[] = []
     const rowsToInsert: Array<typeof questions.$inferInsert> = []
-    const seenQuestions = new Set<string>()
-
-    const existingTexts = await db
-      .select({ question: questions.question, mode: questions.mode })
-      .from(questions)
-      .where(eq(questions.materialId, materialId))
-    // Kunci: mode||teks — sama dengan kunci di seenQuestions
-    const existingQuestionTexts = new Set(
-      existingTexts.map((r) => `${r.mode.toLowerCase()}||${r.question.trim().toLowerCase()}`)
-    )
+    const seenInFile = new Set<string>()
+    const headerWarnings: string[] = []
 
     dataRows.forEach((row, idx) => {
       const rowNum = idx + 2
-
       if (row.every((cell) => !cell.trim())) return
 
-      // Minimum 10 kolom (sampai optD + either correct v1 atau optE v2)
-      if (row.length < 10) {
-        errors.push(
-          `Baris ${rowNum}: minimal 10 kolom diperlukan — ditemukan ${row.length}.`
-        )
-        return
-      }
+      let rowMaterialId: string
+      let mode_raw: string, indicator_raw: string, difficulty_raw: string
+      let questionType_raw: string, question_raw: string
+      let optA_raw: string, optB_raw: string, optC_raw: string, optD_raw: string, optE_raw: string
+      let correct_raw: string
+      let hint1_raw: string, hint2_raw: string, hint3_raw: string
+      let explanation_raw: string, remedialMaterialId_raw: string
 
-      const mode = normalizeMode(row[0])
-      const indicator = normalizeIndicator(row[1])
-      const difficulty = normalizeDifficulty(row[2])
-      const questionType = normalizeQuestionType(row[3]) || 'PG'
-      const question = (row[4] || '').trim()
-      const optA = (row[5] || '').trim()
-      const optB = (row[6] || '').trim()
-      const optC = (row[7] || '').trim()
-      const optD = (row[8] || '').trim()
+      if (isVExport) {
+        // 20 kolom: id[0], materialId[1], judulMateri[2], mode[3], indicator[4],
+        //           difficulty[5], difficultyLabel[6], questionType[7], question[8],
+        //           optA[9], optB[10], optC[11], optD[12], optE[13], correct[14],
+        //           hint1[15], hint2[16], hint3[17], explanation[18], remedialMaterialId[19]
+        if (row.length < 15) {
+          errors.push(`Baris ${rowNum}: format export membutuhkan minimal 15 kolom — ditemukan ${row.length}.`)
+          return
+        }
+        rowMaterialId         = (row[1]  || '').trim()
+        mode_raw              = row[3]  || ''
+        indicator_raw         = row[4]  || ''
+        difficulty_raw        = row[5]  || ''
+        questionType_raw      = row[7]  || ''
+        question_raw          = row[8]  || ''
+        optA_raw              = row[9]  || ''
+        optB_raw              = row[10] || ''
+        optC_raw              = row[11] || ''
+        optD_raw              = row[12] || ''
+        optE_raw              = row[13] || ''
+        correct_raw           = row[14] || ''
+        hint1_raw             = row[15] || ''
+        hint2_raw             = row[16] || ''
+        hint3_raw             = row[17] || ''
+        explanation_raw       = row[18] || ''
+        remedialMaterialId_raw = row[19] || ''
 
-      // Format v2: posisi 9=optE, 10=correct; v1: posisi 9=correct
-      let optE = ''
-      let correct: 'A' | 'B' | 'C' | 'D' | 'E' | null = null
-
-      if (isV2) {
-        optE = (row[9] || '').trim()
-        correct = normalizeCorrect(row[10] || '')
+        if (!validMaterialIds.has(rowMaterialId)) {
+          errors.push(`Baris ${rowNum}: materialId "${rowMaterialId}" tidak ada di database.`)
+          return
+        }
       } else {
-        // v1 format: optE kosong, correct di posisi 9
-        optE = ''
-        correct = normalizeCorrect(row[9] || '')
+        // v1 / v2
+        if (row.length < 10) {
+          errors.push(`Baris ${rowNum}: minimal 10 kolom diperlukan — ditemukan ${row.length}.`)
+          return
+        }
+        rowMaterialId    = materialIdFromDropdown
+        mode_raw         = row[0] || ''
+        indicator_raw    = row[1] || ''
+        difficulty_raw   = row[2] || ''
+        questionType_raw = row[3] || ''
+        question_raw     = row[4] || ''
+        optA_raw         = row[5] || ''
+        optB_raw         = row[6] || ''
+        optC_raw         = row[7] || ''
+        optD_raw         = row[8] || ''
+        if (isV2) {
+          optE_raw              = row[9]  || ''
+          correct_raw           = row[10] || ''
+          hint1_raw             = row[11] || ''
+          hint2_raw             = row[12] || ''
+          hint3_raw             = row[13] || ''
+          explanation_raw       = row[14] || ''
+          remedialMaterialId_raw = row[15] || ''
+        } else {
+          optE_raw              = ''
+          correct_raw           = row[9]  || ''
+          hint1_raw             = row[10] || ''
+          hint2_raw             = row[11] || ''
+          hint3_raw             = row[12] || ''
+          explanation_raw       = row[13] || ''
+          remedialMaterialId_raw = row[14] || ''
+        }
       }
 
-      const hint1Idx = isV2 ? 11 : 10
-      const hint1 = (row[hint1Idx] || '').trim() || null
-      const hint2 = (row[hint1Idx + 1] || '').trim() || null
-      const hint3 = (row[hint1Idx + 2] || '').trim() || null
-      const explanation = (row[hint1Idx + 3] || '').trim() || null
-      const remedialMaterialId = (row[hint1Idx + 4] || '').trim() || null
+      const mode         = normalizeMode(mode_raw)
+      const indicator    = normalizeIndicator(indicator_raw)
+      const difficulty   = normalizeDifficulty(difficulty_raw)
+      const questionType = normalizeQuestionType(questionType_raw) || 'PG'
+      const question     = question_raw.trim()
+      const optA         = optA_raw.trim()
+      const optB         = optB_raw.trim()
+      const optC         = optC_raw.trim()
+      const optD         = optD_raw.trim()
+      const optE         = optE_raw.trim()
+      const correct      = normalizeCorrect(correct_raw)
+      const hint1        = hint1_raw.trim() || null
+      const hint2        = hint2_raw.trim() || null
+      const hint3        = hint3_raw.trim() || null
+      const explanation  = explanation_raw.trim() || null
+      const remedialMaterialId = remedialMaterialId_raw.trim() || null
 
       // Validasi
-      if (!mode) {
-        errors.push(`Baris ${rowNum}: mode "${row[0]}" tidak valid. Gunakan PRACTICE/PRETEST/POSTTEST/ALL.`)
-      }
-      if (!indicator) {
-        errors.push(`Baris ${rowNum}: indikator "${row[1]}" tidak valid. Gunakan I1/I2/I3/I4.`)
-      }
-      if (difficulty === null) {
-        errors.push(`Baris ${rowNum}: difficulty "${row[2]}" tidak valid. Gunakan 1/2/3 atau MUDAH/SEDANG/SULIT.`)
-      }
-      if (!question) {
-        errors.push(`Baris ${rowNum}: soal kosong.`)
-      }
+      if (!mode)           errors.push(`Baris ${rowNum}: mode "${mode_raw}" tidak valid. Gunakan PRACTICE/PRETEST/POSTTEST/ALL.`)
+      if (!indicator)      errors.push(`Baris ${rowNum}: indikator "${indicator_raw}" tidak valid. Gunakan I1/I2/I3/I4.`)
+      if (difficulty === null) errors.push(`Baris ${rowNum}: difficulty "${difficulty_raw}" tidak valid. Gunakan 1/2/3 atau MUDAH/SEDANG/SULIT.`)
+      if (!question)       errors.push(`Baris ${rowNum}: soal kosong.`)
 
       if (questionType === 'PG') {
-        if (!optA || !optB || !optC || !optD) {
-          errors.push(`Baris ${rowNum}: opsi A/B/C/D wajib diisi untuk soal PG.`)
-        }
-        if (!optE) {
-          errors.push(`Baris ${rowNum}: opsi E wajib diisi untuk soal PG (kolom optE kosong).`)
-        }
-        if (!correct) {
-          errors.push(
-            `Baris ${rowNum}: kunci jawaban "${isV2 ? row[10] : row[9]}" harus A/B/C/D/E untuk soal PG.`
-          )
-        }
-        // Validasi konsistensi: jika jawaban E, optE harus ada
-        if (correct === 'E' && !optE) {
-          errors.push(`Baris ${rowNum}: kunci jawaban "E" tetapi optE kosong.`)
-        }
+        if (!optA || !optB || !optC || !optD) errors.push(`Baris ${rowNum}: opsi A/B/C/D wajib diisi untuk soal PG.`)
+        if (!optE)    errors.push(`Baris ${rowNum}: opsi E wajib diisi untuk soal PG (kolom optE kosong).`)
+        if (!correct) errors.push(`Baris ${rowNum}: kunci jawaban "${correct_raw}" harus A/B/C/D/E untuk soal PG.`)
+        if (correct === 'E' && !optE) errors.push(`Baris ${rowNum}: kunci jawaban "E" tetapi optE kosong.`)
       }
 
-      // Kunci duplikat = mode + teks soal
-      // Soal yang sama boleh punya mode berbeda (PRACTICE vs PRETEST vs POSTTEST)
-      const normalizedKey = `${(mode || '').toLowerCase()}||${question.toLowerCase()}`
-      // Kunci duplikat DB = teks soal saja (tidak boleh sama dalam satu materi+mode)
-      const dbKey = `${(mode || '').toLowerCase()}||${question.toLowerCase()}`
+      // Kunci duplikat: materialId + mode + teks soal
+      const dedupeKey = `${rowMaterialId}||${(mode || '').toLowerCase()}||${question.toLowerCase()}`
 
-      if (seenQuestions.has(normalizedKey)) {
-        // Duplikat dalam file (mode + teks sama persis) — skip
-        skippedDuplicates.push(`Baris ${rowNum} dilewati (mode+teks soal sama dengan baris sebelumnya)`)
+      if (seenInFile.has(dedupeKey)) {
+        skippedDuplicates.push(`Baris ${rowNum} dilewati (duplikat dalam file)`)
         return
-      } else if (existingQuestionTexts.has(dbKey)) {
-        errors.push(`Baris ${rowNum}: soal ini sudah ada di materi ini (duplikat dengan DB).`)
+      } else if (existingSet.has(dedupeKey)) {
+        errors.push(`Baris ${rowNum}: soal ini sudah ada di materi "${rowMaterialId}" (duplikat dengan DB).`)
       } else {
-        seenQuestions.add(normalizedKey)
+        seenInFile.add(dedupeKey)
       }
 
       const isValid =
-        mode &&
-        indicator &&
-        difficulty !== null &&
-        question &&
+        mode && indicator && difficulty !== null && question && rowMaterialId &&
         (questionType !== 'PG' || (optA && optB && optC && optD && optE && correct)) &&
-        !existingQuestionTexts.has(dbKey) &&
+        !existingSet.has(dedupeKey) &&
         !errors.some((e) => e.startsWith(`Baris ${rowNum}:`))
 
       if (isValid) {
         rowsToInsert.push({
           id: `Q${Date.now().toString(36)}_${idx.toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
-          materialId,
+          materialId: rowMaterialId,
           mode: mode!,
           indicator: indicator as 'I1' | 'I2' | 'I3' | 'I4',
           difficulty: difficulty as number,
           questionType,
           question,
-          optA,
-          optB,
-          optC,
-          optD,
-          optE,
+          optA, optB, optC, optD, optE,
           correct: (correct || 'A') as 'A' | 'B' | 'C' | 'D' | 'E',
-          hint1,
-          hint2,
-          hint3,
-          explanation,
-          remedialMaterialId,
+          hint1, hint2, hint3, explanation, remedialMaterialId,
         })
       }
     })
@@ -405,9 +391,8 @@ export async function POST(request: NextRequest) {
         dryRun: true,
         count: rowsToInsert.length,
         preview: rowsToInsert.slice(0, 5).map((r) => ({
+          materialId: r.materialId,
           mode: r.mode,
-          indicator: r.indicator,
-          difficulty: r.difficulty,
           question: r.question,
           correct: r.correct,
         })),
@@ -421,12 +406,22 @@ export async function POST(request: NextRequest) {
       await db.insert(questions).values(batch)
     }
 
+    // Ringkasan per materi
+    const byMaterial: Record<string, number> = {}
+    for (const r of rowsToInsert) {
+      byMaterial[r.materialId] = (byMaterial[r.materialId] || 0) + 1
+    }
+
     return NextResponse.json({
       success: true,
       count: rowsToInsert.length,
       skippedDuplicates: skippedDuplicates.length,
+      byMaterial,
       headerWarnings,
-      formatDetected: isV2 ? 'v2 (dengan optE)' : 'v1 lama (tanpa optE — optE diisi kosong)',
+      formatDetected: isVExport
+        ? 'vExport (20 kolom — multi-materi otomatis)'
+        : isV2 ? 'v2 (16 kolom dengan optE)'
+        : 'v1 (15 kolom lama)',
     })
   } catch (error) {
     console.error('Upload questions error:', error)
