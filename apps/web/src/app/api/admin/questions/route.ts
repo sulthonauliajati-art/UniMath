@@ -55,32 +55,38 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: { message: 'Material ID diperlukan' } }, { status: 400 })
     }
 
-    // Ambil ID soal yang akan dihapus dulu
+    // 1. Ambil semua ID soal di materi ini
     const targetQuestions = await db
       .select({ id: questions.id })
       .from(questions)
       .where(eq(questions.materialId, materialId))
 
-    if (targetQuestions.length > 0) {
-      const questionIds = targetQuestions.map((q) => q.id)
-
-      // Hapus practiceAttempts yang mereferensi soal ini (FK constraint)
-      await db
-        .delete(practiceAttempts)
-        .where(inArray(practiceAttempts.questionId, questionIds))
-
-      // Hapus testAttempts yang mereferensi soal ini (FK constraint)
-      await db
-        .delete(testAttempts)
-        .where(inArray(testAttempts.questionId, questionIds))
-
-      // Baru hapus soalnya
-      await db.delete(questions).where(eq(questions.materialId, materialId))
+    if (targetQuestions.length === 0) {
+      return NextResponse.json({ success: true, deleted: 0 })
     }
 
-    return NextResponse.json({ success: true })
+    const questionIds = targetQuestions.map((q) => q.id)
+
+    // 2. Hapus practice_attempts yang mengacu ke soal ini (hindari FK violation)
+    await db
+      .delete(practiceAttempts)
+      .where(inArray(practiceAttempts.questionId, questionIds))
+
+    // 3. Hapus test_attempts yang mengacu ke soal ini
+    await db
+      .delete(testAttempts)
+      .where(inArray(testAttempts.questionId, questionIds))
+
+    // 4. Baru hapus soal
+    await db.delete(questions).where(eq(questions.materialId, materialId))
+
+    return NextResponse.json({ success: true, deleted: questionIds.length })
   } catch (error) {
-    console.error('Delete questions error:', error)
-    return NextResponse.json({ error: { message: 'Server error' } }, { status: 500 })
+    const errMsg = error instanceof Error ? error.message : String(error)
+    console.error('[DELETE questions] Error:', errMsg, error)
+    return NextResponse.json(
+      { error: { message: `Gagal menghapus: ${errMsg}` } },
+      { status: 500 }
+    )
   }
 }
