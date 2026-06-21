@@ -168,7 +168,7 @@ export const practiceAttempts = sqliteTable('practice_attempts', {
   sessionId: text('session_id').notNull().references(() => practiceSessions.id),
   floor: integer('floor').notNull(),
   questionId: text('question_id').notNull().references(() => questions.id),
-  answer: text('answer', { enum: ['A', 'B', 'C', 'D'] }).notNull(),
+  answer: text('answer', { enum: ['A', 'B', 'C', 'D', 'E'] }).notNull(),
   isCorrect: integer('is_correct', { mode: 'boolean' }).notNull(),
   xpAwarded: integer('xp_awarded').notNull().default(0),
   hintCountAtAnswer: integer('hint_count_at_answer').default(0),

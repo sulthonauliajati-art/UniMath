@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db/client'
-import { questions } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
+import { questions, practiceAttempts, testAttempts } from '@/lib/db/schema'
+import { eq, inArray } from 'drizzle-orm'
 import { validateToken } from '@/lib/auth/utils'
 
 async function validateAdmin(request: NextRequest) {
@@ -55,7 +55,28 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: { message: 'Material ID diperlukan' } }, { status: 400 })
     }
 
-    await db.delete(questions).where(eq(questions.materialId, materialId))
+    // Ambil ID soal yang akan dihapus dulu
+    const targetQuestions = await db
+      .select({ id: questions.id })
+      .from(questions)
+      .where(eq(questions.materialId, materialId))
+
+    if (targetQuestions.length > 0) {
+      const questionIds = targetQuestions.map((q) => q.id)
+
+      // Hapus practiceAttempts yang mereferensi soal ini (FK constraint)
+      await db
+        .delete(practiceAttempts)
+        .where(inArray(practiceAttempts.questionId, questionIds))
+
+      // Hapus testAttempts yang mereferensi soal ini (FK constraint)
+      await db
+        .delete(testAttempts)
+        .where(inArray(testAttempts.questionId, questionIds))
+
+      // Baru hapus soalnya
+      await db.delete(questions).where(eq(questions.materialId, materialId))
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {
