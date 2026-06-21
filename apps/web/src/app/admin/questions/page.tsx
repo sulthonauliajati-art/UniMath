@@ -140,7 +140,11 @@ export default function AdminQuestionsPage() {
         return
       }
 
-      showToast(`Berhasil upload ${data.count} soal`, 'success')
+      const skipped = data.skippedDuplicates || 0
+      const msg = skipped > 0
+        ? `✅ ${data.count} soal berhasil diimpor (${skipped} soal duplikat dilewati)`
+        : `✅ ${data.count} soal berhasil diimpor`
+      showToast(msg, 'success', 6000)
       if (Array.isArray(data.headerWarnings) && data.headerWarnings.length > 0) {
         setHeaderWarnings(data.headerWarnings)
       }

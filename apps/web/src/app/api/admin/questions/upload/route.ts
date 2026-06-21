@@ -242,14 +242,18 @@ export async function POST(request: NextRequest) {
 
     const dataRows = records.slice(1)
     const errors: string[] = []
+    const skippedDuplicates: string[] = []   // baris duplikat dalam file — di-skip, bukan error
     const rowsToInsert: Array<typeof questions.$inferInsert> = []
     const seenQuestions = new Set<string>()
 
     const existingTexts = await db
-      .select({ question: questions.question })
+      .select({ question: questions.question, mode: questions.mode })
       .from(questions)
       .where(eq(questions.materialId, materialId))
-    const existingQuestionTexts = new Set(existingTexts.map((r) => r.question.trim().toLowerCase()))
+    // Kunci: mode||teks — sama dengan kunci di seenQuestions
+    const existingQuestionTexts = new Set(
+      existingTexts.map((r) => `${r.mode.toLowerCase()}||${r.question.trim().toLowerCase()}`)
+    )
 
     dataRows.forEach((row, idx) => {
       const rowNum = idx + 2
@@ -326,11 +330,18 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      const normalizedKey = question.toLowerCase()
+      // Kunci duplikat = mode + teks soal
+      // Soal yang sama boleh punya mode berbeda (PRACTICE vs PRETEST vs POSTTEST)
+      const normalizedKey = `${(mode || '').toLowerCase()}||${question.toLowerCase()}`
+      // Kunci duplikat DB = teks soal saja (tidak boleh sama dalam satu materi+mode)
+      const dbKey = `${(mode || '').toLowerCase()}||${question.toLowerCase()}`
+
       if (seenQuestions.has(normalizedKey)) {
-        errors.push(`Baris ${rowNum}: soal ini duplikat di dalam file.`)
-      } else if (existingQuestionTexts.has(normalizedKey)) {
-        errors.push(`Baris ${rowNum}: soal ini sudah ada di materi ini (duplikat).`)
+        // Duplikat dalam file (mode + teks sama persis) — skip
+        skippedDuplicates.push(`Baris ${rowNum} dilewati (mode+teks soal sama dengan baris sebelumnya)`)
+        return
+      } else if (existingQuestionTexts.has(dbKey)) {
+        errors.push(`Baris ${rowNum}: soal ini sudah ada di materi ini (duplikat dengan DB).`)
       } else {
         seenQuestions.add(normalizedKey)
       }
@@ -341,7 +352,7 @@ export async function POST(request: NextRequest) {
         difficulty !== null &&
         question &&
         (questionType !== 'PG' || (optA && optB && optC && optD && optE && correct)) &&
-        !existingQuestionTexts.has(normalizedKey) &&
+        !existingQuestionTexts.has(dbKey) &&
         !errors.some((e) => e.startsWith(`Baris ${rowNum}:`))
 
       if (isValid) {
@@ -413,6 +424,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       count: rowsToInsert.length,
+      skippedDuplicates: skippedDuplicates.length,
       headerWarnings,
       formatDetected: isV2 ? 'v2 (dengan optE)' : 'v1 lama (tanpa optE — optE diisi kosong)',
     })
