@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, forwardRef, InputHTMLAttributes } from 'react'
+import { useState, useId, forwardRef, InputHTMLAttributes } from 'react'
 import { motion } from 'framer-motion'
 import { clsx } from 'clsx'
 
@@ -11,7 +11,10 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, icon, type, className, ...props }, ref) => {
+  ({ label, error, icon, type, className, id: propId, ...props }, ref) => {
+    const generatedId = useId()
+    const inputId = propId || generatedId
+    const errorId = `${inputId}-error`
     const [showPassword, setShowPassword] = useState(false)
     const isPassword = type === 'password'
     const inputType = isPassword ? (showPassword ? 'text' : 'password') : type
@@ -19,19 +22,25 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm font-medium text-text-secondary mb-2">
+          <label
+            htmlFor={inputId}
+            className="block text-sm font-medium text-text-secondary mb-2"
+          >
             {label}
           </label>
         )}
         <div className="relative">
           {icon && (
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" aria-hidden="true">
               {icon}
             </div>
           )}
           <input
             ref={ref}
+            id={inputId}
             type={inputType}
+            aria-invalid={error ? 'true' : undefined}
+            aria-describedby={error ? errorId : undefined}
             className={clsx(
               'w-full px-4 py-3 rounded-xl',
               'bg-white/90 border border-uni-primary/30',
@@ -49,6 +58,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-white transition-colors"
             >
               {showPassword ? (
@@ -61,6 +71,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         </div>
         {error && (
           <motion.p
+            id={errorId}
+            role="alert"
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
             className="mt-2 text-sm text-uni-error"

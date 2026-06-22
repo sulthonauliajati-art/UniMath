@@ -57,11 +57,17 @@ export default function StudentDashboard() {
     async function fetchStats() {
       if (!token) return
       try {
-        const res = await fetch('/api/student/stats', {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        if (res.ok) {
-          const data = await res.json()
+        // Parallel fetch: stats + progress — setengah latency
+        const [statsRes, progressRes] = await Promise.all([
+          fetch('/api/student/stats', {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch('/api/student/progress'),
+        ])
+
+        let totalXP = 0
+        if (statsRes.ok) {
+          const data = await statsRes.json()
           setStats({
             totalFloors: data.stats?.totalFloors || 0,
             accuracy: data.stats?.accuracy || 0,
@@ -69,22 +75,20 @@ export default function StudentDashboard() {
             totalXP: 0,
             rank: data.stats?.rank || 1,
           })
-          
-          // Fetch totalXP from progress API
-          try {
-            const progressRes = await fetch('/api/student/progress')
-            if (progressRes.ok) {
-              const progressData = await progressRes.json()
-              setStats(prev => ({ ...prev, totalXP: progressData.totalXP || 0 }))
-            }
-          } catch {}
-          
+
           // P1 Fix: Show onboarding for new users (no sessions yet)
           const hasSeenOnboarding = localStorage.getItem('unimath_onboarding_seen')
           if (data.stats?.totalSessions === 0 && !hasSeenOnboarding) {
             setShowOnboarding(true)
           }
         }
+
+        if (progressRes.ok) {
+          const progressData = await progressRes.json()
+          totalXP = progressData.totalXP || 0
+        }
+
+        setStats(prev => ({ ...prev, totalXP }))
       } catch (error) {
         console.error('Failed to fetch stats:', error)
       } finally {
@@ -282,17 +286,17 @@ export default function StudentDashboard() {
               <div className="text-center">
                  <div className="text-xl mb-1">🎯</div>
                  <div className="text-lg font-bold text-white">{loadingStats ? '...' : `${stats.accuracy}%`}</div>
-                 <div className="text-[10px] text-text-secondary uppercase tracking-wider">Akurasi</div>
+                 <div className="text-xs text-text-secondary uppercase tracking-wider">Akurasi</div>
               </div>
               <div className="text-center border-l border-r border-white/10">
                  <div className="text-xl mb-1">{getBadge(stats.totalXP).emoji}</div>
                  <div className={`text-lg font-bold ${getBadge(stats.totalXP).color}`}>{getBadge(stats.totalXP).name}</div>
-                 <div className="text-[10px] text-text-secondary uppercase tracking-wider">Badge</div>
+                 <div className="text-xs text-text-secondary uppercase tracking-wider">Badge</div>
               </div>
               <div className="text-center">
                  <div className="text-xl mb-1">🏢</div>
                  <div className="text-lg font-bold text-uni-primary">{loadingStats ? '...' : stats.totalFloors}</div>
-                 <div className="text-[10px] text-text-secondary uppercase tracking-wider">Lantai</div>
+                 <div className="text-xs text-text-secondary uppercase tracking-wider">Lantai</div>
               </div>
             </div>
 
@@ -313,7 +317,7 @@ export default function StudentDashboard() {
                     📚
                  </div>
                  <h3 className="text-sm font-bold text-white mb-1">Daftar Materi</h3>
-                 <p className="text-[10px] text-text-secondary">Pilih materi spesifik</p>
+                 <p className="text-xs text-text-secondary">Pilih materi spesifik</p>
               </GlassCard>
            </Link>
 
@@ -323,7 +327,7 @@ export default function StudentDashboard() {
                     🏆
                  </div>
                  <h3 className="text-sm font-bold text-white mb-1">Leaderboard</h3>
-                 <p className="text-[10px] text-text-secondary">Peringkat global</p>
+                 <p className="text-xs text-text-secondary">Peringkat global</p>
               </GlassCard>
            </Link>
         </div>
@@ -336,7 +340,7 @@ export default function StudentDashboard() {
                     📝
                  </div>
                  <h3 className="text-sm font-bold text-white mb-1">Tes</h3>
-                 <p className="text-[10px] text-text-secondary">Pre-test & Post-test</p>
+                 <p className="text-xs text-text-secondary">Pre-test & Post-test</p>
               </GlassCard>
            </Link>
 
@@ -346,7 +350,7 @@ export default function StudentDashboard() {
                     👤
                  </div>
                  <h3 className="text-sm font-bold text-white mb-1">Profil</h3>
-                 <p className="text-[10px] text-text-secondary">Statistik & pengaturan</p>
+                 <p className="text-xs text-text-secondary">Statistik & pengaturan</p>
               </GlassCard>
            </Link>
         </div>

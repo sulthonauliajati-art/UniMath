@@ -79,15 +79,15 @@ export default function StudentAchievementsPage() {
           <div className="flex justify-around text-center">
             <div>
               <div className="text-xl sm:text-2xl font-bold text-uni-primary">{earnedCount}</div>
-              <div className="text-[10px] sm:text-xs text-text-secondary">Diraih</div>
+              <div className="text-xs sm:text-xs text-text-secondary">Diraih</div>
             </div>
             <div>
               <div className="text-xl sm:text-2xl font-bold text-uni-accent">{achievements.length}</div>
-              <div className="text-[10px] sm:text-xs text-text-secondary">Total</div>
+              <div className="text-xs sm:text-xs text-text-secondary">Total</div>
             </div>
             <div>
               <div className="text-xl sm:text-2xl font-bold text-uni-warning">{totalPoints}</div>
-              <div className="text-[10px] sm:text-xs text-text-secondary">Poin</div>
+              <div className="text-xs sm:text-xs text-text-secondary">Poin</div>
             </div>
           </div>
         </GlassCard>
@@ -129,11 +129,11 @@ export default function StudentAchievementsPage() {
                       <div className="flex items-center gap-1 sm:gap-2 mb-0.5 sm:mb-1 flex-wrap">
                         <h3 className="font-semibold text-white text-sm sm:text-base">{ach.name}</h3>
                         {ach.earned && (
-                          <span className="text-[10px] sm:text-xs bg-uni-success/20 text-uni-success px-1.5 sm:px-2 py-0.5 rounded">
+                          <span className="text-xs sm:text-xs bg-uni-success/20 text-uni-success px-1.5 sm:px-2 py-0.5 rounded">
                             ✓
                           </span>
                         )}
-                        <span className="text-[10px] sm:text-xs text-uni-warning">+{ach.points}</span>
+                        <span className="text-xs sm:text-xs text-uni-warning">+{ach.points}</span>
                       </div>
                       <p className="text-xs sm:text-sm text-text-secondary mb-1.5 sm:mb-2">{ach.description}</p>
                       {!ach.earned && (
@@ -141,7 +141,7 @@ export default function StudentAchievementsPage() {
                           <div className="flex-1">
                             <ProgressBar value={ach.progress} size="sm" />
                           </div>
-                          <span className="text-[10px] sm:text-xs text-text-muted flex-shrink-0">
+                          <span className="text-xs sm:text-xs text-text-muted flex-shrink-0">
                             {ach.current}/{ach.requirement}
                           </span>
                         </div>

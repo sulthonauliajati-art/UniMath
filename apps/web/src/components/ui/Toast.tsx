@@ -36,19 +36,24 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={{ showToast }}>
       {children}
       
-      {/* Toast Container */}
-      <div className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2 max-w-sm">
+      {/* Toast Container — live region untuk screen reader */}
+      <div
+        className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2 max-w-sm"
+        aria-live="polite"
+        aria-relevant="additions"
+      >
         <AnimatePresence>
           {toasts.map((toast) => (
             <motion.div
               key={toast.id}
+              role="status"
               initial={{ opacity: 0, y: 20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
               className={`px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 cursor-pointer ${getToastStyles(toast.type)}`}
               onClick={() => removeToast(toast.id)}
             >
-              <span className="text-lg">{getToastIcon(toast.type)}</span>
+              <span className="text-lg" aria-hidden="true">{getToastIcon(toast.type)}</span>
               <p className="text-sm font-medium">{toast.message}</p>
             </motion.div>
           ))}

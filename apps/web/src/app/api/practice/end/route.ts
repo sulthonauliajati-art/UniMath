@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db/client'
 import { practiceSessions, practiceAttempts, classStudents, classes, schools, teacherProfiles, users } from '@/lib/db/schema'
 import { eq, sql } from 'drizzle-orm'
+import { resolveAuthenticatedUserId } from '@/lib/auth/server'
 
 
 // Helper function to award points to teacher
@@ -43,6 +44,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // ── AUTH: Resolve authenticated user ──
+    const userId = await resolveAuthenticatedUserId(request)
+    if (!userId) {
+      return NextResponse.json(
+        { error: { code: 'UNAUTHORIZED', message: 'Autentikasi diperlukan' } },
+        { status: 401 }
+      )
+    }
+
     // Get session
     const [session] = await db
       .select()
@@ -55,6 +65,28 @@ export async function POST(request: NextRequest) {
         { error: { code: 'NOT_FOUND', message: 'Session tidak ditemukan' } },
         { status: 404 }
       )
+    }
+
+    // ── GUARD: Session ownership ──
+    if (session.studentUserId !== userId) {
+      return NextResponse.json(
+        { error: { code: 'FORBIDDEN', message: 'Session ini bukan milik Anda' } },
+        { status: 403 }
+      )
+    }
+
+    // ── GUARD: Already ended sessions — idempotent return ──
+    if (session.status === 'COMPLETED' || session.status === 'ABANDONED') {
+      const [existingUser] = await db
+        .select({ totalPoints: users.totalPoints })
+        .from(users)
+        .where(eq(users.id, session.studentUserId))
+      return NextResponse.json({
+        success: true,
+        alreadyEnded: true,
+        totalXP: existingUser?.totalPoints || 0,
+        stats: { floorsClimbed: 0, correctAnswers: 0, totalAttempts: 0 },
+      })
     }
 
     // Get stats from attempts

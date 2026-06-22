@@ -21,17 +21,18 @@ const config: Config = {
       boxShadow: {
         'glow': '0 0 20px var(--primary-glow)',
         'glow-accent': '0 0 20px var(--accent-glow)',
-        'card': '0 8px 32px rgba(0, 0, 0, 0.3)',
+        'card': '0 10px 40px rgba(0, 0, 0, 0.5)',
       },
       fontFamily: {
-        sans: ['Poppins', 'Inter', 'sans-serif'],
+        sans: ['Inter', 'sans-serif'],
+        heading: ['Poppins', 'sans-serif'],
       },
       backdropBlur: {
-        'glass': '12px',
+        'glass': '16px',
       },
       borderRadius: {
-        'xl': '20px',
-        '2xl': '28px',
+        'xl': '24px',
+        '2xl': '32px',
       },
       animation: {
         'float': 'float 6s ease-in-out infinite',

@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { StarryBackground } from '@/components/ui/StarryBackground'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { useAuth } from '@/lib/auth/context'
+import { getSafeSessionStorage, setSafeSessionStorage } from '@/lib/storage'
 
 interface Material {
   id: string
@@ -97,15 +98,12 @@ export default function MaterialDetailPage() {
 
   // ── Initialize Wajib Belajar mode ──
   useEffect(() => {
-    const studyData = sessionStorage.getItem('studyMaterial')
-    if (studyData) {
-      const data = JSON.parse(studyData)
-      if (data.materialId === materialId) {
-        setFromGameOver(true)
-        setCanContinue(false)
-        setTimeLeft(MIN_STUDY_SECONDS)
-        sessionStorage.setItem('materialStudied_' + materialId, 'true')
-      }
+    const studyData = getSafeSessionStorage<{ materialId: string; materialName: string }>('studyMaterial')
+    if (studyData?.materialId === materialId) {
+      setFromGameOver(true)
+      setCanContinue(false)
+      setTimeLeft(MIN_STUDY_SECONDS)
+      setSafeSessionStorage('materialStudied_' + materialId, true)
     }
   }, [materialId])
 
@@ -168,24 +166,24 @@ export default function MaterialDetailPage() {
 
   const fetchAll = async () => {
     try {
-      // Fetch material info
-      const matRes = await fetch(`/api/student/materials/${materialId}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      })
+      // Parallel fetch: material info + SHORT content + FULL content
+      const fetchHeaders: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {}
+      const [matRes, shortRes, fullRes] = await Promise.all([
+        fetch(`/api/student/materials/${materialId}`, { headers: fetchHeaders }),
+        fetch(`/api/student/materials/${materialId}/content?variant=SHORT`),
+        fetch(`/api/student/materials/${materialId}/content?variant=FULL`),
+      ])
+
       if (matRes.ok) {
         const data = await matRes.json()
         setMaterial(data.material)
       }
 
-      // Fetch SHORT content
-      const shortRes = await fetch(`/api/student/materials/${materialId}/content?variant=SHORT`)
       if (shortRes.ok) {
         const data = await shortRes.json()
         setShortContent(data.content)
       }
 
-      // Fetch FULL content
-      const fullRes = await fetch(`/api/student/materials/${materialId}/content?variant=FULL`)
       if (fullRes.ok) {
         const data = await fullRes.json()
         setFullContent(data.content)
@@ -236,7 +234,7 @@ export default function MaterialDetailPage() {
       } else if (trimmed.startsWith('## ')) {
         elements.push(<h3 key={i} className="text-lg font-bold text-cyan-400 mt-4 mb-2">{trimmed.slice(3)}</h3>)
       } else if (trimmed.startsWith('### ')) {
-        elements.push(<h4 key={i} className="text-base font-semibold text-teal-300 mt-3 mb-1">{trimmed.slice(4)}</h4>)
+        elements.push(<h4 key={i} className="text-base font-semibold text-uni-primary mt-3 mb-1">{trimmed.slice(4)}</h4>)
       } else if (trimmed.startsWith('- ')) {
         elements.push(
           <div key={i} className="flex items-start gap-2 ml-3 mb-1">
@@ -586,7 +584,7 @@ export default function MaterialDetailPage() {
             <div className="max-w-4xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3 flex items-center gap-3">
               {/* Status indicators — 3 kondisi */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-xs flex-wrap">
+                <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-xs flex-wrap">
                   {/* 1. Scroll check */}
                   <span className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full ${scrollDone ? 'text-emerald-400 bg-emerald-500/10' : 'text-slate-500'}`}>
                     {scrollDone ? '✅' : '▢'} Baca
@@ -608,7 +606,7 @@ export default function MaterialDetailPage() {
                   </span>
                 </div>
                 {!canContinue && (
-                  <p className="text-slate-500 text-[10px] sm:text-xs mt-0.5 line-clamp-1">
+                  <p className="text-slate-500 text-xs sm:text-xs mt-0.5 line-clamp-1">
                     {!scrollDone && !quizDone
                       ? '💡 Scroll baca materi, atau kerjakan Quiz di atas'
                       : scrollDone && !quizDone
@@ -697,7 +695,7 @@ function StickyContinueBar({
       >
         <div className="max-w-4xl mx-auto px-3 sm:px-6 py-2 sm:py-2.5 flex items-center gap-2 sm:gap-3">
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.15em] text-orange-300/90 font-semibold">
+            <p className="text-xs sm:text-xs uppercase tracking-[0.15em] text-orange-300/90 font-semibold">
               📚 Wajib Belajar
             </p>
             <p className="text-white text-xs sm:text-sm leading-tight mt-0.5 line-clamp-1 tabular-nums">

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 import { db } from '@/lib/db/client'
+import { resolveAuthenticatedUserId } from '@/lib/auth/server'
 import { questions, materials, practiceSessions, practiceAttempts } from '@/lib/db/schema'
 import { eq, desc, and, or } from 'drizzle-orm'
 
@@ -60,47 +60,12 @@ async function pickQuestion(
 
 export async function GET(request: NextRequest) {
   try {
-    // Resolve userId via multiple auth methods
-    const cookieStore = await cookies()
-    let userId = ''
-
-    // 1. Authorization header
-    const authHeader = request.headers.get('authorization')
-    if (authHeader?.startsWith('Bearer ')) {
-      const { validateToken } = await import('@/lib/auth/utils')
-      const t = await validateToken(authHeader.replace('Bearer ', '').trim())
-      if (t.valid && t.userId) userId = t.userId
-    }
-
-    // 2. Cookie 'token' (set oleh AuthContext)
+    const userId = await resolveAuthenticatedUserId(request)
     if (!userId) {
-      const tokenCookie = cookieStore.get('token')
-      if (tokenCookie?.value) {
-        const { validateToken } = await import('@/lib/auth/utils')
-        const t = await validateToken(tokenCookie.value)
-        if (t.valid && t.userId) userId = t.userId
-      }
-    }
-
-    // 3. Cookie 'user' legacy
-    if (!userId) {
-      const userCookie = cookieStore.get('user')
-      if (!userCookie) {
-        return NextResponse.json({ error: { message: 'Unauthorized' } }, { status: 401 })
-      }
-      try {
-        const user = JSON.parse(userCookie.value)
-        if (!user.id || user.id === 'anonymous') {
-          return NextResponse.json({ error: { message: 'Unauthorized' } }, { status: 401 })
-        }
-        userId = user.id
-      } catch {
-        return NextResponse.json({ error: { message: 'Invalid token' } }, { status: 401 })
-      }
-    }
-
-    if (!userId) {
-      return NextResponse.json({ error: { message: 'Unauthorized' } }, { status: 401 })
+      return NextResponse.json(
+        { error: { code: 'UNAUTHORIZED', message: 'Unauthorized' } },
+        { status: 401 }
+      )
     }
 
     // ⚡ OPTIMASI: Pakai index practice_sessions(student_user_id, status)

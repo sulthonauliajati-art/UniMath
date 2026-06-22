@@ -139,7 +139,7 @@ function StudentTestLandingContent() {
                           {mat.description || 'Kelas ' + mat.grade}
                         </p>
                       </div>
-                      <span className="text-[10px] bg-uni-primary/20 text-uni-primary px-2 py-0.5 rounded shrink-0">
+                      <span className="text-xs bg-uni-primary/20 text-uni-primary px-2 py-0.5 rounded shrink-0">
                         Kelas {mat.grade}
                       </span>
                     </div>

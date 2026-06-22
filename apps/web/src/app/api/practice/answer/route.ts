@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db/client'
 import { questions, materials, practiceSessions, practiceAttempts, users } from '@/lib/db/schema'
 import { eq, and, or, sql } from 'drizzle-orm'
+import { resolveAuthenticatedUserId } from '@/lib/auth/server'
 
 const DIFFICULTY_LABELS: Record<number, string> = {
   1: 'Mudah',
@@ -122,6 +123,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Validasi responseMs — harus positive number
+    const sanitizedResponseMs = (typeof responseMs === 'number' && responseMs >= 0)
+      ? Math.round(responseMs)
+      : 0
+
+    // ── AUTH: Resolve authenticated user ──
+    const userId = await resolveAuthenticatedUserId(request)
+    if (!userId) {
+      return NextResponse.json(
+        { error: { code: 'UNAUTHORIZED', message: 'Autentikasi diperlukan' } },
+        { status: 401 }
+      )
+    }
+
     // Get the question being answered
     const [question] = await db
       .select()
@@ -147,6 +162,58 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: { code: 'NOT_FOUND', message: 'Session tidak ditemukan' } },
         { status: 404 }
+      )
+    }
+
+    // ── GUARD: Session ownership ──
+    if (session.studentUserId !== userId) {
+      return NextResponse.json(
+        { error: { code: 'FORBIDDEN', message: 'Session ini bukan milik Anda' } },
+        { status: 403 }
+      )
+    }
+
+    // ── GUARD: Session must be ACTIVE (or REMEDIAL_REQUIRED for transition) ──
+    // REMEDIAL_REQUIRED sessions get rejected — student must study first via /api/practice/start
+    if (session.status === 'REMEDIAL_REQUIRED') {
+      return NextResponse.json(
+        { error: { code: 'REMEDIAL_REQUIRED', message: 'Kamu harus mempelajari materi dulu sebelum melanjutkan latihan' } },
+        { status: 403 }
+      )
+    }
+
+    if (session.status !== 'ACTIVE') {
+      return NextResponse.json(
+        { error: { code: 'SESSION_INACTIVE', message: 'Session sudah tidak aktif' } },
+        { status: 403 }
+      )
+    }
+
+    // ── GUARD: Question must match current question ──
+    // Prevents answering arbitrary questions or questions from different materials
+    if (session.currentQuestionId && questionId !== session.currentQuestionId) {
+      return NextResponse.json(
+        { error: { code: 'QUESTION_MISMATCH', message: 'Soal ini bukan soal yang sedang ditampilkan' } },
+        { status: 403 }
+      )
+    }
+
+    // ── GUARD: Duplicate answer prevention ──
+    const [existingAttempt] = await db
+      .select({ id: practiceAttempts.id })
+      .from(practiceAttempts)
+      .where(
+        and(
+          eq(practiceAttempts.sessionId, sessionId),
+          eq(practiceAttempts.questionId, questionId)
+        )
+      )
+      .limit(1)
+
+    if (existingAttempt) {
+      return NextResponse.json(
+        { error: { code: 'DUPLICATE_ANSWER', message: 'Soal ini sudah kamu jawab' } },
+        { status: 409 }
       )
     }
 
@@ -197,13 +264,13 @@ export async function POST(request: NextRequest) {
         sessionId,
         floor: session.floor,
         questionId,
-        answer: answer as 'A' | 'B' | 'C' | 'D',
+        answer: answer as 'A' | 'B' | 'C' | 'D' | 'E',
         isCorrect,
         xpAwarded: xpGain,
         hintCountAtAnswer: session.consecutiveWrong,
         difficultyAtAnswer: session.currentDifficulty,
-        isRemedialSession: session.status === 'REMEDIAL_REQUIRED',
-        responseMs: responseMs || 0,
+        isRemedialSession: false,
+        responseMs: sanitizedResponseMs,
         createdAt: new Date().toISOString(),
       }))
 
@@ -252,13 +319,13 @@ export async function POST(request: NextRequest) {
       sessionId,
       floor: session.floor,
       questionId,
-      answer: answer as 'A' | 'B' | 'C' | 'D',
+      answer: answer as 'A' | 'B' | 'C' | 'D' | 'E',
       isCorrect,
       xpAwarded: 0,
       hintCountAtAnswer: session.consecutiveWrong,
       difficultyAtAnswer: session.currentDifficulty,
-      isRemedialSession: session.status === 'REMEDIAL_REQUIRED',
-      responseMs: responseMs || 0,
+      isRemedialSession: false,
+      responseMs: sanitizedResponseMs,
       createdAt: new Date().toISOString(),
     }))
 

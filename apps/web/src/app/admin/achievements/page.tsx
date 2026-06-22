@@ -297,7 +297,7 @@ export default function AdminAchievementsPage() {
                       <p className="text-sm text-text-secondary line-clamp-2">
                         {achievement.description}
                       </p>
-                      <div className="flex flex-wrap gap-1.5 mt-2 text-[10px]">
+                      <div className="flex flex-wrap gap-1.5 mt-2 text-xs">
                         <span className="px-2 py-0.5 bg-uni-primary/20 rounded text-uni-primary">
                           {typeLabels[achievement.type]}
                         </span>

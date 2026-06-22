@@ -284,7 +284,7 @@ export default function AdminReportsClient() {
             </div>
 
             {/* Research Export */}
-            <div className="p-4 bg-black/30 border border-purple-500/20 rounded-xl">
+            <div className="p-4 bg-black/30 border border-uni-accent/20 rounded-xl">
               <div className="flex items-start gap-3 mb-3">
                 <span className="text-2xl">🔬</span>
                 <div>
@@ -300,7 +300,7 @@ export default function AdminReportsClient() {
               <button
                 onClick={() => handleDownload('research')}
                 disabled={downloading !== null}
-                className="w-full py-2.5 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600 text-white font-semibold text-sm hover:from-purple-400 hover:to-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-[0_0_12px_rgba(147,51,234,0.3)]"
+                className="w-full py-2.5 rounded-lg bg-gradient-to-r from-uni-accent to-uni-accent text-white font-semibold text-sm hover:from-uni-primary hover:to-uni-accent disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-[0_0_12px_rgba(147,51,234,0.3)]"
               >
                 {downloading === 'research' ? '⏳ Menyiapkan…' : '⬇️ Download CSV Penelitian'}
               </button>

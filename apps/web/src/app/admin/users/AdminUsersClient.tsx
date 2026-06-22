@@ -416,7 +416,7 @@ export default function AdminUsersClient() {
                         )}
                       </div>
                       {s.lastPracticeAt && (
-                        <p className="text-[11px] text-text-muted mt-1">
+                        <p className="text-xs text-text-muted mt-1">
                           Terakhir: {new Date(s.lastPracticeAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                         </p>
                       )}
@@ -467,64 +467,76 @@ export default function AdminUsersClient() {
             }}
           >
             <div>
-              <label className="block text-sm text-text-secondary mb-1">
+              <label htmlFor="admin-user-name" className="block text-sm text-text-secondary mb-1">
                 Nama <span className="text-uni-error">*</span>
               </label>
               <input
+                id="admin-user-name"
                 type="text"
                 value={editor.name}
                 onChange={(e) => setEditor({ ...editor, name: e.target.value })}
                 placeholder="Nama lengkap"
                 className={fieldClass(!!formErrors.name)}
+                aria-invalid={formErrors.name ? 'true' : undefined}
+                aria-describedby={formErrors.name ? 'admin-user-name-error' : undefined}
                 autoFocus
               />
-              {formErrors.name && <p className="text-xs text-uni-error mt-1">{formErrors.name}</p>}
+              {formErrors.name && <p id="admin-user-name-error" role="alert" className="text-xs text-uni-error mt-1">{formErrors.name}</p>}
             </div>
 
             {editor.tab === 'teachers' ? (
               <div>
-                <label className="block text-sm text-text-secondary mb-1">
+                <label htmlFor="admin-user-email" className="block text-sm text-text-secondary mb-1">
                   Email <span className="text-uni-error">*</span>
                 </label>
                 <input
+                  id="admin-user-email"
                   type="email"
                   value={editor.email || ''}
                   onChange={(e) => setEditor({ ...editor, email: e.target.value })}
                   placeholder="guru@sekolah.sch.id"
                   className={fieldClass(!!formErrors.email)}
+                  aria-invalid={formErrors.email ? 'true' : undefined}
+                  aria-describedby={formErrors.email ? 'admin-user-email-error' : undefined}
                 />
                 {formErrors.email && (
-                  <p className="text-xs text-uni-error mt-1">{formErrors.email}</p>
+                  <p id="admin-user-email-error" role="alert" className="text-xs text-uni-error mt-1">{formErrors.email}</p>
                 )}
               </div>
             ) : (
               <div>
-                <label className="block text-sm text-text-secondary mb-1">
+                <label htmlFor="admin-user-nisn" className="block text-sm text-text-secondary mb-1">
                   NISN <span className="text-uni-error">*</span>
                 </label>
                 <input
+                  id="admin-user-nisn"
                   type="text"
                   inputMode="numeric"
                   value={editor.nisn || ''}
                   onChange={(e) => setEditor({ ...editor, nisn: e.target.value.replace(/\D/g, '') })}
                   placeholder="1234567890"
                   className={fieldClass(!!formErrors.nisn)}
+                  aria-invalid={formErrors.nisn ? 'true' : undefined}
+                  aria-describedby={formErrors.nisn ? 'admin-user-nisn-error' : undefined}
                 />
-                {formErrors.nisn && <p className="text-xs text-uni-error mt-1">{formErrors.nisn}</p>}
+                {formErrors.nisn && <p id="admin-user-nisn-error" role="alert" className="text-xs text-uni-error mt-1">{formErrors.nisn}</p>}
               </div>
             )}
 
             {editor.mode === 'create' && (
               <div>
-                <label className="block text-sm text-text-secondary mb-1">
+                <label htmlFor="admin-user-password" className="block text-sm text-text-secondary mb-1">
                   Password Awal <span className="text-text-muted text-xs">(opsional)</span>
                 </label>
                 <input
+                  id="admin-user-password"
                   type="text"
                   value={editor.password || ''}
                   onChange={(e) => setEditor({ ...editor, password: e.target.value })}
                   placeholder="Kosongkan untuk generate otomatis (8 karakter)"
                   className={fieldClass(!!formErrors.password)}
+                  aria-invalid={formErrors.password ? 'true' : undefined}
+                  aria-describedby={formErrors.password ? 'admin-user-password-error' : undefined}
                 />
                 {formErrors.password && (
                   <p className="text-xs text-uni-error mt-1">{formErrors.password}</p>

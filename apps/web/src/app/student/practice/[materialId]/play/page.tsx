@@ -6,6 +6,27 @@ import { motion, AnimatePresence } from 'framer-motion'
 import confetti from 'canvas-confetti'
 import { TowerBackground, GlassCard } from '@/components/ui'
 import { useAuth } from '@/lib/auth/context'
+import { setSafeSessionStorage, getSafeSessionStorage, removeSafeSessionStorage } from '@/lib/storage'
+
+/**
+ * Retry wrapper untuk fetch — mencegah kehilangan data saat koneksi terputus.
+ * Mencoba hingga maxRetries kali dengan exponential backoff.
+ */
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit,
+  maxRetries = 3
+): Promise<Response> {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await fetch(url, options)
+    } catch (err) {
+      if (attempt === maxRetries) throw err
+      await new Promise((r) => setTimeout(r, 200 * attempt))
+    }
+  }
+  throw new Error('Max retries exceeded')
+}
 
 interface QuestionForClient {
   id: string
@@ -80,29 +101,32 @@ export default function GamePlayPage() {
     }
 
     const initSession = async () => {
-      const sessionData = sessionStorage.getItem('practiceSession')
+      const sessionData = getSafeSessionStorage<{
+          sessionId: string; floor: number; consecutiveWrong: number;
+          currentDifficulty: number; difficultyLabel: string;
+          question: QuestionForClient; materialId: string; materialName: string;
+          stats: GameState['stats']; streak: number; sessionXP: number;
+        }>('practiceSession')
       if (sessionData) {
-        const data = JSON.parse(sessionData)
         questionShownAtRef.current = Date.now()
         setGameState({
-          sessionId: data.sessionId,
-          floor: data.floor || 1,
-          floorBeforeAnswer: data.floor || 1,
-          consecutiveWrong: data.consecutiveWrong || 0,
-          currentDifficulty: data.currentDifficulty || 2,
-          difficultyLabel: data.difficultyLabel || 'Sedang',
-          question: data.question,
-          materialId: data.materialId || materialId,
-          materialName: data.materialName || 'Matematika',
+          sessionId: sessionData.sessionId,
+          floor: sessionData.floor || 1,
+          floorBeforeAnswer: sessionData.floor || 1,
+          consecutiveWrong: sessionData.consecutiveWrong || 0,
+          currentDifficulty: sessionData.currentDifficulty || 2,
+          difficultyLabel: sessionData.difficultyLabel || 'Sedang',
+          question: sessionData.question,
+          materialId: sessionData.materialId || materialId,
+          materialName: sessionData.materialName || 'Matematika',
           selectedAnswer: null,
           showCorrectModal: false,
           showMustStudyModal: false,
           isSubmitting: false,
           currentHint: null,
-          stats: data.stats || { floorsClimbed: 0, correctAnswers: 0, totalAttempts: 0 },
-          // ✅ FIX #12: Restore streak dari session storage (bukan selalu 0)
-          streak: data.streak || 0,
-          sessionXP: data.sessionXP || 0,
+          stats: sessionData.stats || { floorsClimbed: 0, correctAnswers: 0, totalAttempts: 0 },
+          streak: sessionData.streak || 0,
+          sessionXP: sessionData.sessionXP || 0,
           lastXPGain: 0,
         })
       } else {
@@ -110,7 +134,7 @@ export default function GamePlayPage() {
           const res = await fetch('/api/practice/current')
           if (res.ok) {
             const data = await res.json()
-            sessionStorage.setItem('practiceSession', JSON.stringify(data))
+            setSafeSessionStorage('practiceSession', data)
             questionShownAtRef.current = Date.now()
             setGameState({
               sessionId: data.sessionId,
@@ -145,25 +169,22 @@ export default function GamePlayPage() {
     initSession()
   }, [user, isLoading, router, materialId])
 
-  // Auto-save session state to sessionStorage on every gameState change
+  // Auto-save session state to sessionStorage (debounced 300ms + try-catch safe)
   useEffect(() => {
     if (gameState) {
-      sessionStorage.setItem(
-        'practiceSession',
-        JSON.stringify({
-          sessionId: gameState.sessionId,
-          floor: gameState.floor,
-          consecutiveWrong: gameState.consecutiveWrong,
-          currentDifficulty: gameState.currentDifficulty,
-          difficultyLabel: gameState.difficultyLabel,
-          question: gameState.question,
-          materialId: gameState.materialId,
-          materialName: gameState.materialName,
-          stats: gameState.stats,
-          streak: gameState.streak,
-          sessionXP: gameState.sessionXP,
-        })
-      )
+      setSafeSessionStorage('practiceSession', {
+        sessionId: gameState.sessionId,
+        floor: gameState.floor,
+        consecutiveWrong: gameState.consecutiveWrong,
+        currentDifficulty: gameState.currentDifficulty,
+        difficultyLabel: gameState.difficultyLabel,
+        question: gameState.question,
+        materialId: gameState.materialId,
+        materialName: gameState.materialName,
+        stats: gameState.stats,
+        streak: gameState.streak,
+        sessionXP: gameState.sessionXP,
+      })
     }
   }, [gameState])
 
@@ -281,13 +302,10 @@ export default function GamePlayPage() {
 
         if (data.mustStudy) {
           // 3x consecutive wrong → Wajib Belajar
-          sessionStorage.setItem(
-            'studyMaterial',
-            JSON.stringify({
-              materialId: data.materialId || gameState.materialId,
-              materialName: data.materialName || gameState.materialName,
-            })
-          )
+          setSafeSessionStorage('studyMaterial', {
+            materialId: data.materialId || gameState.materialId,
+            materialName: data.materialName || gameState.materialName,
+          })
           setGameState((prev) =>
             prev
               ? {
@@ -336,45 +354,52 @@ export default function GamePlayPage() {
     }
   }
 
-  // ✅ FIX #4: handleEndSession terima reason + sessionId parameter
-  // Menerima sessionId eksplisit agar tidak bergantung pada gameState yang mungkin stale
-  // saat dipanggil dari dalam setTimeout chain
+  // handleEndSession — proper await + retry untuk mencegah kehilangan data
   const handleEndSession = useCallback(async (
     reason: 'completed' | 'user_quit' = 'user_quit',
     sessionIdOverride?: string
   ) => {
-    // Baca state terkini melalui functional getter
-    setGameState((currentState) => {
-      if (!currentState) return null
-      const sid = sessionIdOverride || currentState.sessionId
+    // Tangkap state terkini via functional updater + Promise
+    const capturedState: GameState | null = await new Promise((resolve) => {
+      setGameState((currentState) => {
+        resolve(currentState)
+        return null // trigger loading UI
+      })
+    })
 
-      // Fire-and-forget: simpan ke sessionStorage dulu
-      sessionStorage.setItem(
-        'practiceStats',
-        JSON.stringify({
-          ...currentState.stats,
-          sessionXP: currentState.sessionXP,
-          bestStreak: currentState.streak,
-          materialId: currentState.materialId,
-          materialTitle: currentState.materialName,
-        })
-      )
-      sessionStorage.removeItem('practiceSession')
+    if (!capturedState) {
+      router.push('/student/practice/complete')
+      return
+    }
 
-      // Call end API (fire-and-forget, tidak block navigasi)
-      fetch('/api/practice/end', {
+    const sid = sessionIdOverride || capturedState.sessionId
+
+    // Simpan stats ke sessionStorage sebagai fallback (safe + try-catch)
+    setSafeSessionStorage('practiceStats', {
+      ...capturedState.stats,
+      sessionXP: capturedState.sessionXP,
+      bestStreak: capturedState.streak,
+      materialId: capturedState.materialId,
+      materialTitle: capturedState.materialName,
+    })
+    removeSafeSessionStorage('practiceSession')
+
+    // Await API end dengan retry — data siswa TIDAK hilang
+    try {
+      await fetchWithRetry('/api/practice/end', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sessionId: sid,
           reason,
-          stats: currentState.stats,
-          sessionXP: currentState.sessionXP,
+          stats: capturedState.stats,
+          sessionXP: capturedState.sessionXP,
         }),
-      }).catch((err) => console.error('Failed to end session:', err))
-
-      return null // trigger loading state
-    })
+      })
+    } catch (err) {
+      console.error('Failed to end session after retries:', err)
+      // Data masih aman di sessionStorage — bisa di-recover nanti
+    }
 
     router.push('/student/practice/complete')
   }, [router])
@@ -461,10 +486,10 @@ export default function GamePlayPage() {
         {/* Progress bar */}
         <div className="mt-3 mx-auto max-w-md">
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] sm:text-xs text-white/60 uppercase tracking-[0.15em]">
+            <span className="text-xs sm:text-xs text-white/60 uppercase tracking-[0.15em]">
               Progress
             </span>
-            <span className="text-[10px] sm:text-xs text-cyan-300 font-semibold">
+            <span className="text-xs sm:text-xs text-cyan-300 font-semibold">
               {progressPct}%
             </span>
           </div>
@@ -507,7 +532,7 @@ export default function GamePlayPage() {
                     <span className="text-amber-300 font-bold text-base leading-none">?</span>
                   </span>
                   <div className="flex-1">
-                    <p className="text-[10px] uppercase tracking-[0.15em] text-amber-300/80 font-semibold mb-1">
+                    <p className="text-xs uppercase tracking-[0.15em] text-amber-300/80 font-semibold mb-1">
                       Petunjuk
                     </p>
                     <p className="text-sm text-slate-100/90 leading-snug">
@@ -529,7 +554,7 @@ export default function GamePlayPage() {
 
           <GlassCard glowColor={cardGlow} intensity="strong" className="p-5 sm:p-6">
             {/* Material label */}
-            <p className="text-center text-[11px] sm:text-xs text-cyan-200/70 uppercase tracking-[0.2em] mb-3">
+            <p className="text-center text-xs sm:text-xs text-cyan-200/70 uppercase tracking-[0.2em] mb-3">
               {gameState.materialName}
             </p>
 
@@ -585,7 +610,7 @@ export default function GamePlayPage() {
                     }`}
                   />
                 ))}
-                <span className="text-[10px] text-red-300/70 ml-1.5">
+                <span className="text-xs text-red-300/70 ml-1.5">
                   {gameState.consecutiveWrong}/3 salah berturut
                 </span>
               </div>
@@ -674,7 +699,7 @@ export default function GamePlayPage() {
                 +{gameState.sessionXP} XP
               </motion.span>
               {gameState.streak >= 3 && (
-                <span className="text-[10px] text-orange-400 font-semibold">×{getXPMultiplier(gameState.streak)}</span>
+                <span className="text-xs text-orange-400 font-semibold">×{getXPMultiplier(gameState.streak)}</span>
               )}
             </div>
             {/* Floating +XP animation */}
@@ -696,7 +721,7 @@ export default function GamePlayPage() {
           {/* End button — ✅ FIX #4: kirim 'user_quit' */}
           <button
             onClick={() => handleEndSession('user_quit')}
-            className="ml-1 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-slate-900 bg-gradient-to-r from-teal-300 to-cyan-300 shadow-[0_0_12px_-2px_rgba(6,182,212,0.7)] active:scale-95 transition"
+            className="ml-1 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-slate-900 bg-gradient-to-r from-uni-accent to-uni-primary shadow-[0_0_12px_-2px_rgba(6,182,212,0.7)] active:scale-95 transition"
             title="Udah dulu latihan hari ini"
           >
             Selesai
@@ -786,7 +811,7 @@ export default function GamePlayPage() {
                     router.push(`/student/materials/${gameState.materialId}`)
                   }
                   whileTap={{ scale: 0.98 }}
-                  className="w-full py-2.5 sm:py-3 rounded-xl font-bold text-sm sm:text-base bg-gradient-to-r from-cyan-400 to-teal-400 text-slate-900 shadow-[0_0_18px_-3px_rgba(6,182,212,0.7)]"
+                  className="w-full py-2.5 sm:py-3 rounded-xl font-bold text-sm sm:text-base bg-gradient-to-r from-uni-accent to-uni-primary text-slate-900 shadow-[0_0_18px_-3px_rgba(6,182,212,0.7)]"
                 >
                   📖 Pelajari Materi Sekarang
                 </motion.button>

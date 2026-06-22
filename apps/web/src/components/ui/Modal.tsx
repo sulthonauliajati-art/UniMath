@@ -1,6 +1,6 @@
 'use client'
 
-import { ReactNode, useEffect } from 'react'
+import { ReactNode, useEffect, useRef, useId, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface ModalProps {
@@ -12,20 +12,69 @@ interface ModalProps {
 }
 
 export function Modal({ isOpen, onClose, children, title, size = 'md' }: ModalProps) {
-  // Close on escape key
+  const generatedId = useId()
+  const titleId = `modal-title-${generatedId}`
+  const modalRef = useRef<HTMLDivElement>(null)
+  const previousActiveElement = useRef<HTMLElement | null>(null)
+
+  // Basic focus trap: cycle focus within modal elements
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      onClose()
+      return
+    }
+
+    // Focus trap: Tab / Shift+Tab
+    if (e.key === 'Tab' && modalRef.current) {
+      const focusable = modalRef.current.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      )
+      if (focusable.length === 0) return
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault()
+          last.focus()
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault()
+          first.focus()
+        }
+      }
+    }
+  }, [onClose])
+
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
     if (isOpen) {
-      document.addEventListener('keydown', handleEscape)
+      previousActiveElement.current = document.activeElement as HTMLElement
+      document.addEventListener('keydown', handleKeyDown)
       document.body.style.overflow = 'hidden'
+
+      // Focus first focusable element after render
+      requestAnimationFrame(() => {
+        if (modalRef.current) {
+          const firstFocusable = modalRef.current.querySelector<HTMLElement>(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          )
+          if (firstFocusable) firstFocusable.focus()
+        }
+      })
     }
+
     return () => {
-      document.removeEventListener('keydown', handleEscape)
+      document.removeEventListener('keydown', handleKeyDown)
       document.body.style.overflow = 'unset'
+
+      // Restore focus to previous element
+      if (previousActiveElement.current?.focus) {
+        previousActiveElement.current.focus()
+      }
     }
-  }, [isOpen, onClose])
+  }, [isOpen, handleKeyDown])
 
   const sizeClasses = {
     sm: 'max-w-sm',
@@ -44,20 +93,26 @@ export function Modal({ isOpen, onClose, children, title, size = 'md' }: ModalPr
             exit={{ opacity: 0 }}
             onClick={onClose}
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            aria-hidden="true"
           />
-          
+
           {/* Modal content */}
           <motion.div
+            ref={modalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={title ? titleId : undefined}
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className={`relative w-full ${sizeClasses[size]} bg-uni-bg-secondary border border-white/10 rounded-2xl shadow-2xl`}
+            className={`relative w-full ${sizeClasses[size]} bg-uni-bg-secondary border border-white/10 rounded-2xl shadow-card`}
           >
             {title && (
               <div className="flex items-center justify-between p-4 border-b border-white/10">
-                <h3 className="text-lg font-semibold text-white">{title}</h3>
+                <h3 id={titleId} className="text-lg font-semibold text-white">{title}</h3>
                 <button
                   onClick={onClose}
+                  aria-label="Tutup dialog"
                   className="p-1 text-text-secondary hover:text-white transition-colors"
                 >
                   ✕

@@ -263,7 +263,7 @@ function StatPill({
       className={`bg-black/35 border rounded-xl p-3 ${tones[color]}`}
     >
       <div className="text-2xl sm:text-3xl font-bold">{value}</div>
-      <div className="text-[10px] sm:text-xs text-slate-400 uppercase tracking-wider mt-1">
+      <div className="text-xs sm:text-xs text-slate-400 uppercase tracking-wider mt-1">
         {label}
       </div>
     </div>

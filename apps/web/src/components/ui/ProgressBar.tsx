@@ -21,8 +21,8 @@ export function ProgressBar({
   const clampedValue = Math.min(100, Math.max(0, value))
   
   const colors = {
-    cyan: 'from-uni-accent to-blue-400',
-    green: 'from-uni-primary to-emerald-400',
+    cyan: 'from-uni-accent to-uni-primary',
+    green: 'from-uni-accent to-uni-success',
   }
 
   const sizes = {
@@ -39,10 +39,17 @@ export function ProgressBar({
           <span className="text-xs text-uni-primary font-medium">{Math.round(clampedValue)}%</span>
         </div>
       )}
-      <div className={clsx(
-        'w-full bg-uni-bg-secondary/50 rounded-full overflow-hidden',
-        sizes[size]
-      )}>
+      <div
+        role="progressbar"
+        aria-valuenow={Math.round(clampedValue)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={showLabel ? undefined : `Progress ${Math.round(clampedValue)}%`}
+        className={clsx(
+          'w-full bg-uni-bg-secondary/50 rounded-full overflow-hidden',
+          sizes[size]
+        )}
+      >
         <motion.div
           className={clsx(
             'h-full rounded-full bg-gradient-to-r',

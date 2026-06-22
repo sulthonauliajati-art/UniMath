@@ -6,6 +6,25 @@ import { Question } from '@/lib/types'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { StarryBackground } from '@/components/ui/StarryBackground'
 
+/**
+ * Retry wrapper untuk fetch — mencegah kehilangan jawaban tes saat koneksi terputus.
+ */
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit,
+  maxRetries = 3
+): Promise<Response> {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await fetch(url, options)
+    } catch (err) {
+      if (attempt === maxRetries) throw err
+      await new Promise((r) => setTimeout(r, 200 * attempt))
+    }
+  }
+  throw new Error('Max retries exceeded')
+}
+
 interface StrictTestClientProps {
   materialId: string
   materialTitle: string
@@ -119,7 +138,7 @@ export default function StrictTestClient({
     if (!sessionId) return
     setSaveStatus('saving')
     try {
-      await fetch('/api/test/answer', {
+      await fetchWithRetry('/api/test/answer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -132,7 +151,7 @@ export default function StrictTestClient({
       setAnsweredIds((prev) => new Set(prev).add(qId))
       setTimeout(() => setSaveStatus('idle'), 2000)
     } catch (err) {
-      console.error('Failed to save answer', err)
+      console.error('Failed to save answer after retries', err)
       setSaveStatus('idle')
     }
   }
@@ -195,14 +214,16 @@ export default function StrictTestClient({
 
   const finishSession = async () => {
     try {
-      await fetch('/api/test/finish', {
+      await fetchWithRetry('/api/test/finish', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId }),
       })
       setIsTestFinished(true)
     } catch (err) {
-      console.error('Failed to finish', err)
+      console.error('Failed to finish test after retries', err)
+      // Tetap tandai selesai — jawaban sudah tersimpan satu per satu
+      setIsTestFinished(true)
     }
   }
 

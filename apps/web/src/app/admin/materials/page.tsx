@@ -454,19 +454,19 @@ function MaterialRow({
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2 mb-1.5">
             <h3 className="font-semibold text-white truncate">{material.title}</h3>
-            <span className="text-[10px] font-mono text-text-muted bg-white/5 px-1.5 py-0.5 rounded">
+            <span className="text-xs font-mono text-text-muted bg-white/5 px-1.5 py-0.5 rounded">
               {material.id}
             </span>
             {isRemedial && (
-              <span className="text-[10px] font-semibold text-uni-warning bg-uni-warning/15 border border-uni-warning/30 px-1.5 py-0.5 rounded">
+              <span className="text-xs font-semibold text-uni-warning bg-uni-warning/15 border border-uni-warning/30 px-1.5 py-0.5 rounded">
                 REMEDIAL
               </span>
             )}
-            <span className="text-[10px] font-semibold text-uni-primary bg-uni-primary/15 border border-uni-primary/30 px-1.5 py-0.5 rounded">
+            <span className="text-xs font-semibold text-uni-primary bg-uni-primary/15 border border-uni-primary/30 px-1.5 py-0.5 rounded">
               Kelas {material.grade}
             </span>
             {material.questionCount !== undefined && (
-              <span className="text-[10px] font-semibold text-uni-accent bg-uni-accent/15 border border-uni-accent/30 px-1.5 py-0.5 rounded">
+              <span className="text-xs font-semibold text-uni-accent bg-uni-accent/15 border border-uni-accent/30 px-1.5 py-0.5 rounded">
                 {material.questionCount} soal
               </span>
             )}
@@ -474,7 +474,7 @@ function MaterialRow({
           <p className="text-sm text-text-secondary line-clamp-1 mb-2">
             {material.description || 'Tidak ada deskripsi'}
           </p>
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-text-muted">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-muted">
             <ContentBadge filled={!!material.hasSummaryContent} label="Ringkas" icon="📝" />
             <ContentBadge filled={!!material.hasFullContent} label="Full" icon="📖" />
             {material.videoUrl && <span>🎬 Video</span>}
@@ -506,7 +506,7 @@ function MaterialRow({
 function ContentBadge({ filled, label, icon }: { filled: boolean; label: string; icon: string }) {
   return (
     <span
-      className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-medium ${
+      className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-xs font-medium ${
         filled
           ? 'bg-uni-success/10 border-uni-success/30 text-uni-success'
           : 'bg-white/3 border-white/10 text-text-muted'
@@ -571,7 +571,7 @@ function MarkdownTextarea({
         className="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg text-white font-mono text-sm leading-relaxed placeholder:text-text-muted/60 focus:border-uni-primary focus:outline-none transition-colors resize-y min-h-[240px]"
         spellCheck={false}
       />
-      <div className="flex flex-wrap justify-between gap-2 mt-1.5 text-[11px] text-text-muted">
+      <div className="flex flex-wrap justify-between gap-2 mt-1.5 text-xs text-text-muted">
         {helper && <span>{helper}</span>}
         <span className="ml-auto tabular-nums">
           {lineCount} baris · {charCount} karakter

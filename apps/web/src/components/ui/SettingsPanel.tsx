@@ -33,7 +33,7 @@ export function SettingsPanel() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="absolute bottom-14 right-0 w-72 rounded-2xl border border-cyan-400/30 bg-[rgba(4,9,20,0.92)] backdrop-blur-xl shadow-[0_8px_32px_-8px_rgba(0,0,0,0.8),0_0_20px_-4px_rgba(6,182,212,0.3)] overflow-hidden"
+            className="absolute bottom-14 right-0 w-72 rounded-2xl border border-uni-primary/30 bg-[rgba(4,9,20,0.92)] backdrop-blur-xl shadow-card overflow-hidden"
           >
             {/* Header */}
             <div className="px-4 pt-4 pb-2 border-b border-white/5">
@@ -46,13 +46,13 @@ export function SettingsPanel() {
               {/* ── BGM Section ──────────────────────────────────── */}
               <div>
                 <div className="flex items-center justify-between mb-2.5">
-                  <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider">🎵 Musik</span>
+                  <span className="text-xs font-semibold text-text-secondary uppercase tracking-wider">🎵 Musik</span>
                   <button
                     onClick={togglePlay}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all duration-200 ${
                       isPlaying
-                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                        : 'bg-slate-700/50 text-slate-400 border border-slate-600/40'
+                        ? 'bg-uni-success/20 text-uni-success border border-uni-success/40'
+                        : 'bg-uni-bg-secondary/50 text-text-muted border border-white/10'
                     }`}
                   >
                     {isPlaying ? 'ON' : 'OFF'}
@@ -63,10 +63,10 @@ export function SettingsPanel() {
                   <div className="flex items-center gap-2.5">
                     <button
                       onClick={toggleMute}
-                      className={`w-7 h-7 rounded-lg flex items-center justify-center text-sm transition-all ${
+                      className={`w-7 h-7 rounded-lg flex items-center justify-center text-sm transition-all duration-200 ${
                         isMuted
-                          ? 'bg-red-500/15 text-red-400 border border-red-500/30'
-                          : 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30'
+                          ? 'bg-uni-error/15 text-uni-error border border-uni-error/30'
+                          : 'bg-uni-primary/15 text-uni-primary border border-uni-primary/30'
                       }`}
                       title={isMuted ? 'Unmute' : 'Mute'}
                     >
@@ -81,31 +81,33 @@ export function SettingsPanel() {
                         </svg>
                       )}
                     </button>
+                    <label htmlFor="bgm-volume-slider" className="sr-only">Volume Musik</label>
                     <input
+                      id="bgm-volume-slider"
                       type="range"
                       min="0"
                       max="100"
                       value={Math.round(volume * 100)}
                       onChange={(e) => setVolume(Number(e.target.value) / 100)}
-                      className="flex-1 h-1.5 rounded-full appearance-none bg-slate-700 cursor-pointer accent-cyan-400 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-cyan-400 [&::-webkit-slider-thumb]:shadow-[0_0_6px_rgba(6,182,212,0.7)] [&::-webkit-slider-thumb]:cursor-pointer"
+                      className="flex-1 h-1.5 rounded-full appearance-none bg-uni-bg-secondary cursor-pointer accent-uni-primary [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-uni-primary [&::-webkit-slider-thumb]:shadow-glow [&::-webkit-slider-thumb]:cursor-pointer"
                     />
-                    <span className="text-[10px] text-slate-400 tabular-nums w-8 text-right">{Math.round(volume * 100)}%</span>
+                    <span className="text-xs text-text-muted tabular-nums w-8 text-right" aria-hidden="true">{Math.round(volume * 100)}%</span>
                   </div>
                 )}
               </div>
 
               {/* ── Font Size Section ────────────────────────────── */}
               <div>
-                <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-2.5">🔤 Ukuran Teks</span>
+                <span className="text-xs font-semibold text-text-secondary uppercase tracking-wider block mb-2.5">🔤 Ukuran Teks</span>
                 <div className="flex gap-1.5">
                   {FONT_OPTIONS.map((opt) => (
                     <button
                       key={opt.key}
                       onClick={() => setFontSizeLevel(opt.key)}
-                      className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${
+                      className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all duration-200 ${
                         fontSizeLevel === opt.key
-                          ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/50 shadow-[0_0_8px_rgba(6,182,212,0.3)]'
-                          : 'bg-slate-800/50 text-slate-400 border border-slate-600/30 hover:border-slate-500/50 hover:text-slate-300'
+                          ? 'bg-uni-primary/20 text-uni-primary border border-uni-primary/50 shadow-glow'
+                          : 'bg-uni-bg-secondary/50 text-text-muted border border-white/10 hover:border-white/20 hover:text-text-secondary'
                       }`}
                     >
                       {opt.label}
@@ -116,16 +118,16 @@ export function SettingsPanel() {
 
               {/* ── Display Mode Section ─────────────────────────── */}
               <div>
-                <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-2.5">📐 Tampilan</span>
+                <span className="text-xs font-semibold text-text-secondary uppercase tracking-wider block mb-2.5">📐 Tampilan</span>
                 <div className="flex gap-1.5">
                   {DISPLAY_OPTIONS.map((opt) => (
                     <button
                       key={opt.key}
                       onClick={() => setDisplayMode(opt.key)}
-                      className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all flex flex-col items-center gap-0.5 ${
+                      className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all duration-200 flex flex-col items-center gap-0.5 ${
                         displayMode === opt.key
-                          ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/50 shadow-[0_0_8px_rgba(6,182,212,0.3)]'
-                          : 'bg-slate-800/50 text-slate-400 border border-slate-600/30 hover:border-slate-500/50 hover:text-slate-300'
+                          ? 'bg-uni-primary/20 text-uni-primary border border-uni-primary/50 shadow-glow'
+                          : 'bg-uni-bg-secondary/50 text-text-muted border border-white/10 hover:border-white/20 hover:text-text-secondary'
                       }`}
                     >
                       <span className="text-base">{opt.icon}</span>
@@ -143,10 +145,10 @@ export function SettingsPanel() {
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
         whileTap={{ scale: 0.92 }}
-        className={`w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-[0_4px_20px_-4px_rgba(0,0,0,0.6)] ${
+        className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 shadow-card ${
           isOpen
-            ? 'bg-cyan-500/20 border-2 border-cyan-400/60 text-cyan-300 shadow-[0_0_20px_-4px_rgba(6,182,212,0.6)]'
-            : 'bg-[rgba(4,9,20,0.85)] border border-cyan-400/30 text-slate-300 hover:text-cyan-300 hover:border-cyan-400/50'
+            ? 'bg-uni-primary/20 border-2 border-uni-primary/60 text-uni-primary shadow-glow'
+            : 'bg-[rgba(4,9,20,0.85)] border border-uni-primary/30 text-text-secondary hover:text-uni-primary hover:border-uni-primary/50'
         } backdrop-blur-md`}
         title="Pengaturan"
       >

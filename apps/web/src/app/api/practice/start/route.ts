@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 import { db } from '@/lib/db/client'
 import { questions, materials, practiceSessions, practiceAttempts } from '@/lib/db/schema'
 import { eq, and, or, desc, notInArray, sql } from 'drizzle-orm'
-import { validateToken } from '@/lib/auth/utils'
+import { resolveAuthenticatedUserId } from '@/lib/auth/server'
 
 const DIFFICULTY_LABELS: Record<number, string> = {
   1: 'Mudah',
@@ -24,57 +23,6 @@ function formatQuestionForClient(q: typeof questions.$inferSelect) {
     optD: q.optD,
     optE: q.optE || '',
   }
-}
-
-/**
- * Resolve authenticated user ID dari:
- * 1. Authorization header (Bearer token) — diutamakan
- * 2. Cookie 'auth_token'
- * 3. Cookie 'user' (legacy) — hanya sebagai fallback dengan validasi
- * 
- * Return null jika tidak ada user yang valid.
- */
-async function resolveAuthenticatedUserId(request: NextRequest): Promise<string | null> {
-  // 1. Authorization header
-  const authHeader = request.headers.get('authorization')
-  if (authHeader?.startsWith('Bearer ')) {
-    const token = authHeader.replace('Bearer ', '').trim()
-    if (token) {
-      const t = await validateToken(token)
-      if (t.valid && t.userId) return t.userId
-    }
-  }
-
-  // 2. Cookie 'auth_token' (server-set token)
-  const cookieStore = await cookies()
-  const authToken = cookieStore.get('auth_token')
-  if (authToken?.value) {
-    const t = await validateToken(authToken.value)
-    if (t.valid && t.userId) return t.userId
-  }
-
-  // 2b. Cookie 'token' (client-set oleh AuthContext login())
-  const tokenCookie = cookieStore.get('token')
-  if (tokenCookie?.value) {
-    const t = await validateToken(tokenCookie.value)
-    if (t.valid && t.userId) return t.userId
-  }
-
-  // 3. Cookie 'user' legacy — parse and validate format
-  const userCookie = cookieStore.get('user')
-  if (userCookie?.value) {
-    try {
-      const user = JSON.parse(userCookie.value)
-      // Pastikan ID tidak 'anonymous' dan punya format yang valid
-      if (user.id && typeof user.id === 'string' && user.id !== 'anonymous' && user.id.length > 0) {
-        return user.id
-      }
-    } catch {
-      // invalid JSON — ignore
-    }
-  }
-
-  return null
 }
 
 async function getNewQuestion(

@@ -111,7 +111,7 @@ export default function StudentLeaderboardPage() {
                         <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
                           <h3 className="font-semibold text-white text-sm sm:text-base truncate">{entry.name}</h3>
                           {entry.id === user.id && (
-                            <span className="text-[10px] sm:text-xs bg-uni-primary/20 text-uni-primary px-1.5 sm:px-2 py-0.5 rounded">
+                            <span className="text-xs sm:text-xs bg-uni-primary/20 text-uni-primary px-1.5 sm:px-2 py-0.5 rounded">
                               Kamu
                             </span>
                           )}
@@ -125,7 +125,7 @@ export default function StudentLeaderboardPage() {
                       {/* Lantai count */}
                       <div className="text-right flex-shrink-0">
                         <div className="text-lg sm:text-xl font-bold text-uni-primary">{entry.totalFloors}</div>
-                        <div className="text-[10px] sm:text-xs text-text-secondary">Lantai</div>
+                        <div className="text-xs sm:text-xs text-text-secondary">Lantai</div>
                       </div>
                     </div>
                   </GlassCard>

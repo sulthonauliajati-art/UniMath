@@ -290,8 +290,9 @@ export default function AdminQuestionsPage() {
               )}
             </div>
             <div>
-              <label className="block text-sm text-text-secondary mb-2">Upload File CSV</label>
+              <label htmlFor="admin-csv-upload" className="block text-sm text-text-secondary mb-2">Upload File CSV</label>
               <input
+                id="admin-csv-upload"
                 ref={fileInputRef}
                 type="file"
                 accept=".csv,text/csv"
@@ -398,7 +399,7 @@ export default function AdminQuestionsPage() {
             <div className="mt-3 space-y-3">
               <div>
                 <p className="text-xs text-text-secondary mb-1">Urutan kolom v2 (header wajib ada di baris 1) — <b className="text-uni-primary">16 kolom</b>:</p>
-                <code className="block text-[11px] text-uni-primary bg-black/40 p-2 rounded break-all">
+                <code className="block text-xs text-uni-primary bg-black/40 p-2 rounded break-all">
                   mode, indicator, difficulty, questionType, question, optA, optB, optC, optD, <b>optE</b>, correct, hint1, hint2, hint3, explanation, remedialMaterialId
                 </code>
               </div>
@@ -457,13 +458,13 @@ export default function AdminQuestionsPage() {
                   className="p-3 bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
                 >
                   <div className="flex items-start gap-3 flex-wrap">
-                    <span className="text-[10px] bg-uni-primary/20 text-uni-primary px-2 py-0.5 rounded font-semibold">
+                    <span className="text-xs bg-uni-primary/20 text-uni-primary px-2 py-0.5 rounded font-semibold">
                       {MODE_LABELS[q.mode] || q.mode}
                     </span>
-                    <span className="text-[10px] bg-uni-accent/20 text-uni-accent px-2 py-0.5 rounded font-semibold">
+                    <span className="text-xs bg-uni-accent/20 text-uni-accent px-2 py-0.5 rounded font-semibold">
                       {q.indicator}
                     </span>
-                    <span className="text-[10px] bg-uni-warning/20 text-uni-warning px-2 py-0.5 rounded font-semibold">
+                    <span className="text-xs bg-uni-warning/20 text-uni-warning px-2 py-0.5 rounded font-semibold">
                       {DIFFICULTY_LABELS[q.difficulty] || `Lv.${q.difficulty}`}
                     </span>
                     <div className="flex-1 min-w-0">

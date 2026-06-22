@@ -64,20 +64,22 @@ export default function StudentProfile() {
       if (!token) return
 
       try {
-        const res = await fetch('/api/student/stats', {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        const data = await res.json()
+        // Parallel fetch: stats + report — setengah latency
+        const [res, reportRes] = await Promise.all([
+          fetch('/api/student/stats', {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch('/api/student/report', {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ])
 
+        const data = await res.json()
         if (data.stats) {
           setStats(data.stats)
           setMaterialProgress(data.materialProgress || [])
         }
 
-        // Fetch performance report
-        const reportRes = await fetch('/api/student/report', {
-          headers: { Authorization: `Bearer ${token}` },
-        })
         if (reportRes.ok) {
           const reportData = await reportRes.json()
           setReport(reportData)
@@ -185,7 +187,7 @@ export default function StudentProfile() {
             <div className="flex flex-col sm:flex-row items-center gap-6 mb-8 text-center sm:text-left">
               <div className="w-24 h-24 bg-gradient-to-br from-[#1E293B] to-[#0F172A] rounded-full flex items-center justify-center border-2 border-uni-primary shadow-[0_0_15px_rgba(0,229,255,0.4)] flex-shrink-0 relative">
                 <span className="text-4xl">🤖</span>
-                <div className="absolute -bottom-2 bg-uni-accent text-white text-[10px] font-bold px-2 py-0.5 rounded-full border border-uni-bg shadow-[0_0_5px_rgba(0,119,255,0.5)]">LVL {stats?.totalFloors || 1}</div>
+                <div className="absolute -bottom-2 bg-uni-accent text-white text-xs font-bold px-2 py-0.5 rounded-full border border-uni-bg shadow-[0_0_5px_rgba(0,119,255,0.5)]">LVL {stats?.totalFloors || 1}</div>
               </div>
               
               <div className="flex-1 min-w-0">
@@ -251,21 +253,21 @@ export default function StudentProfile() {
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div className="bg-uni-bg-secondary/40 border border-uni-primary/20 rounded-xl p-4 text-center hover:bg-uni-primary/5 transition-colors">
                   <div className="text-2xl sm:text-3xl font-bold text-uni-primary mb-1 drop-shadow-[0_0_8px_rgba(0,229,255,0.5)]">{stats.totalFloors}</div>
-                  <div className="text-[10px] sm:text-xs text-text-secondary uppercase tracking-wider">Lantai Tercapai</div>
+                  <div className="text-xs sm:text-xs text-text-secondary uppercase tracking-wider">Lantai Tercapai</div>
                 </div>
                 <div className="bg-uni-bg-secondary/40 border border-uni-accent/20 rounded-xl p-4 text-center hover:bg-uni-accent/5 transition-colors">
                   <div className="text-2xl sm:text-3xl font-bold text-uni-accent mb-1 drop-shadow-[0_0_8px_rgba(0,119,255,0.5)]">{stats.accuracy}%</div>
-                  <div className="text-[10px] sm:text-xs text-text-secondary uppercase tracking-wider">Akurasi</div>
+                  <div className="text-xs sm:text-xs text-text-secondary uppercase tracking-wider">Akurasi</div>
                 </div>
                 <div className="bg-uni-bg-secondary/40 border border-white/10 rounded-xl p-4 text-center">
                   <div className="text-2xl sm:text-3xl font-bold text-white mb-1">{stats.totalSessions}</div>
-                  <div className="text-[10px] sm:text-xs text-text-secondary uppercase tracking-wider">Sesi Latihan</div>
+                  <div className="text-xs sm:text-xs text-text-secondary uppercase tracking-wider">Sesi Latihan</div>
                 </div>
                 <div className="bg-uni-bg-secondary/40 border border-uni-success/20 rounded-xl p-4 text-center hover:bg-uni-success/5 transition-colors">
                   <div className="text-xl sm:text-2xl font-bold text-uni-success mb-1 drop-shadow-[0_0_5px_rgba(16,185,129,0.4)]">
                     {stats.correctAttempts}/{stats.totalAttempts}
                   </div>
-                  <div className="text-[10px] sm:text-xs text-text-secondary uppercase tracking-wider">Jawaban Benar</div>
+                  <div className="text-xs sm:text-xs text-text-secondary uppercase tracking-wider">Jawaban Benar</div>
                 </div>
               </div>
             ) : (

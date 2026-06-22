@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db/client'
 import { users } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
-import { validateToken } from '@/lib/auth/utils'
+import { validateToken, revokeAllUserTokens } from '@/lib/auth/utils'
 
 export async function POST(
   request: NextRequest,
@@ -42,6 +42,10 @@ export async function POST(
         { status: 404 }
       )
     }
+
+    // Revoke all active tokens before resetting password
+    // This ensures the student must re-authenticate with the new password
+    await revokeAllUserTokens(id)
 
     // Reset password - set passwordStatus to UNSET and clear password
     await db

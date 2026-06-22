@@ -41,15 +41,15 @@ export function NeonButton({
   return (
     <motion.button
       className={clsx(
-        'font-semibold transition-all duration-300',
+        'font-semibold transition-[box-shadow,transform,background-color,border-color,color] duration-200 ease-out',
         variants[variant],
         sizes[size],
         glowEffect,
         disabled && 'opacity-50 cursor-not-allowed',
         className
       )}
-      whileHover={!disabled ? { scale: 1.02 } : undefined}
-      whileTap={!disabled ? { scale: 0.98 } : undefined}
+      whileHover={!disabled ? { scale: 1.02, y: -2 } : undefined}
+      whileTap={!disabled ? { scale: 0.98, y: 0 } : undefined}
       disabled={disabled || loading}
       {...props}
     >
@@ -60,7 +60,7 @@ export function NeonButton({
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
           />
-          Loading...
+          Memuat...
         </span>
       ) : (
         children

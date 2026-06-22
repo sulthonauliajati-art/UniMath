@@ -23,61 +23,52 @@ const GLOW_TOKENS: Record<
   { border: string; shadowSubtle: string; shadowStrong: string; shadowHover: string }
 > = {
   cyan: {
-    border: 'border-[rgba(6,182,212,0.55)]',
-    shadowSubtle:
-      '0 0 0 1px rgba(6,182,212,0.25), 0 0 24px -6px rgba(6,182,212,0.45), inset 0 1px 0 rgba(255,255,255,0.08)',
-    shadowStrong:
-      '0 0 0 1px rgba(6,182,212,0.7), 0 0 40px -4px rgba(6,182,212,0.65), inset 0 1px 0 rgba(255,255,255,0.12)',
-    shadowHover:
-      '0 0 0 1px rgba(6,182,212,0.85), 0 0 48px -4px rgba(6,182,212,0.75), inset 0 1px 0 rgba(255,255,255,0.15)',
+    border: 'border-[rgba(0,229,255,0.35)]',
+    shadowSubtle: '0 0 20px rgba(0,229,255,0.35)',
+    shadowStrong: '0 0 30px rgba(0,229,255,0.5)',
+    shadowHover: '0 0 30px rgba(0,229,255,0.5), 0 0 15px rgba(0,119,255,0.5)',
   },
   emerald: {
-    border: 'border-[rgba(16,185,129,0.55)]',
-    shadowSubtle:
-      '0 0 0 1px rgba(16,185,129,0.25), 0 0 24px -6px rgba(16,185,129,0.45), inset 0 1px 0 rgba(255,255,255,0.08)',
-    shadowStrong:
-      '0 0 0 1px rgba(16,185,129,0.7), 0 0 40px -4px rgba(16,185,129,0.65), inset 0 1px 0 rgba(255,255,255,0.12)',
-    shadowHover:
-      '0 0 0 1px rgba(16,185,129,0.85), 0 0 48px -4px rgba(16,185,129,0.75), inset 0 1px 0 rgba(255,255,255,0.15)',
+    border: 'border-[rgba(16,185,129,0.35)]',
+    shadowSubtle: '0 0 20px rgba(16,185,129,0.35)',
+    shadowStrong: '0 0 30px rgba(16,185,129,0.5)',
+    shadowHover: '0 0 30px rgba(16,185,129,0.5)',
   },
   amber: {
-    border: 'border-[rgba(245,158,11,0.55)]',
-    shadowSubtle:
-      '0 0 0 1px rgba(245,158,11,0.25), 0 0 24px -6px rgba(245,158,11,0.45), inset 0 1px 0 rgba(255,255,255,0.08)',
-    shadowStrong:
-      '0 0 0 1px rgba(245,158,11,0.7), 0 0 40px -4px rgba(245,158,11,0.6), inset 0 1px 0 rgba(255,255,255,0.12)',
-    shadowHover:
-      '0 0 0 1px rgba(245,158,11,0.85), 0 0 48px -4px rgba(245,158,11,0.7), inset 0 1px 0 rgba(255,255,255,0.15)',
+    border: 'border-[rgba(245,158,11,0.35)]',
+    shadowSubtle: '0 0 20px rgba(245,158,11,0.35)',
+    shadowStrong: '0 0 30px rgba(245,158,11,0.5)',
+    shadowHover: '0 0 30px rgba(245,158,11,0.5)',
   },
   red: {
-    border: 'border-[rgba(239,68,68,0.55)]',
-    shadowSubtle:
-      '0 0 0 1px rgba(239,68,68,0.3), 0 0 24px -6px rgba(239,68,68,0.5), inset 0 1px 0 rgba(255,255,255,0.08)',
-    shadowStrong:
-      '0 0 0 1px rgba(239,68,68,0.7), 0 0 40px -4px rgba(239,68,68,0.65), inset 0 1px 0 rgba(255,255,255,0.12)',
-    shadowHover:
-      '0 0 0 1px rgba(239,68,68,0.85), 0 0 48px -4px rgba(239,68,68,0.75), inset 0 1px 0 rgba(255,255,255,0.15)',
+    border: 'border-[rgba(239,68,68,0.35)]',
+    shadowSubtle: '0 0 20px rgba(239,68,68,0.35)',
+    shadowStrong: '0 0 30px rgba(239,68,68,0.5)',
+    shadowHover: '0 0 30px rgba(239,68,68,0.5)',
   },
   purple: {
-    border: 'border-[rgba(139,92,246,0.55)]',
-    shadowSubtle:
-      '0 0 0 1px rgba(139,92,246,0.25), 0 0 24px -6px rgba(139,92,246,0.45), inset 0 1px 0 rgba(255,255,255,0.08)',
-    shadowStrong:
-      '0 0 0 1px rgba(139,92,246,0.7), 0 0 40px -4px rgba(139,92,246,0.65), inset 0 1px 0 rgba(255,255,255,0.12)',
-    shadowHover:
-      '0 0 0 1px rgba(139,92,246,0.85), 0 0 48px -4px rgba(139,92,246,0.75), inset 0 1px 0 rgba(255,255,255,0.15)',
+    border: 'border-[rgba(139,92,246,0.35)]',
+    shadowSubtle: '0 0 20px rgba(139,92,246,0.35)',
+    shadowStrong: '0 0 30px rgba(139,92,246,0.5)',
+    shadowHover: '0 0 30px rgba(139,92,246,0.5)',
   },
 }
 
 /**
- * Glassmorphic container with a precise neon cyan (or coloured) ring, used for
- * question cards, modals, dashboard panels — essentially every surface that
- * sits on top of the 3D background.
+ * Glassmorphic container — the signature UI surface of The Arcade Lab.
  *
- * Key design tokens (from the final sci-fi mock):
- *  - translucent navy fill    →   `rgba(7, 17, 36, 0.72)`
- *  - backdrop-blur(20px)
- *  - 1px border + 0 0 24-40px outer neon + subtle inset highlight
+ * DESIGN.md §5 — Glass Card:
+ *   background: rgba(10, 17, 40, 0.65)
+ *   backdrop-filter: blur(16px)
+ *   border: 1px solid rgba(0, 229, 255, 0.35)
+ *   border-radius: 24px
+ *   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5)  (structural card shadow)
+ *
+ * Key design principles:
+ *   - translucent navy fill with backdrop-blur for depth
+ *   - neon border + glow aura driven by glowColor prop
+ *   - structural shadow for separation from background
+ *   - hover: intensifies glow (The Neon Depth Rule)
  */
 export function GlassCard({
   children,
@@ -94,20 +85,20 @@ export function GlassCard({
   return (
     <motion.div
       className={clsx(
-        'relative rounded-2xl border backdrop-blur-xl',
-        'bg-[rgba(7,17,36,0.72)]',
+        'relative rounded-2xl border backdrop-blur-glass',
+        'bg-[rgba(10,17,40,0.65)]',
         tokens.border,
-        hover && 'transition-[box-shadow,transform] duration-300 cursor-pointer',
+        'shadow-card',
+        hover && 'transition-[box-shadow,transform] duration-200 cursor-pointer',
         className
       )}
       style={{
-        boxShadow: shadow,
-        WebkitBackdropFilter: 'blur(20px)',
+        boxShadow: [shadow, 'var(--shadow-card)'].filter(Boolean).join(', '),
         ...style,
       }}
       whileHover={
         hover
-          ? { boxShadow: tokens.shadowHover, y: -2 }
+          ? { boxShadow: [tokens.shadowHover, 'var(--shadow-card)'].join(', '), y: -2 }
           : undefined
       }
       {...props}
