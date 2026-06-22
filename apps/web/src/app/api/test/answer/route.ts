@@ -1,23 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 import { db } from '@/lib/db/client'
 import { questions, testSessions, testAttempts } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
-import { validateToken } from '@/lib/auth/utils'
+import { resolveAuthenticatedUserId } from '@/lib/auth/server'
 
 export async function POST(request: NextRequest) {
   try {
-    let token = request.headers.get('authorization')?.replace('Bearer ', '')
-    if (!token) {
-      const cookieStore = await cookies()
-      token = cookieStore.get('token')?.value
-    }
-
-    if (!token) return NextResponse.json({ error: { message: 'Unauthorized' } }, { status: 401 })
-
-    const tokenData = await validateToken(token)
-    if (!tokenData.valid || tokenData.role !== 'STUDENT') {
-      return NextResponse.json({ error: { message: 'Unauthorized' } }, { status: 401 })
+    const userId = await resolveAuthenticatedUserId(request)
+    if (!userId) {
+      return NextResponse.json(
+        { error: { code: 'UNAUTHORIZED', message: 'Unauthorized' } },
+        { status: 401 }
+      )
     }
 
     const { sessionId, questionId, answer, responseMs } = await request.json()
@@ -35,7 +29,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: { message: 'Session not found' } }, { status: 404 })
     }
 
-    if (session.studentUserId !== tokenData.userId) {
+    if (session.studentUserId !== userId) {
       return NextResponse.json({ error: { message: 'Unauthorized' } }, { status: 401 })
     }
 

@@ -1,23 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 import { db } from '@/lib/db/client'
 import { questions, testSessions, testAttempts } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
-import { validateToken } from '@/lib/auth/utils'
+import { resolveAuthenticatedUserId } from '@/lib/auth/server'
 
 export async function POST(request: NextRequest) {
   try {
-    let token = request.headers.get('authorization')?.replace('Bearer ', '')
-    if (!token) {
-      const cookieStore = await cookies()
-      token = cookieStore.get('token')?.value
-    }
-
-    if (!token) return NextResponse.json({ error: { message: 'Unauthorized' } }, { status: 401 })
-
-    const tokenData = await validateToken(token)
-    if (!tokenData.valid || tokenData.role !== 'STUDENT') {
-      return NextResponse.json({ error: { message: 'Unauthorized' } }, { status: 401 })
+    const userId = await resolveAuthenticatedUserId(request)
+    if (!userId) {
+      return NextResponse.json(
+        { error: { code: 'UNAUTHORIZED', message: 'Unauthorized' } },
+        { status: 401 }
+      )
     }
 
     const { materialId, testType } = await request.json()
@@ -31,7 +25,7 @@ export async function POST(request: NextRequest) {
       .from(testSessions)
       .where(
         and(
-          eq(testSessions.studentUserId, tokenData.userId!),
+          eq(testSessions.studentUserId, userId),
           eq(testSessions.materialId, materialId),
           eq(testSessions.testType, testType)
         )
@@ -48,14 +42,14 @@ export async function POST(request: NextRequest) {
       const id = `test_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       await db.insert(testSessions).values({
         id,
-        studentUserId: tokenData.userId!,
+        studentUserId: userId,
         materialId,
         testType,
         startedAt: new Date().toISOString()
       })
       session = {
         id,
-        studentUserId: tokenData.userId!,
+        studentUserId: userId,
         materialId,
         testType,
         startedAt: new Date().toISOString(),

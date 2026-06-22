@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db/client'
 import { questions, practiceAttempts, testAttempts } from '@/lib/db/schema'
-import { eq, inArray } from 'drizzle-orm'
+import { eq, inArray, and } from 'drizzle-orm'
 import { validateToken } from '@/lib/auth/utils'
 
 async function validateAdmin(request: NextRequest) {
@@ -18,26 +18,38 @@ export async function GET(request: NextRequest) {
   try {
     const admin = await validateAdmin(request)
     if (!admin) {
-      return NextResponse.json({ error: { message: 'Unauthorized' } }, { status: 401 })
+      return NextResponse.json(
+        { error: { code: 'UNAUTHORIZED', message: 'Unauthorized' } },
+        { status: 401 }
+      )
     }
 
     const { searchParams } = new URL(request.url)
     const materialId = searchParams.get('materialId')
+    const mode = searchParams.get('mode')
 
     if (!materialId) {
       return NextResponse.json({ questions: [] })
     }
 
+    const conditions = [eq(questions.materialId, materialId)]
+    if (mode && mode !== 'ALL') {
+      conditions.push(eq(questions.mode, mode as typeof questions.$inferSelect.mode))
+    }
+
     const allQuestions = await db
       .select()
       .from(questions)
-      .where(eq(questions.materialId, materialId))
+      .where(and(...conditions))
       .orderBy(questions.difficulty)
 
     return NextResponse.json({ questions: allQuestions })
   } catch (error) {
     console.error('Get questions error:', error)
-    return NextResponse.json({ error: { message: 'Server error' } }, { status: 500 })
+    return NextResponse.json(
+      { error: { code: 'SERVER_ERROR', message: 'Server error' } },
+      { status: 500 }
+    )
   }
 }
 

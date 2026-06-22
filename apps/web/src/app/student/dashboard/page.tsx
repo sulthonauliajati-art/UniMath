@@ -36,14 +36,24 @@ interface Stats {
   totalSessions: number
   totalXP: number
   rank?: number
+  currentMaterialId: string
+}
+
+interface TestUnlock {
+  pretestUnlocked: boolean
+  posttestUnlocked: boolean
+  pretestCompleted: boolean
+  highestFloor: number
+  floorRequirement: number
+  floorMet: boolean
 }
 
 export default function StudentDashboard() {
   const router = useRouter()
   const { user, token, isLoading, logout } = useAuth()
-  const [stats, setStats] = useState<Stats>({ totalFloors: 0, accuracy: 0, totalSessions: 0, totalXP: 0, rank: 1 })
+  const [stats, setStats] = useState<Stats>({ totalFloors: 0, accuracy: 0, totalSessions: 0, totalXP: 0, rank: 1, currentMaterialId: 'M1A' })
   const [loadingStats, setLoadingStats] = useState(true)
-  // P1 Fix: Onboarding state
+  const [testUnlock, setTestUnlock] = useState<TestUnlock | null>(null)
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [onboardingStep, setOnboardingStep] = useState(0)
 
@@ -66,6 +76,7 @@ export default function StudentDashboard() {
         ])
 
         let totalXP = 0
+        let currentMaterialId = 'M1A'
         if (statsRes.ok) {
           const data = await statsRes.json()
           setStats({
@@ -74,9 +85,9 @@ export default function StudentDashboard() {
             totalSessions: data.stats?.totalSessions || 0,
             totalXP: 0,
             rank: data.stats?.rank || 1,
+            currentMaterialId: 'M1A',
           })
 
-          // P1 Fix: Show onboarding for new users (no sessions yet)
           const hasSeenOnboarding = localStorage.getItem('unimath_onboarding_seen')
           if (data.stats?.totalSessions === 0 && !hasSeenOnboarding) {
             setShowOnboarding(true)
@@ -86,9 +97,19 @@ export default function StudentDashboard() {
         if (progressRes.ok) {
           const progressData = await progressRes.json()
           totalXP = progressData.totalXP || 0
+          currentMaterialId = progressData.currentMaterialId || 'M1A'
         }
 
-        setStats(prev => ({ ...prev, totalXP }))
+        setStats(prev => ({ ...prev, totalXP, currentMaterialId }))
+
+        // Fetch test unlock status
+        try {
+          const unlockRes = await fetch(`/api/student/test-unlock?materialId=${currentMaterialId}`)
+          if (unlockRes.ok) {
+            const unlockData = await unlockRes.json()
+            setTestUnlock(unlockData)
+          }
+        } catch {}
       } catch (error) {
         console.error('Failed to fetch stats:', error)
       } finally {
@@ -332,27 +353,57 @@ export default function StudentDashboard() {
            </Link>
         </div>
 
-        {/* Test Mode + Profile Navigation */}
+        {/* Pre-test & Post-test + Profile */}
         <div className="grid grid-cols-2 gap-4 w-full relative z-20 mt-4">
-           <Link href="/student/test">
+           {/* Pre-test — always unlocked, direct routing */}
+           <Link href={`/student/test/${stats.currentMaterialId}/PRETEST`}>
               <GlassCard hover className="p-4 flex flex-col items-center justify-center text-center h-full glass-strong">
                  <div className="w-12 h-12 bg-uni-bg/50 rounded-full border border-uni-accent/30 flex items-center justify-center mb-3 text-2xl shadow-[inset_0_0_10px_rgba(0,119,255,0.2)]">
                     📝
                  </div>
-                 <h3 className="text-sm font-bold text-white mb-1">Tes</h3>
-                 <p className="text-xs text-text-secondary">Pre-test & Post-test</p>
+                 <h3 className="text-sm font-bold text-white mb-1">Pre-test</h3>
+                 <p className="text-xs text-text-secondary">Uji pemahaman awal</p>
               </GlassCard>
            </Link>
 
-           <Link href="/student/profile">
-              <GlassCard hover className="p-4 flex flex-col items-center justify-center text-center h-full glass-strong">
-                 <div className="w-12 h-12 bg-uni-bg/50 rounded-full border border-uni-success/30 flex items-center justify-center mb-3 text-2xl shadow-[inset_0_0_10px_rgba(16,185,129,0.2)]">
-                    👤
+           {/* Post-test — locked/unlocked with progression guard */}
+           {testUnlock?.posttestUnlocked ? (
+             <Link href={`/student/test/${stats.currentMaterialId}/POSTTEST`}>
+               <GlassCard hover className="p-4 flex flex-col items-center justify-center text-center h-full glass-strong border border-uni-success/30">
+                 <div className="w-12 h-12 bg-uni-success/10 rounded-full border border-uni-success/30 flex items-center justify-center mb-3 text-2xl shadow-[inset_0_0_10px_rgba(16,185,129,0.2)]">
+                    ✅
                  </div>
-                 <h3 className="text-sm font-bold text-white mb-1">Profil</h3>
-                 <p className="text-xs text-text-secondary">Statistik & pengaturan</p>
-              </GlassCard>
-           </Link>
+                 <h3 className="text-sm font-bold text-white mb-1">Post-test</h3>
+                 <p className="text-xs text-uni-success">Siap dikerjakan!</p>
+               </GlassCard>
+             </Link>
+           ) : (
+             <div className="relative group">
+               <GlassCard className="p-4 flex flex-col items-center justify-center text-center h-full opacity-50 cursor-not-allowed">
+                 <div className="w-12 h-12 bg-uni-bg/50 rounded-full border border-gray-500/30 flex items-center justify-center mb-3 text-2xl">
+                    🔒
+                 </div>
+                 <h3 className="text-sm font-bold text-text-muted mb-1">Post-test</h3>
+                 <p className="text-xs text-text-muted">Terkunci</p>
+               </GlassCard>
+               {/* Tooltip */}
+               <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-[#0a0a1a] border border-uni-primary/30 rounded-lg shadow-card opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 min-w-[220px]">
+                 <p className="text-xs text-white font-semibold mb-1">🔒 Post-test Terkunci</p>
+                 {testUnlock ? (
+                   <div className="text-xs text-text-secondary space-y-0.5">
+                     <p className={testUnlock.pretestCompleted ? 'text-uni-success' : 'text-uni-error'}>
+                       {testUnlock.pretestCompleted ? '✅' : '❌'} Selesaikan Pre-test
+                     </p>
+                     <p className={testUnlock.floorMet ? 'text-uni-success' : 'text-uni-error'}>
+                       {testUnlock.floorMet ? '✅' : '❌'} Capai Lantai {testUnlock.floorRequirement} (sekarang: {testUnlock.highestFloor})
+                     </p>
+                   </div>
+                 ) : (
+                   <p className="text-xs text-text-muted">Memuat syarat...</p>
+                 )}
+               </div>
+             </div>
+           )}
         </div>
 
         {/* Help Button Floating Bottom Left */}
