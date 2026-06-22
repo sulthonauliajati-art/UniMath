@@ -4,6 +4,14 @@ import { questions, testSessions, testAttempts } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
 import { resolveAuthenticatedUserId } from '@/lib/auth/server'
 
+/**
+ * POST /api/test/answer — Strict test mode answer recording.
+ *
+ * ⚠️ ISOLASI: Route ini TIDAK PERNAH memicu REMEDIAL_REQUIRED.
+ * Tidak peduli seburuk apa jawaban siswa — Pre-test & Post-test
+ * adalah instrumen penelitian murni. Sistem remedial hanya berlaku
+ * di /api/practice/answer (tabel practiceSessions).
+ */
 export async function POST(request: NextRequest) {
   try {
     const userId = await resolveAuthenticatedUserId(request)

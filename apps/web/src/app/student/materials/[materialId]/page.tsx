@@ -7,7 +7,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { StarryBackground } from '@/components/ui/StarryBackground'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { useAuth } from '@/lib/auth/context'
+import { useToast } from '@/components/ui/Toast'
 import { getSafeSessionStorage, setSafeSessionStorage } from '@/lib/storage'
+import { useRemedialProgress } from '@/lib/hooks/useRemedialProgress'
+import { StickyProgressHeader } from '@/components/game/StickyProgressHeader'
 
 interface Material {
   id: string
@@ -63,32 +66,39 @@ export default function MaterialDetailPage() {
   const [shortContent, setShortContent] = useState<MaterialContent | null>(null)
   const [fullContent, setFullContent] = useState<MaterialContent | null>(null)
   const [loading, setLoading] = useState(true)
+  const { showToast } = useToast()
   const [fromGameOver, setFromGameOver] = useState(false)
-  const [canContinue, setCanContinue] = useState(true)
-  const [scrollProgress, setScrollProgress] = useState(0)
-  const [scrollDone, setScrollDone] = useState(false)
-  const [timerDone, setTimerDone] = useState(false)
-  const [timeLeft, setTimeLeft] = useState(0)
-  // ✅ FIX: Tambah quizDone — true jika semua checkpoint terjawab benar
-  const [quizDone, setQuizDone] = useState(false)
-
-  // Checkpoint quiz state
+  // Track whether quiz items have been answered (any answer, not just correct)
+  const [quizAnsweredSet, setQuizAnsweredSet] = useState<Set<number>>(new Set())
   const [checkpointAnswers, setCheckpointAnswers] = useState<Record<number, string[]>>({})
-  const [checkpointResults, setCheckpointResults] = useState<Record<number, boolean | null>>({})
 
-  // Reset checkpoint answers when tab changes
-  // ✅ FIX: Jangan reset saat tab berubah dalam mode wajib belajar —
-  // progress quiz siswa harus persisten agar quizDone tidak hilang
+  // Determine total quiz items for the hook (available after content loads)
+  const totalQuizItems = fullContent?.checkpointItems?.length || shortContent?.checkpointItems?.length || 0
+
+  const [remedialProgress, remedialActions] = useRemedialProgress(totalQuizItems, 65)
+
+  // Sync quizAnswered from set size to hook
+  useEffect(() => {
+    if (!fromGameOver) return
+    const current = remedialProgress.quizAnswered
+    const actual = quizAnsweredSet.size
+    if (actual > current) {
+      // Mark any excess as newly answered
+      for (let i = 0; i < actual - current; i++) {
+        remedialActions.markQuizAnswered()
+      }
+    }
+  }, [quizAnsweredSet.size, fromGameOver])
+
+  // Reset quiz state when tab changes (only if not in Wajib Belajar)
   useEffect(() => {
     if (!fromGameOver) {
+      setQuizAnsweredSet(new Set())
       setCheckpointAnswers({})
-      setCheckpointResults({})
     }
   }, [activeTab, fromGameOver])
 
   const contentRef = useRef<HTMLDivElement>(null)
-
-  const MIN_STUDY_SECONDS = 90
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'STUDENT')) {
@@ -101,64 +111,9 @@ export default function MaterialDetailPage() {
     const studyData = getSafeSessionStorage<{ materialId: string; materialName: string }>('studyMaterial')
     if (studyData?.materialId === materialId) {
       setFromGameOver(true)
-      setCanContinue(false)
-      setTimeLeft(MIN_STUDY_SECONDS)
       setSafeSessionStorage('materialStudied_' + materialId, true)
     }
   }, [materialId])
-
-  // ── Countdown timer (90s — berjalan di latar, sebagai fallback terakhir) ──
-  useEffect(() => {
-    if (!fromGameOver || timerDone) return
-    if (timeLeft <= 0) {
-      setTimerDone(true)
-      return
-    }
-    const t = setTimeout(() => setTimeLeft(prev => prev - 1), 1000)
-    return () => clearTimeout(t)
-  }, [fromGameOver, timerDone, timeLeft])
-
-  // ✅ FIX: Unlock logic — scrollDone OR quizDone OR timerDone
-  // Siswa bisa lanjut dengan salah satu dari tiga cara:
-  // 1. Scroll sampai bawah (utama)
-  // 2. Kerjakan semua soal uji pemahaman (utama)
-  // 3. Tunggu timer 90 detik (terakhir — fallback)
-  useEffect(() => {
-    if (!fromGameOver || canContinue) return
-    if (scrollDone || quizDone || timerDone) {
-      setCanContinue(true)
-    }
-  }, [fromGameOver, canContinue, scrollDone, quizDone, timerDone])
-
-  // ── Scroll-based progress tracking ──
-  const handleScroll = useCallback(() => {
-    if (!fromGameOver || scrollDone) return
-
-    const scrollTop = window.scrollY || document.documentElement.scrollTop
-    const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight
-
-    if (docHeight <= 0) {
-      setScrollDone(true)
-      setScrollProgress(100)
-      return
-    }
-
-    const progress = Math.min(100, Math.round((scrollTop / docHeight) * 100))
-    setScrollProgress(progress)
-
-    if (progress >= 95) {
-      setScrollDone(true)
-      setScrollProgress(100)
-    }
-  }, [fromGameOver, scrollDone])
-
-  useEffect(() => {
-    if (fromGameOver && !scrollDone) {
-      window.addEventListener('scroll', handleScroll, { passive: true })
-      handleScroll()
-      return () => window.removeEventListener('scroll', handleScroll)
-    }
-  }, [fromGameOver, scrollDone, handleScroll])
 
   useEffect(() => {
     fetchAll()
@@ -196,7 +151,7 @@ export default function MaterialDetailPage() {
   }
 
   const handleBackToPractice = () => {
-    if (!canContinue) return
+    if (!remedialProgress.isUnlocked) return
     sessionStorage.removeItem('studyMaterial')
     router.push('/student/practice')
   }
@@ -296,13 +251,8 @@ export default function MaterialDetailPage() {
            "3 consecutive wrong" redirect. Sits above the header so
            the countdown is visible immediately without scrolling. */}
       {fromGameOver && (
-        <StickyContinueBar
-          canContinue={canContinue}
-          scrollProgress={scrollProgress}
-          scrollDone={scrollDone}
-          quizDone={quizDone}
-          timerDone={timerDone}
-          timeLeft={timeLeft}
+        <StickyProgressHeader
+          progress={remedialProgress}
           onContinue={handleBackToPractice}
         />
       )}
@@ -419,18 +369,18 @@ export default function MaterialDetailPage() {
 
               {/* === UJI PEMAHAMAN (Checkpoint Quiz) === */}
               {currentContent?.checkpointItems && currentContent.checkpointItems.length > 0 && (
-                <GlassCard className={`p-4 sm:p-6 ${fromGameOver && quizDone ? 'border border-emerald-400/40' : fromGameOver ? 'border border-cyan-400/20' : ''}`}>
+                <GlassCard className={`p-4 sm:p-6 ${fromGameOver && remedialProgress.quizAnswered >= totalQuizItems ? 'border border-emerald-400/40' : fromGameOver ? 'border border-cyan-400/20' : ''}`}>
                   <h3 className="text-cyan-400 font-bold text-sm sm:text-base mb-1 flex items-center gap-2">
                     <span>🧠</span> Uji Pemahaman
-                    {fromGameOver && quizDone && (
+                    {fromGameOver && remedialProgress.quizAnswered >= totalQuizItems && (
                       <span className="ml-auto text-emerald-400 text-xs font-medium bg-emerald-500/10 px-2 py-0.5 rounded-full">
                         ✅ Selesai
                       </span>
                     )}
                   </h3>
-                  {fromGameOver && !quizDone && (
+                  {fromGameOver && remedialProgress.quizAnswered < totalQuizItems && (
                     <p className="text-cyan-300/70 text-xs mb-3 bg-cyan-500/5 border border-cyan-400/10 rounded-lg px-3 py-2">
-                      💡 Jawab semua soal dengan benar untuk langsung lanjut latihan!
+                      💡 Coba jawab semua kuis — tidak perlu benar, yang penting dicoba!
                     </p>
                   )}
                   {!fromGameOver && (
@@ -440,18 +390,16 @@ export default function MaterialDetailPage() {
                   )}
                   <div className="space-y-5">
                     {currentContent.checkpointItems.map((item, idx) => {
-                      const totalItems = currentContent.checkpointItems!.length
-                      // Parse options from "A ... | B ... | C ... | D ..."
                       const optionParts = item.options.split('|').map(o => o.trim())
                       const parsedOptions = optionParts.map(o => ({
                         letter: o.charAt(0),
                         text: o.slice(2).trim(),
                       }))
 
-                      const result = checkpointResults[idx]
-                      const isCorrect = result === true
-                      // Track which options have been tried (wrong)
-                      const triedWrong: string[] = checkpointAnswers[idx] || []
+                      const hasAnswered = quizAnsweredSet.has(idx)
+                      const triedAnswers: string[] = checkpointAnswers[idx] || []
+                      const lastAnswer = triedAnswers[triedAnswers.length - 1]
+                      const gotCorrect = lastAnswer === item.answer
 
                       return (
                         <div key={idx} className="p-3 sm:p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
@@ -460,68 +408,71 @@ export default function MaterialDetailPage() {
                           </p>
                           <div className="space-y-2">
                             {parsedOptions.map((opt) => {
-                              const wasTriedWrong = triedWrong.includes(opt.letter)
-                              const isDisabled = isCorrect || wasTriedWrong
+                              const wasSelected = triedAnswers.includes(opt.letter)
+                              const allDisabled = hasAnswered
 
                               return (
                                 <button
                                   key={opt.letter}
                                   onClick={() => {
-                                    if (isDisabled) return
-                                    const correct = opt.letter === item.answer
-                                    if (correct) {
-                                      const newResults = { ...checkpointResults, [idx]: true }
-                                      setCheckpointResults(newResults)
-                                      setCheckpointAnswers(prev => ({ ...prev, [idx]: [...triedWrong, opt.letter] }))
-                                      // ✅ FIX: Cek apakah semua soal sudah benar
-                                      if (fromGameOver && !quizDone) {
-                                        const allCorrect = Array.from({ length: totalItems }, (_, i) =>
-                                          i === idx ? true : newResults[i] === true
-                                        ).every(Boolean)
-                                        if (allCorrect) setQuizDone(true)
-                                      }
-                                    } else {
-                                      // Mark this option as tried-wrong, allow retry
-                                      setCheckpointAnswers(prev => ({ ...prev, [idx]: [...triedWrong, opt.letter] }))
-                                      setCheckpointResults(prev => ({ ...prev, [idx]: false }))
+                                    if (allDisabled) return
+
+                                    // Record the answer
+                                    const newTried = [...triedAnswers, opt.letter]
+                                    setCheckpointAnswers(prev => ({ ...prev, [idx]: newTried }))
+
+                                    // Mark as answered on first attempt
+                                    if (!hasAnswered) {
+                                      setQuizAnsweredSet(prev => new Set(prev).add(idx))
                                     }
+
+                                    // Show affirmation toast
+                                    const affirmations = [
+                                      'Bagus sekali! Tetap semangat belajarnya! 💪',
+                                      'Pilihan yang menarik, yuk lanjut baca materinya! 📖',
+                                      'Keren! Kamu sudah berusaha, teruskan! 🌟',
+                                      'Hebat! Setiap jawaban adalah langkah maju! 🚀',
+                                      'Mantap! Kamu makin paham materinya! 🎯',
+                                    ]
+                                    const randomAffirmation = affirmations[Math.floor(Math.random() * affirmations.length)]
+                                    showToast(randomAffirmation, opt.letter === item.answer ? 'success' : 'info', 2500)
                                   }}
-                                  disabled={isDisabled}
+                                  disabled={allDisabled}
                                   className={[
                                     'w-full text-left px-3 sm:px-4 py-2.5 rounded-lg text-sm transition-all flex items-center gap-2',
-                                    // Correct final answer
-                                    isCorrect && triedWrong.includes(opt.letter) && opt.letter === item.answer && 'bg-emerald-500/20 border border-emerald-400 text-emerald-300',
-                                    // Was tried wrong → disabled, muted
-                                    wasTriedWrong && opt.letter !== item.answer && 'bg-slate-800/30 border border-orange-400/30 text-slate-500 line-through opacity-60',
-                                    // Not yet interacted, still available
-                                    !isDisabled && !wasTriedWrong && 'bg-slate-700/50 hover:bg-slate-600/50 text-slate-200 border border-slate-600/50',
-                                    // Correct but not the answer clicked (when quiz is done)
-                                    isCorrect && !triedWrong.includes(opt.letter) && 'bg-slate-800/30 border border-slate-700/30 text-slate-400',
+                                    // After answering: show which was correct
+                                    hasAnswered && opt.letter === item.answer && 'bg-emerald-500/20 border border-emerald-400 text-emerald-300',
+                                    // Wrong answer selected
+                                    wasSelected && opt.letter !== item.answer && 'bg-amber-500/10 border border-amber-400/30 text-amber-300',
+                                    // Not answered yet, still clickable
+                                    !hasAnswered && 'bg-slate-700/50 hover:bg-slate-600/50 text-slate-200 border border-slate-600/50 cursor-pointer',
+                                    // Answered but not this option
+                                    hasAnswered && !wasSelected && opt.letter !== item.answer && 'bg-slate-800/30 border border-slate-700/30 text-slate-500',
                                   ].filter(Boolean).join(' ')}
                                 >
                                   <span className={[
                                     'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0',
-                                    isCorrect && opt.letter === item.answer && 'bg-emerald-400 text-slate-900',
-                                    wasTriedWrong && opt.letter !== item.answer && 'bg-orange-400/50 text-slate-900',
-                                    !isDisabled && !wasTriedWrong && 'bg-slate-600/50 text-slate-300',
-                                    isCorrect && !triedWrong.includes(opt.letter) && opt.letter !== item.answer && 'bg-slate-700/30 text-slate-500',
+                                    hasAnswered && opt.letter === item.answer && 'bg-emerald-400 text-slate-900',
+                                    wasSelected && opt.letter !== item.answer && 'bg-amber-400/60 text-slate-900',
+                                    !hasAnswered && 'bg-slate-600/50 text-slate-300',
+                                    hasAnswered && !wasSelected && opt.letter !== item.answer && 'bg-slate-700/30 text-slate-500',
                                   ].filter(Boolean).join(' ')}>
-                                    {wasTriedWrong && opt.letter !== item.answer ? '✕' : opt.letter}
+                                    {wasSelected && opt.letter !== item.answer ? '✕' : opt.letter}
                                   </span>
                                   <span>{opt.text}</span>
                                 </button>
                               )
                             })}
                           </div>
-                          {/* Feedback */}
-                          {isCorrect && (
+                          {/* Feedback — affirmation regardless of correct/wrong */}
+                          {hasAnswered && gotCorrect && (
                             <div className="mt-3 px-3 py-2 rounded-lg text-sm font-medium bg-emerald-500/10 text-emerald-400">
-                              ✅ Benar! Kamu paham materinya.
+                              ✅ Benar! Kamu makin paham materinya.
                             </div>
                           )}
-                          {result === false && !isCorrect && (
-                            <div className="mt-3 px-3 py-2 rounded-lg text-sm font-medium bg-amber-500/10 text-amber-400">
-                              🤔 Kurang tepat, coba lagi!
+                          {hasAnswered && !gotCorrect && (
+                            <div className="mt-3 px-3 py-2 rounded-lg text-sm font-medium bg-uni-primary/10 text-uni-primary">
+                              💡 Jawaban yang benar adalah <b>{item.answer}</b>. Tidak apa-apa — yang penting sudah dicoba! Semangat terus! 🌟
                             </div>
                           )}
                         </div>
@@ -580,54 +531,45 @@ export default function MaterialDetailPage() {
       {/* ── FIXED BOTTOM BAR — always visible in Wajib Belajar mode ── */}
       {fromGameOver && (
         <div className="fixed bottom-0 left-0 right-0 z-50 safe-bottom">
-          <div className="backdrop-blur-xl bg-[rgba(4,9,20,0.95)] border-t border-white/10 shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.8)]">
+          <div className="backdrop-blur-xl bg-[rgba(4,9,20,0.95)] border-t border-cyan-400/20 shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.8)]">
             <div className="max-w-4xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3 flex items-center gap-3">
-              {/* Status indicators — 3 kondisi */}
+              {/* Status indicators */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-xs flex-wrap">
-                  {/* 1. Scroll check */}
-                  <span className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full ${scrollDone ? 'text-emerald-400 bg-emerald-500/10' : 'text-slate-500'}`}>
-                    {scrollDone ? '✅' : '▢'} Baca
+                <div className="flex items-center gap-2 sm:gap-3 text-xs flex-wrap">
+                  <span className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full ${remedialProgress.scrollProgress >= 100 ? 'text-emerald-400 bg-emerald-500/10' : 'text-slate-500'}`}>
+                    {remedialProgress.scrollProgress >= 100 ? '✅' : '▢'} Baca {remedialProgress.scrollProgress}%
                   </span>
-                  {/* 2. Quiz check */}
-                  <span className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full ${
-                    quizDone ? 'text-emerald-400 bg-emerald-500/10'
-                    : 'text-slate-500'
-                  }`}>
-                    {quizDone ? '✅' : '▢'} Quiz
+                  <span className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full ${remedialProgress.quizAnswered >= totalQuizItems ? 'text-emerald-400 bg-emerald-500/10' : 'text-slate-500'}`}>
+                    {remedialProgress.quizAnswered >= totalQuizItems ? '✅' : '▢'} Kuis {remedialProgress.quizAnswered}/{totalQuizItems}
                   </span>
-                  {/* 3. Timer (fallback) */}
-                  <span className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full ${
-                    timerDone ? 'text-emerald-400 bg-emerald-500/10'
-                    : canContinue ? 'text-slate-600' : 'text-slate-500'
-                  }`}>
-                    {timerDone ? '✅' : '⏳'}
-                    {timerDone ? ' Selesai' : timeLeft > 0 ? ` ${timeLeft}s` : ''}
+                  <span className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full ${remedialProgress.timeRemaining <= 0 ? 'text-emerald-400 bg-emerald-500/10' : 'text-slate-500'}`}>
+                    {remedialProgress.timeRemaining <= 0 ? '✅' : '⏳'} {Math.floor(remedialProgress.timeRemaining / 60)}:{(remedialProgress.timeRemaining % 60).toString().padStart(2, '0')}
                   </span>
                 </div>
-                {!canContinue && (
-                  <p className="text-slate-500 text-xs sm:text-xs mt-0.5 line-clamp-1">
-                    {!scrollDone && !quizDone
-                      ? '💡 Scroll baca materi, atau kerjakan Quiz di atas'
-                      : scrollDone && !quizDone
-                      ? '✅ Siap dilanjut! Tekan tombol lanjut'
-                      : '✅ Quiz selesai! Tekan tombol lanjut'}
-                  </p>
-                )}
+                <p className="text-slate-500 text-xs mt-0.5 line-clamp-1">
+                  {remedialProgress.isUnlocked
+                    ? remedialProgress.unlockReason === 'timer'
+                      ? '⏰ Waktu habis — kamu bisa lanjut latihan!'
+                      : '🎉 Siap Lanjut! Semua syarat terpenuhi.'
+                    : remedialProgress.quizAnswered >= totalQuizItems && remedialProgress.scrollProgress < 100
+                    ? '📖 Kuis selesai! Lanjut baca sampai 100% untuk unlock.'
+                    : remedialProgress.scrollProgress >= 100 && remedialProgress.quizAnswered < totalQuizItems
+                    ? '🧠 Bacaan selesai! Jawab semua kuis untuk unlock.'
+                    : '📚 Selesaikan bacaan & kuis, atau tunggu waktu habis untuk lanjut.'}
+                </p>
               </div>
 
-              {/* Button */}
               <button
                 onClick={handleBackToPractice}
-                disabled={!canContinue}
+                disabled={!remedialProgress.isUnlocked}
                 className={[
                   'shrink-0 px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 transition-all',
-                  canContinue
+                  remedialProgress.isUnlocked
                     ? 'bg-gradient-to-r from-emerald-400 to-cyan-400 text-slate-900 shadow-[0_0_20px_-4px_rgba(16,185,129,0.8)] hover:shadow-[0_0_28px_-4px_rgba(16,185,129,1)] active:scale-95'
                     : 'bg-slate-700/60 text-slate-400 border border-slate-600/40 cursor-not-allowed',
                 ].join(' ')}
               >
-                {canContinue ? (
+                {remedialProgress.isUnlocked ? (
                   <>
                     <span>🚀</span>
                     <span>Lanjut Latihan</span>
@@ -647,85 +589,3 @@ export default function MaterialDetailPage() {
   )
 }
 
-/* ─────────────────────────────────────────────────────────────────────
- * StickyContinueBar
- *
- * Compact sticky bar at the top showing progress for 3 conditions:
- * 1. Scroll progress (primary)
- * 2. Quiz progress (primary)
- * 3. Timer countdown (fallback / terakhir)
- * ─────────────────────────────────────────────────────────────────── */
-function StickyContinueBar({
-  canContinue,
-  scrollProgress,
-  scrollDone,
-  quizDone,
-  timerDone,
-  timeLeft,
-  onContinue,
-}: {
-  canContinue: boolean
-  scrollProgress: number
-  scrollDone: boolean
-  quizDone: boolean
-  timerDone: boolean
-  timeLeft: number
-  onContinue: () => void
-}) {
-  // Kondisi utama mana yang paling relevan saat ini
-  const getStatusText = () => {
-    if (canContinue) return '🎉 Selesai! Kamu bisa lanjut latihan'
-    if (scrollDone) return '📚 Materi sudah dibaca ✅ — siap lanjut!'
-    if (quizDone) return '🧠 Quiz selesai ✅ — siap lanjut!'
-    // Belum ada yang done — tampilkan dua opsi utama
-    const parts: string[] = []
-    if (!scrollDone) parts.push(`Baca ${scrollProgress}%`)
-    if (!quizDone) parts.push('atau kerjakan Quiz')
-    if (!timerDone) parts.push(`⏳ ${timeLeft}s`)
-    return parts.join(' · ')
-  }
-
-  return (
-    <div className="sticky top-0 z-40 w-full">
-      <motion.div
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.35, ease: 'easeOut' }}
-        className="backdrop-blur-xl bg-[rgba(7,17,36,0.88)] border-b border-cyan-400/30 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)]"
-      >
-        <div className="max-w-4xl mx-auto px-3 sm:px-6 py-2 sm:py-2.5 flex items-center gap-2 sm:gap-3">
-          <div className="flex-1 min-w-0">
-            <p className="text-xs sm:text-xs uppercase tracking-[0.15em] text-orange-300/90 font-semibold">
-              📚 Wajib Belajar
-            </p>
-            <p className="text-white text-xs sm:text-sm leading-tight mt-0.5 line-clamp-1 tabular-nums">
-              {getStatusText()}
-            </p>
-          </div>
-
-          {canContinue && (
-            <button
-              onClick={onContinue}
-              className="shrink-0 px-3 sm:px-5 py-1.5 sm:py-2 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-emerald-400 to-cyan-400 text-slate-900 shadow-[0_0_20px_-4px_rgba(16,185,129,0.8)] hover:shadow-[0_0_28px_-4px_rgba(16,185,129,1)] active:scale-95 transition-all flex items-center gap-1.5"
-            >
-              <span>🚀</span>
-              <span>Lanjut</span>
-            </button>
-          )}
-        </div>
-
-        {/* Scroll progress bar — tampil selama belum baca & belum quiz */}
-        {!scrollDone && !quizDone && (
-          <div className="h-[3px] w-full bg-black/50">
-            <motion.div
-              className="h-full bg-gradient-to-r from-orange-400 via-amber-300 to-cyan-300"
-              animate={{ width: `${scrollProgress}%` }}
-              transition={{ duration: 0.15, ease: 'linear' }}
-              style={{ boxShadow: '0 0 10px rgba(251,191,36,0.6)' }}
-            />
-          </div>
-        )}
-      </motion.div>
-    </div>
-  )
-}

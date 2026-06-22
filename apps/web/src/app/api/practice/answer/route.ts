@@ -335,6 +335,10 @@ export async function POST(request: NextRequest) {
     const nextDifficulty = clampDifficulty(session.currentDifficulty - 1)
 
     // ── CASE 2a: 3 consecutive wrong → WAJIB BELAJAR ──
+    // ⚠️ ISOLASI: Hanya berlaku untuk PRACTICE mode.
+    // PRETEST & POSTTEST menggunakan route terpisah (/api/test/*) dan
+    // tabel testSessions — TIDAK PERNAH menyentuh logika remedial ini.
+    // Siswa tidak boleh dikunci di mode ujian, seburuk apa pun jawabannya.
     if (newConsecutiveWrong >= 3) {
       await withRetry(() => db
         .update(practiceSessions)
