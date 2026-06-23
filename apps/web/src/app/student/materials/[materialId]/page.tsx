@@ -374,7 +374,12 @@ export default function MaterialDetailPage() {
               )}
 
               {/* === UJI PEMAHAMAN (Checkpoint Quiz) === */}
-              {currentContent?.checkpointItems && currentContent.checkpointItems.length > 0 && (
+              {/* Filter: hanya soal dengan question non-kosong yang di-render */}
+              {(() => {
+                const displayItems = (currentContent?.checkpointItems || [])
+                  .filter((item: CheckpointItem) => item.question?.trim())
+                if (displayItems.length === 0) return null
+                return (
                 <GlassCard className={`p-4 sm:p-6 ${fromGameOver && remedialProgress.quizAnswered >= totalQuizItems ? 'border border-emerald-400/40' : fromGameOver ? 'border border-cyan-400/20' : ''}`}>
                   <h3 className="text-cyan-400 font-bold text-sm sm:text-base mb-1 flex items-center gap-2">
                     <span>🧠</span> Uji Pemahaman
@@ -395,7 +400,7 @@ export default function MaterialDetailPage() {
                     </p>
                   )}
                   <div className="space-y-5">
-                    {currentContent.checkpointItems.map((item, idx) => {
+                    {displayItems.map((item, idx) => {
                       const optionParts = item.options.split('|').map(o => o.trim())
                       const parsedOptions = optionParts.map(o => ({
                         letter: o.charAt(0),
@@ -486,7 +491,8 @@ export default function MaterialDetailPage() {
                     })}
                   </div>
                 </GlassCard>
-              )}
+              )
+              })()}
 
             </div>
           )}

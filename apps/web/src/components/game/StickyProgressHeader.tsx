@@ -25,7 +25,7 @@ export function StickyProgressHeader({ progress, onContinue }: StickyProgressHea
   }
 
   return (
-    <div className="sticky top-0 z-50 w-full">
+    <div className="sticky top-0 z-[60] w-full">
       <motion.div
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}

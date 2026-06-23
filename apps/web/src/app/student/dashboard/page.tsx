@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { StarryBackground, TowerBackground, RobotMascot, GlassCard, NeonButton } from '@/components/ui'
+import { StarryBackground, TowerBackground, GlassCard, NeonButton } from '@/components/ui'
 import { Modal } from '@/components/ui/Modal'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { useAuth } from '@/lib/auth/context'
@@ -330,16 +330,6 @@ export default function StudentDashboard() {
           </GlassCard>
         </motion.div>
 
-        {/* ── Robot Mascot — di antara tombol & grid menu ──────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="my-2 z-30"
-        >
-          <RobotMascot state={stats.totalSessions === 0 ? 'waving' : 'happy'} size="sm" />
-        </motion.div>
-
         {/* ── 4 Kotak Menu (2×2 Unified Grid) ───────────────────────── */}
         <div className="relative w-full z-20 mt-2">
           <div className="grid grid-cols-2 gap-4 w-full">
@@ -397,10 +387,10 @@ export default function StudentDashboard() {
           {/* ── Help Icon — absolute di tengah persimpangan 4 kotak ──── */}
           <button
             onClick={() => { setOnboardingStep(0); setShowOnboarding(true) }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-uni-bg-secondary border-2 border-uni-primary/50 text-uni-primary rounded-full flex items-center justify-center shadow-[0_0_16px_rgba(0,229,255,0.5)] hover:bg-uni-primary/30 hover:shadow-[0_0_24px_rgba(0,229,255,0.7)] transition-all z-40"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-yellow-400 border-2 border-yellow-300 text-black text-lg font-bold rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(250,204,21,0.8)] hover:bg-yellow-300 hover:shadow-[0_0_28px_rgba(250,204,21,1)] hover:scale-110 transition-all z-40"
             title="Cara Bermain"
           >
-            ❓
+            ?
           </button>
         </div>
 
