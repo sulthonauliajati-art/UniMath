@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 
-// Alias: /student/posttest -> /student/test?type=posttest
+// Legacy redirect: /student/posttest → /student/evaluasi
 export default function PosttestAlias() {
-  redirect('/student/test?type=posttest')
+  redirect('/student/evaluasi')
 }

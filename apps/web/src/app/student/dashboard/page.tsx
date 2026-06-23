@@ -355,8 +355,8 @@ export default function StudentDashboard() {
               </GlassCard>
             </Link>
 
-            {/* Kotak 3: Ujian Evaluasi (Pre-test + Post-test digabung) */}
-            <Link href={`/student/test/${stats.currentMaterialId}/PRETEST`}>
+            {/* Kotak 3: Ujian Evaluasi */}
+            <Link href="/student/evaluasi">
               <GlassCard hover className="p-4 flex flex-col items-center justify-center text-center h-full glass-strong">
                 <div className="w-12 h-12 bg-uni-bg/50 rounded-full border border-uni-accent/30 flex items-center justify-center mb-3 text-2xl shadow-[inset_0_0_10px_rgba(0,119,255,0.2)]">
                   📝

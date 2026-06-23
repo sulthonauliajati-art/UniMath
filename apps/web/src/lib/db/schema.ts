@@ -189,10 +189,13 @@ export const testSessions = sqliteTable('test_sessions', {
   studentUserId: text('student_user_id').notNull().references(() => users.id),
   materialId: text('material_id').notNull().references(() => materials.id),
   testType: text('test_type', { enum: ['PRETEST', 'POSTTEST'] }).notNull(),
+  pairOrdinal: integer('pair_ordinal').notNull().default(1),
+  floorAtCompletion: integer('floor_at_completion'),
   startedAt: text('started_at').notNull(),
   completedAt: text('completed_at'),
 }, (table) => ({
   studentTypeIdx: index('test_sessions_student_type_idx').on(table.studentUserId, table.testType),
+  pairIdx: index('test_sessions_pair_idx').on(table.studentUserId, table.materialId, table.pairOrdinal),
 }))
 
 // Test Attempts (Strict)

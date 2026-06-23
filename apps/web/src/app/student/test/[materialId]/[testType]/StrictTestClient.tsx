@@ -244,10 +244,10 @@ export default function StrictTestClient({
           <h2 className="text-2xl text-red-400 font-bold mb-4">Terjadi Kesalahan</h2>
           <p className="text-white mb-6">{error}</p>
           <button
-            onClick={() => router.push('/student/dashboard')}
+            onClick={() => router.push('/student/evaluasi')}
             className="px-6 py-2 bg-uni-primary rounded-xl text-white font-semibold"
           >
-            Kembali ke Dasbor
+            Kembali ke Riwayat Evaluasi
           </button>
         </GlassCard>
       </div>
@@ -262,10 +262,10 @@ export default function StrictTestClient({
           <h2 className="text-2xl text-green-400 font-bold mb-4">Tes Selesai</h2>
           <p className="text-white mb-6">Jawaban Anda telah tersimpan dengan aman.</p>
           <button
-            onClick={() => router.push('/student/dashboard')}
+            onClick={() => router.push('/student/evaluasi')}
             className="px-6 py-2 bg-uni-primary rounded-xl text-white font-semibold"
           >
-            Kembali ke Dasbor
+            Kembali ke Riwayat Evaluasi
           </button>
         </GlassCard>
       </div>
@@ -286,10 +286,10 @@ export default function StrictTestClient({
             atau admin untuk meminta akses.
           </p>
           <button
-            onClick={() => router.push('/student/dashboard')}
+            onClick={() => router.push('/student/evaluasi')}
             className="px-6 py-2 bg-uni-primary rounded-xl text-white font-semibold hover:bg-uni-primary/80 transition-colors"
           >
-            Kembali ke Dashboard
+            Kembali ke Riwayat Evaluasi
           </button>
         </GlassCard>
       </div>
