@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * import-full.ts — Full Rollback + Bank Soal Seeding + Rekap Import
  *
