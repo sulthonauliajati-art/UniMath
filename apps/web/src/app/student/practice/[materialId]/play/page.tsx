@@ -563,10 +563,17 @@ export default function GamePlayPage() {
               {gameState.question.question}
             </h2>
 
-            {/* Options */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-4">
-              {options.map((opt) => {
+            {/* Options — responsive grid: 5-option → 2×2 + E centered below */}
+            <div
+              className={
+                options.length === 5
+                  ? 'grid grid-cols-2 gap-2.5 mb-4'
+                  : 'grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-4'
+              }
+            >
+              {options.map((opt, idx) => {
                 const selected = gameState.selectedAnswer === opt.key
+                const isLastOfFive = options.length === 5 && idx === 4
                 return (
                   <motion.button
                     key={opt.key}
@@ -575,6 +582,8 @@ export default function GamePlayPage() {
                     whileTap={!gameState.isSubmitting ? { scale: 0.97 } : undefined}
                     className={[
                       'group relative py-2.5 px-4 rounded-xl text-left text-sm sm:text-[15px] font-medium transition-all duration-200 border backdrop-blur-sm',
+                      // Opsi E (ke-5) → col-span-2, centered at half-width
+                      isLastOfFive && 'col-span-2 justify-self-center w-[calc(50%-0.3125rem)]',
                       selected
                         ? 'bg-cyan-400/20 border-cyan-300 text-white shadow-[0_0_22px_-4px_rgba(6,182,212,0.9)]'
                         : 'bg-black/40 border-cyan-500/25 text-slate-100 hover:border-cyan-400/70 hover:bg-cyan-500/10',

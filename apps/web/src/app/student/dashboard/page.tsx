@@ -330,94 +330,78 @@ export default function StudentDashboard() {
           </GlassCard>
         </motion.div>
 
-        {/* Secondary Navigation Options */}
-        <div className="grid grid-cols-2 gap-4 w-full relative z-20">
-           <Link href="/student/materials">
-              <GlassCard hover className="p-4 flex flex-col items-center justify-center text-center h-full glass-strong">
-                 <div className="w-12 h-12 bg-uni-bg/50 rounded-full border border-uni-primary/30 flex items-center justify-center mb-3 text-2xl shadow-[inset_0_0_10px_rgba(0,229,255,0.2)]">
-                    📚
-                 </div>
-                 <h3 className="text-sm font-bold text-white mb-1">Daftar Materi</h3>
-                 <p className="text-xs text-text-secondary">Pilih materi spesifik</p>
-              </GlassCard>
-           </Link>
-
-           <Link href="/student/leaderboard">
-              <GlassCard hover className="p-4 flex flex-col items-center justify-center text-center h-full glass-strong">
-                 <div className="w-12 h-12 bg-uni-bg/50 rounded-full border border-uni-warning/30 flex items-center justify-center mb-3 text-2xl shadow-[inset_0_0_10px_rgba(245,158,11,0.2)]">
-                    🏆
-                 </div>
-                 <h3 className="text-sm font-bold text-white mb-1">Leaderboard</h3>
-                 <p className="text-xs text-text-secondary">Peringkat global</p>
-              </GlassCard>
-           </Link>
-        </div>
-
-        {/* Pre-test & Post-test + Profile */}
-        <div className="grid grid-cols-2 gap-4 w-full relative z-20 mt-4">
-           {/* Pre-test — always unlocked, direct routing */}
-           <Link href={`/student/test/${stats.currentMaterialId}/PRETEST`}>
-              <GlassCard hover className="p-4 flex flex-col items-center justify-center text-center h-full glass-strong">
-                 <div className="w-12 h-12 bg-uni-bg/50 rounded-full border border-uni-accent/30 flex items-center justify-center mb-3 text-2xl shadow-[inset_0_0_10px_rgba(0,119,255,0.2)]">
-                    📝
-                 </div>
-                 <h3 className="text-sm font-bold text-white mb-1">Pre-test</h3>
-                 <p className="text-xs text-text-secondary">Uji pemahaman awal</p>
-              </GlassCard>
-           </Link>
-
-           {/* Post-test — locked/unlocked with progression guard */}
-           {testUnlock?.posttestUnlocked ? (
-             <Link href={`/student/test/${stats.currentMaterialId}/POSTTEST`}>
-               <GlassCard hover className="p-4 flex flex-col items-center justify-center text-center h-full glass-strong border border-uni-success/30">
-                 <div className="w-12 h-12 bg-uni-success/10 rounded-full border border-uni-success/30 flex items-center justify-center mb-3 text-2xl shadow-[inset_0_0_10px_rgba(16,185,129,0.2)]">
-                    ✅
-                 </div>
-                 <h3 className="text-sm font-bold text-white mb-1">Post-test</h3>
-                 <p className="text-xs text-uni-success">Siap dikerjakan!</p>
-               </GlassCard>
-             </Link>
-           ) : (
-             <div className="relative group">
-               <GlassCard className="p-4 flex flex-col items-center justify-center text-center h-full opacity-50 cursor-not-allowed">
-                 <div className="w-12 h-12 bg-uni-bg/50 rounded-full border border-gray-500/30 flex items-center justify-center mb-3 text-2xl">
-                    🔒
-                 </div>
-                 <h3 className="text-sm font-bold text-text-muted mb-1">Post-test</h3>
-                 <p className="text-xs text-text-muted">Terkunci</p>
-               </GlassCard>
-               {/* Tooltip */}
-               <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-[#0a0a1a] border border-uni-primary/30 rounded-lg shadow-card opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 min-w-[220px]">
-                 <p className="text-xs text-white font-semibold mb-1">🔒 Post-test Terkunci</p>
-                 {testUnlock ? (
-                   <div className="text-xs text-text-secondary space-y-0.5">
-                     <p className={testUnlock.pretestCompleted ? 'text-uni-success' : 'text-uni-error'}>
-                       {testUnlock.pretestCompleted ? '✅' : '❌'} Selesaikan Pre-test
-                     </p>
-                     <p className={testUnlock.floorMet ? 'text-uni-success' : 'text-uni-error'}>
-                       {testUnlock.floorMet ? '✅' : '❌'} Capai Lantai {testUnlock.floorRequirement} (sekarang: {testUnlock.highestFloor})
-                     </p>
-                   </div>
-                 ) : (
-                   <p className="text-xs text-text-muted">Memuat syarat...</p>
-                 )}
-               </div>
-             </div>
-           )}
-        </div>
-
-        {/* Help Button Floating Bottom Left */}
-        <button
-           onClick={() => { setOnboardingStep(0); setShowOnboarding(true) }}
-           className="absolute bottom-6 left-6 w-10 h-10 bg-uni-bg-secondary border border-uni-primary/30 text-uni-primary rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(0,229,255,0.2)] hover:bg-uni-primary/20 transition-all z-40"
-           title="Cara Bermain"
+        {/* ── Robot Mascot — di antara tombol & grid menu ──────────── */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="my-2 z-30"
         >
-           ❓
-        </button>
+          <RobotMascot state={stats.totalSessions === 0 ? 'waving' : 'happy'} size="sm" />
+        </motion.div>
 
-        {/* Robot Mascot Bottom Right */}
-        <div className="absolute bottom-4 right-4 z-40">
-           <RobotMascot state={stats.totalSessions === 0 ? 'waving' : 'happy'} size="sm" />
+        {/* ── 4 Kotak Menu (2×2 Unified Grid) ───────────────────────── */}
+        <div className="relative w-full z-20 mt-2">
+          <div className="grid grid-cols-2 gap-4 w-full">
+            {/* Kotak 1: Daftar Materi */}
+            <Link href="/student/materials">
+              <GlassCard hover className="p-4 flex flex-col items-center justify-center text-center h-full glass-strong">
+                <div className="w-12 h-12 bg-uni-bg/50 rounded-full border border-uni-primary/30 flex items-center justify-center mb-3 text-2xl shadow-[inset_0_0_10px_rgba(0,229,255,0.2)]">
+                  📚
+                </div>
+                <h3 className="text-sm font-bold text-white mb-1">Daftar Materi</h3>
+                <p className="text-xs text-text-secondary">Pilih materi spesifik</p>
+              </GlassCard>
+            </Link>
+
+            {/* Kotak 2: Leaderboard */}
+            <Link href="/student/leaderboard">
+              <GlassCard hover className="p-4 flex flex-col items-center justify-center text-center h-full glass-strong">
+                <div className="w-12 h-12 bg-uni-bg/50 rounded-full border border-uni-warning/30 flex items-center justify-center mb-3 text-2xl shadow-[inset_0_0_10px_rgba(245,158,11,0.2)]">
+                  🏆
+                </div>
+                <h3 className="text-sm font-bold text-white mb-1">Leaderboard</h3>
+                <p className="text-xs text-text-secondary">Peringkat global</p>
+              </GlassCard>
+            </Link>
+
+            {/* Kotak 3: Ujian Evaluasi (Pre-test + Post-test digabung) */}
+            <Link href={`/student/test/${stats.currentMaterialId}/PRETEST`}>
+              <GlassCard hover className="p-4 flex flex-col items-center justify-center text-center h-full glass-strong">
+                <div className="w-12 h-12 bg-uni-bg/50 rounded-full border border-uni-accent/30 flex items-center justify-center mb-3 text-2xl shadow-[inset_0_0_10px_rgba(0,119,255,0.2)]">
+                  📝
+                </div>
+                <h3 className="text-sm font-bold text-white mb-1">Ujian Evaluasi</h3>
+                <p className="text-xs text-text-secondary">
+                  {testUnlock?.posttestUnlocked
+                    ? 'Pre-test & Post-test'
+                    : testUnlock?.pretestCompleted
+                    ? 'Post-test terkunci'
+                    : 'Mulai pre-test'}
+                </p>
+              </GlassCard>
+            </Link>
+
+            {/* Kotak 4: Profil Saya */}
+            <Link href="/student/profile">
+              <GlassCard hover className="p-4 flex flex-col items-center justify-center text-center h-full glass-strong">
+                <div className="w-12 h-12 bg-uni-bg/50 rounded-full border border-uni-primary/30 flex items-center justify-center mb-3 text-2xl shadow-[inset_0_0_10px_rgba(0,229,255,0.2)]">
+                  👤
+                </div>
+                <h3 className="text-sm font-bold text-white mb-1">Profil Saya</h3>
+                <p className="text-xs text-text-secondary">Lihat & edit profil</p>
+              </GlassCard>
+            </Link>
+          </div>
+
+          {/* ── Help Icon — absolute di tengah persimpangan 4 kotak ──── */}
+          <button
+            onClick={() => { setOnboardingStep(0); setShowOnboarding(true) }}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-uni-bg-secondary border-2 border-uni-primary/50 text-uni-primary rounded-full flex items-center justify-center shadow-[0_0_16px_rgba(0,229,255,0.5)] hover:bg-uni-primary/30 hover:shadow-[0_0_24px_rgba(0,229,255,0.7)] transition-all z-40"
+            title="Cara Bermain"
+          >
+            ❓
+          </button>
         </div>
 
       </div>

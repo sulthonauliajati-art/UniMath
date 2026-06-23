@@ -65,9 +65,15 @@ export function useRemedialProgress(
     return () => clearTimeout(t)
   }, [isUnlocked, timeRemaining])
 
-  // Unlock check
+  // Unlock check — hanya evaluasi jika totalQuizItems sudah diketahui (> 0)
+  // Tanpa guard ini, saat first render (totalQuizItems=0) kondisi
+  // `quizAnswered >= 0` langsung true dan tombol bocor dari detik pertama.
   useEffect(() => {
     if (isUnlocked) return
+    // JANGAN unlock sebelum totalQuizItems diketahui — mencegah tombol
+    // "Lanjut Latihan" aktif sebelum konten checkpoint selesai dimuat.
+    if (totalQuizItems <= 0) return
+
     if (scrollProgress >= 100 && quizAnswered >= totalQuizItems) {
       setIsUnlocked(true)
       setUnlockReason('scroll+quiz')

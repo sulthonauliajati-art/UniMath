@@ -72,8 +72,14 @@ export default function MaterialDetailPage() {
   const [quizAnsweredSet, setQuizAnsweredSet] = useState<Set<number>>(new Set())
   const [checkpointAnswers, setCheckpointAnswers] = useState<Record<number, string[]>>({})
 
-  // Determine total quiz items for the hook (available after content loads)
-  const totalQuizItems = fullContent?.checkpointItems?.length || shortContent?.checkpointItems?.length || 0
+  // Determine total quiz items — filter: hanya soal dengan question non-kosong.
+  // Sebelumnya menghitung semua entry di array (termasuk placeholder indicator),
+  // bukan jumlah soal aktual yang di-render di halaman.
+  const activeCheckpointItems =
+    fullContent?.checkpointItems?.filter((item: CheckpointItem) => item.question?.trim()) ||
+    shortContent?.checkpointItems?.filter((item: CheckpointItem) => item.question?.trim()) ||
+    []
+  const totalQuizItems = activeCheckpointItems.length
 
   const [remedialProgress, remedialActions] = useRemedialProgress(totalQuizItems, 65)
 
