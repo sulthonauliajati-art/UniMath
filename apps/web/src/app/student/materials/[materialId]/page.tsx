@@ -72,14 +72,25 @@ export default function MaterialDetailPage() {
   const [quizAnsweredSet, setQuizAnsweredSet] = useState<Set<number>>(new Set())
   const [checkpointAnswers, setCheckpointAnswers] = useState<Record<number, string[]>>({})
 
-  // Determine total quiz items — filter: hanya soal dengan question non-kosong.
-  // Sebelumnya menghitung semua entry di array (termasuk placeholder indicator),
-  // bukan jumlah soal aktual yang di-render di halaman.
-  const activeCheckpointItems =
-    fullContent?.checkpointItems?.filter((item: CheckpointItem) => item.question?.trim()) ||
-    shortContent?.checkpointItems?.filter((item: CheckpointItem) => item.question?.trim()) ||
-    []
-  const totalQuizItems = activeCheckpointItems.length
+  // Choose which content to show based on active tab
+  const currentContent = activeTab === 'lengkap' ? fullContent : shortContent
+
+  // ⚠️ KRITIS: totalQuizItems HARUS dari currentContent (yang SEDANG di-render),
+  // BUKAN dari fullContent. Sebelumnya `fullContent?.checkpointItems?.filter()`
+  // selalu truthy (array kosong pun truthy di JS), sehingga || tak pernah fallback
+  // ke shortContent. Akibat: fullContent punya 5 item indikator, shortContent cuma 3,
+  // tapi totalQuizItems = 5 → quizAnswered mentok 3 → unlock gagal SELAMANYA.
+  //
+  // Filter 3-kali: question + options + answer harus non-kosong.
+  // Placeholder indikator (question ada tapi options/answer kosong) tidak dihitung.
+  const isValidCheckpointItem = (item: CheckpointItem) =>
+    item.question?.trim() !== '' &&
+    item.options?.trim() !== '' &&
+    item.answer?.trim() !== ''
+
+  const totalQuizItems = (currentContent?.checkpointItems || [])
+    .filter(isValidCheckpointItem)
+    .length
 
   const [remedialProgress, remedialActions] = useRemedialProgress(totalQuizItems, 65)
 
@@ -177,9 +188,6 @@ export default function MaterialDetailPage() {
       </div>
     )
   }
-
-  // Choose which content to show based on active tab
-  const currentContent = activeTab === 'lengkap' ? fullContent : shortContent
 
   // Helper: render markdown-like text into sections
   const renderBodyMarkdown = (md: string) => {
@@ -374,10 +382,10 @@ export default function MaterialDetailPage() {
               )}
 
               {/* === UJI PEMAHAMAN (Checkpoint Quiz) === */}
-              {/* Filter: hanya soal dengan question non-kosong yang di-render */}
+              {/* Pakai filter yang sama dengan totalQuizItems: question + options + answer valid */}
               {(() => {
                 const displayItems = (currentContent?.checkpointItems || [])
-                  .filter((item: CheckpointItem) => item.question?.trim())
+                  .filter(isValidCheckpointItem)
                 if (displayItems.length === 0) return null
                 return (
                 <GlassCard className={`p-4 sm:p-6 ${fromGameOver && remedialProgress.quizAnswered >= totalQuizItems ? 'border border-emerald-400/40' : fromGameOver ? 'border border-cyan-400/20' : ''}`}>
