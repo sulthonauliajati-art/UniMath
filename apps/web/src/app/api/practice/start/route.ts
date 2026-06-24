@@ -212,20 +212,30 @@ export async function POST(request: NextRequest) {
     }
 
     // ── NO ACTIVE SESSION — Create a brand new one ────────────────────────
-    // Start from the student's HIGHEST floor ever reached for this material
+    // GLOBAL highest floor (lintas materi). Sebelumnya filter eq(materialId)
+    // menyebabkan floor reset ke 1 tiap ganti materi: M1A lantai 14 → M1B
+    // mulai lagi dari 1. Sekarang melanjutkan dari 14.
     const [highestFloorRow] = await db
       .select({
         maxFloor: sql<number>`COALESCE(MAX(floor), 1)`,
       })
       .from(practiceSessions)
-      .where(
-        and(
-          eq(practiceSessions.studentUserId, userId),
-          eq(practiceSessions.materialId, materialId)
-        )
-      )
+      .where(eq(practiceSessions.studentUserId, userId))
 
     const startingFloor = highestFloorRow?.maxFloor || 1
+
+    // Pastikan materialId sesuai dengan lantai global (cegah mismatch)
+    const allMaterials = await db
+      .select()
+      .from(materials)
+      .where(eq(materials.isActive, true))
+      .orderBy(materials.order)
+
+    const expectedMaterialIndex = Math.min(
+      Math.floor((startingFloor - 1) / 10),
+      allMaterials.length - 1
+    )
+    const effectiveMaterialId = allMaterials[expectedMaterialIndex]?.id || materialId
 
     const startDifficulty = 2
     let availableQuestions = await db
@@ -233,7 +243,7 @@ export async function POST(request: NextRequest) {
       .from(questions)
       .where(
         and(
-          eq(questions.materialId, materialId),
+          eq(questions.materialId, effectiveMaterialId),
           eq(questions.difficulty, startDifficulty),
           or(eq(questions.mode, 'PRACTICE'), eq(questions.mode, 'ALL'))
         )
@@ -245,7 +255,7 @@ export async function POST(request: NextRequest) {
         .from(questions)
         .where(
           and(
-            eq(questions.materialId, materialId),
+            eq(questions.materialId, effectiveMaterialId),
             or(eq(questions.mode, 'PRACTICE'), eq(questions.mode, 'ALL'))
           )
         )
@@ -263,7 +273,7 @@ export async function POST(request: NextRequest) {
     const [material] = await db
       .select()
       .from(materials)
-      .where(eq(materials.id, materialId))
+      .where(eq(materials.id, effectiveMaterialId))
       .limit(1)
 
     const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
@@ -271,7 +281,7 @@ export async function POST(request: NextRequest) {
     await db.insert(practiceSessions).values({
       id: sessionId,
       studentUserId: userId,
-      materialId,
+      materialId: effectiveMaterialId,
       floor: startingFloor,
       consecutiveWrong: 0,
       currentDifficulty: firstQuestion.difficulty,
@@ -283,7 +293,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       sessionId,
-      materialId,
+      materialId: effectiveMaterialId,
       materialName: material?.title || 'Matematika',
       floor: startingFloor,
       consecutiveWrong: 0,

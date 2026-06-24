@@ -269,11 +269,10 @@ export default function GamePlayPage() {
           setRobotState('climbing')
           setTimeout(() => {
             setRobotState('idle')
-            // ✅ FIX #4: Cek apakah semua 10 lantai selesai
-            const isSessionComplete = data.floor >= TOTAL_FLOORS + 1 || !data.nextQuestion
-
-            if (data.nextQuestion && !isSessionComplete) {
-              // Reset timer untuk soal baru
+            // ENDLESS MODE: Sesi TIDAK PERNAH berhenti otomatis.
+            // Pop-up rangkuman HANYA muncul jika siswa manual klik "Selesai".
+            // Soal terus mengalir tanpa batas lantai.
+            if (data.nextQuestion) {
               questionShownAtRef.current = Date.now()
               setGameState((prev) =>
                 prev
@@ -290,7 +289,7 @@ export default function GamePlayPage() {
                   : null
               )
             } else {
-              // ✅ FIX #4: Kirim reason: 'completed' bukan 'user_quit'
+              // Hanya jika benar-benar tidak ada soal (pool habis total)
               handleEndSession('completed')
             }
           }, 800)
@@ -422,9 +421,19 @@ export default function GamePlayPage() {
     ...(gameState.question.optE ? [{ key: 'E', text: gameState.question.optE }] : []),
   ]
 
-  const progressPct = Math.min(100, Math.round(((gameState.floor - 1) / TOTAL_FLOORS) * 100))
+  // Progress siklus 10 lantai — bukan linear floor/total.
+  // Lantai 11→10%, 14→40%, 20→100%, 21→10%, 25→50%
+  const cycleFloor = ((gameState.floor - 1) % 10) + 1
+  const progressPct = Math.round((cycleFloor / 10) * 100)
   const cardGlow: 'cyan' | 'red' = showWrongFeedback ? 'red' : 'cyan'
   const diffStyle = DIFFICULTY_COLORS[gameState.currentDifficulty] || DIFFICULTY_COLORS[2]
+
+  // Label dinamis: milestone materi berikutnya
+  const nextMilestoneFloor = Math.ceil(gameState.floor / 10) * 10 + 1
+  const progressLabel =
+    gameState.floor % 10 === 0
+      ? `🎉 Lantai ${gameState.floor} — Siap naik materi!`
+      : `${progressPct}% menuju Lt. ${nextMilestoneFloor}`
 
   return (
     <TowerBackground variant="practice">
@@ -487,7 +496,7 @@ export default function GamePlayPage() {
         <div className="mt-3 mx-auto max-w-md">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-xs sm:text-xs text-white/60 uppercase tracking-[0.15em]">
-              Progress
+              {gameState.floor % 10 === 0 ? '🎉 Siap Naik' : 'Progress Materi'}
             </span>
             <span className="text-xs sm:text-xs text-cyan-300 font-semibold">
               {progressPct}%

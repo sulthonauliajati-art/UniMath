@@ -321,7 +321,7 @@ export default function StudentDashboard() {
               </div>
             </div>
 
-            <Link href="/student/practice" className="block w-full">
+            <Link href={`/student/practice/${stats.currentMaterialId}/play`} className="block w-full">
               <button className="w-full py-4 bg-gradient-to-r from-uni-primary to-uni-accent hover:from-uni-primary-dark hover:to-uni-primary rounded-xl text-white font-bold text-lg shadow-[0_0_20px_rgba(0,229,255,0.4)] flex items-center justify-center gap-3 transition-transform hover:scale-105">
                 {stats.totalSessions === 0 ? 'Mulai Misi Pertama' : 'Lanjut Perjalanan'}
                 <span className="text-xl leading-none">›</span>
