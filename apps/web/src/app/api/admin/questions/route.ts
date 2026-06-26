@@ -62,16 +62,23 @@ export async function DELETE(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const materialId = searchParams.get('materialId')
+    const mode = searchParams.get('mode') as 'PRETEST' | 'POSTTEST' | null
 
     if (!materialId) {
       return NextResponse.json({ error: { message: 'Material ID diperlukan' } }, { status: 400 })
     }
 
-    // 1. Ambil semua ID soal di materi ini
+    // Build where conditions — support mode filter untuk evaluasi global
+    const whereConditions = [eq(questions.materialId, materialId)]
+    if (mode && (mode === 'PRETEST' || mode === 'POSTTEST')) {
+      whereConditions.push(eq(questions.mode, mode))
+    }
+
+    // 1. Ambil semua ID soal di materi ini (dan mode jika disediakan)
     const targetQuestions = await db
       .select({ id: questions.id })
       .from(questions)
-      .where(eq(questions.materialId, materialId))
+      .where(and(...whereConditions))
 
     if (targetQuestions.length === 0) {
       return NextResponse.json({ success: true, deleted: 0 })
@@ -89,8 +96,8 @@ export async function DELETE(request: NextRequest) {
       .delete(testAttempts)
       .where(inArray(testAttempts.questionId, questionIds))
 
-    // 4. Baru hapus soal
-    await db.delete(questions).where(eq(questions.materialId, materialId))
+    // 4. Baru hapus soal — filter by materialId AND mode if specified
+    await db.delete(questions).where(and(...whereConditions))
 
     return NextResponse.json({ success: true, deleted: questionIds.length })
   } catch (error) {

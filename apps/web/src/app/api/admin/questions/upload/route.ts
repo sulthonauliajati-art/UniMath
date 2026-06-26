@@ -147,7 +147,9 @@ export async function POST(request: NextRequest) {
     }
 
     const file = formData.get('file')
-    const materialIdFromDropdown = String(formData.get('materialId') || '').trim()
+    let materialIdFromDropdown = String(formData.get('materialId') || '').trim()
+    const modeFromForm = String(formData.get('mode') || '').trim()
+    const isEvalMode = modeFromForm === 'PRETEST' || modeFromForm === 'POSTTEST'
     const dryRun = String(formData.get('dryRun') || '') === '1'
 
     if (!file || !(file instanceof File)) {
@@ -179,6 +181,22 @@ export async function POST(request: NextRequest) {
         { error: { message: 'Format header tidak dikenali. Gunakan file export dari admin (20 kolom) atau template import (16 kolom).' } },
         { status: 400 }
       )
+    }
+
+    // Untuk mode Evaluasi (PRETEST/POSTTEST): auto-assign material container jika tidak ada
+    if (!isVExport && !materialIdFromDropdown && isEvalMode) {
+      const [firstMaterial] = await db
+        .select({ id: materials.id })
+        .from(materials)
+        .limit(1)
+      if (firstMaterial) {
+        materialIdFromDropdown = firstMaterial.id
+      } else {
+        return NextResponse.json(
+          { error: { message: 'Tidak ada materi tersedia sebagai container evaluasi. Buat materi dulu.' } },
+          { status: 400 }
+        )
+      }
     }
 
     // Format v1/v2: wajib pilih materi dari dropdown

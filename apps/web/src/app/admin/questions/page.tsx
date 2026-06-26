@@ -32,7 +32,7 @@ type MainTab = 'practice' | 'evaluation'
 
 const MAIN_TABS: { key: MainTab; label: string; emoji: string; desc: string }[] = [
   { key: 'practice', label: 'Latihan', emoji: '🎯', desc: 'Soal mode latihan dengan hint & remedial' },
-  { key: 'evaluation', label: 'Evaluasi', emoji: '📝', desc: 'Soal Pre-test & Post-test — wajib tepat 10 per materi' },
+  { key: 'evaluation', label: 'Evaluasi', emoji: '📝', desc: 'Soal Pre-test & Post-test — wajib tepat 10 soal total' },
 ]
 
 const EVAL_SUB_TABS: { key: QuestionMode; label: string; emoji: string }[] = [
@@ -73,6 +73,7 @@ export default function AdminQuestionsPage() {
 
   // Derived active mode — disinkronkan dari main tab + sub tab
   const activeMode: QuestionMode = activeMainTab === 'practice' ? 'PRACTICE' : activeEvalSubMode
+  const isEvaluation = activeMainTab === 'evaluation'
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'ADMIN')) {
@@ -116,6 +117,14 @@ export default function AdminQuestionsPage() {
   )
 
   useEffect(() => { fetchMaterials() }, [fetchMaterials])
+
+  // Auto-set material untuk tab Evaluasi (pakai material pertama sbg container)
+  useEffect(() => {
+    if (isEvaluation && materials.length > 0 && selectedMaterial !== materials[0].id) {
+      setSelectedMaterial(materials[0].id)
+    }
+  }, [isEvaluation, materials, selectedMaterial])
+
   useEffect(() => {
     if (selectedMaterial) fetchQuestions(selectedMaterial)
   }, [selectedMaterial, activeMode, fetchQuestions])
@@ -181,9 +190,15 @@ export default function AdminQuestionsPage() {
 
   const handleDeleteAll = async () => {
     const tabLabel = MODE_LABELS[activeMode] || activeMode
-    if (!confirm(`Yakin ingin menghapus SEMUA soal ${tabLabel} di materi ini?`)) return
+    const confirmMsg = isEvaluation
+      ? `Yakin ingin menghapus SEMUA soal ${tabLabel} secara global?`
+      : `Yakin ingin menghapus SEMUA soal ${tabLabel} di materi ini?`
+    if (!confirm(confirmMsg)) return
+
     try {
-      const res = await fetch(`/api/admin/questions?materialId=${selectedMaterial}`, {
+      const params = new URLSearchParams({ materialId: selectedMaterial })
+      if (isEvaluation) params.set('mode', activeMode)
+      const res = await fetch(`/api/admin/questions?${params}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       })
@@ -223,7 +238,12 @@ export default function AdminQuestionsPage() {
     setExporting(true)
     try {
       const params = new URLSearchParams()
-      if (exportFilter !== '__ALL__') params.set('materialId', exportFilter)
+      // Evaluation: export by container material (global)
+      if (isEvaluation) {
+        params.set('materialId', selectedMaterial)
+      } else if (exportFilter !== '__ALL__') {
+        params.set('materialId', exportFilter)
+      }
       params.set('mode', activeMode)
       const res = await fetch(`/api/admin/questions/export?${params}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -231,7 +251,7 @@ export default function AdminQuestionsPage() {
       if (!res.ok) throw new Error('Gagal mengekspor soal')
       const blob = await res.blob()
       const now = new Date().toISOString().slice(0, 10)
-      const suffix = exportFilter !== '__ALL__' ? `_${exportFilter}` : '_semua'
+      const suffix = isEvaluation ? `_${activeMode.toLowerCase()}` : exportFilter !== '__ALL__' ? `_${exportFilter}` : '_semua'
       const filename = `unimath_soal_${activeMode.toLowerCase()}${suffix}_${now}.csv`
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -257,7 +277,7 @@ export default function AdminQuestionsPage() {
     ? EVAL_SUB_TABS.find(s => s.key === activeMode)?.emoji || '📝'
     : '🎯'
   const activeDesc = isPreOrPost
-    ? `Soal ${activeMode === 'PRETEST' ? 'pre-test' : 'post-test'} — wajib tepat 10 per materi`
+    ? `Soal ${activeMode === 'PRETEST' ? 'pre-test' : 'post-test'} — wajib tepat 10 soal total`
     : 'Soal mode latihan dengan hint & remedial'
 
   if (isLoading || !user) {
@@ -343,35 +363,41 @@ export default function AdminQuestionsPage() {
         {/* Upload Section */}
         <GlassCard className="p-6 mb-6">
           <h3 className="text-lg font-semibold text-white mb-4">📤 Upload Soal dari CSV</h3>
-          <div className="grid md:grid-cols-2 gap-4 mb-4">
+          <div className={`grid ${isEvaluation ? 'grid-cols-1' : 'md:grid-cols-2'} gap-4 mb-4`}>
+            {/* Material dropdown — disembunyikan di tab Evaluasi */}
+            {!isEvaluation && (
+              <div>
+                <label htmlFor="admin-material-select" className="block text-sm text-text-secondary mb-2">Pilih Materi</label>
+                <select
+                  id="admin-material-select"
+                  value={selectedMaterial}
+                  onChange={(e) => setSelectedMaterial(e.target.value)}
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:border-uni-primary focus:outline-none transition-colors"
+                >
+                  <option value="__BULK__" className="bg-uni-bg font-bold">📦 Semua Materi (dari file export 20 kolom)</option>
+                  <option value="" disabled className="bg-uni-bg text-gray-500">── atau pilih 1 materi ──</option>
+                  {materials.length === 0 && <option value="">(belum ada materi)</option>}
+                  {materials.map((mat) => (
+                    <option key={mat.id} value={mat.id} className="bg-uni-bg">{mat.title} ({mat.questionCount} soal)</option>
+                  ))}
+                </select>
+                {selectedMaterial === '__BULK__' && (
+                  <p className="text-xs text-cyan-400 mt-1.5">⚡ Mode multi-materi: materialId dibaca otomatis dari kolom CSV</p>
+                )}
+              </div>
+            )}
             <div>
-              <label htmlFor="admin-material-select" className="block text-sm text-text-secondary mb-2">Pilih Materi</label>
-              <select
-                id="admin-material-select"
-                value={selectedMaterial}
-                onChange={(e) => setSelectedMaterial(e.target.value)}
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:border-uni-primary focus:outline-none transition-colors"
-              >
-                <option value="__BULK__" className="bg-uni-bg font-bold">📦 Semua Materi (dari file export 20 kolom)</option>
-                <option value="" disabled className="bg-uni-bg text-gray-500">── atau pilih 1 materi ──</option>
-                {materials.length === 0 && <option value="">(belum ada materi)</option>}
-                {materials.map((mat) => (
-                  <option key={mat.id} value={mat.id} className="bg-uni-bg">{mat.title} ({mat.questionCount} soal)</option>
-                ))}
-              </select>
-              {selectedMaterial === '__BULK__' && (
-                <p className="text-xs text-cyan-400 mt-1.5">⚡ Mode multi-materi: materialId dibaca otomatis dari kolom CSV</p>
-              )}
-            </div>
-            <div>
-              <label htmlFor="admin-csv-upload" className="block text-sm text-text-secondary mb-2">Upload File CSV</label>
+              <label htmlFor="admin-csv-upload" className="block text-sm text-text-secondary mb-2">
+                Upload File CSV
+                {isEvaluation && <span className="ml-2 text-[10px] text-cyan-400/70 font-normal">— Soal global (semua materi)</span>}
+              </label>
               <input
                 id="admin-csv-upload"
                 ref={fileInputRef}
                 type="file"
                 accept=".csv,text/csv"
                 onChange={handleFileUpload}
-                disabled={uploading || !selectedMaterial}
+                disabled={uploading || (!isEvaluation && !selectedMaterial)}
                 className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-uni-primary file:text-white disabled:opacity-50"
               />
               {uploading && (
@@ -408,13 +434,19 @@ export default function AdminQuestionsPage() {
           <div className="mt-4 p-4 bg-green-900/10 border border-green-500/20 rounded-lg">
             <p className="text-sm text-green-300 font-semibold mb-3">📤 Export Soal ke CSV (Arsip Lengkap)</p>
             <div className="flex gap-2 flex-wrap items-center">
-              <select value={exportFilter} onChange={(e) => setExportFilter(e.target.value)} className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:border-green-400 focus:outline-none transition-colors">
-                <option value="__ALL__" className="bg-uni-bg">📦 Semua Materi</option>
-                {materials.map((mat) => (<option key={mat.id} value={mat.id} className="bg-uni-bg">{mat.title} ({mat.questionCount} soal)</option>))}
-              </select>
+              {/* Material filter — disembunyikan di tab Evaluasi (export global by mode) */}
+              {!isEvaluation && (
+                <select value={exportFilter} onChange={(e) => setExportFilter(e.target.value)} className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:border-green-400 focus:outline-none transition-colors">
+                  <option value="__ALL__" className="bg-uni-bg">📦 Semua Materi</option>
+                  {materials.map((mat) => (<option key={mat.id} value={mat.id} className="bg-uni-bg">{mat.title} ({mat.questionCount} soal)</option>))}
+                </select>
+              )}
               <NeonButton variant="secondary" onClick={exportQuestions} disabled={exporting}>
                 {exporting ? '⏳ Mengekspor...' : '⬇️ Export CSV'}
               </NeonButton>
+              {isEvaluation && (
+                <span className="text-[10px] text-green-400/60">Mengekspor semua soal {activeLabel.toLowerCase()} (global)</span>
+              )}
             </div>
           </div>
 
@@ -425,7 +457,7 @@ export default function AdminQuestionsPage() {
               <ul className="text-xs text-text-muted space-y-1 list-disc list-inside">
                 <li><b className="text-text-secondary">mode</b>: PRACTICE / PRETEST / POSTTEST / ALL</li>
                 <li><b className="text-green-400">optE</b>: opsi E — WAJIB untuk soal PG</li>
-                {isPreOrPost && <li className="text-yellow-300/80">⚠️ <b>{activeLabel}</b>: wajib tepat 10 soal per materi.</li>}
+                {isPreOrPost && <li className="text-yellow-300/80">⚠️ <b>{activeLabel}</b>: wajib tepat 10 soal total.</li>}
               </ul>
             </div>
           </details>
@@ -440,8 +472,16 @@ export default function AdminQuestionsPage() {
           {questions.length === 0 ? (
             <div className="text-center py-8">
               <div className="text-4xl mb-2">📝</div>
-              <p className="text-text-secondary">Belum ada soal {activeLabel} untuk materi ini</p>
-              <p className="text-xs text-text-muted mt-1">Download template, isi 10 soal (untuk pre/post-test), lalu upload</p>
+              <p className="text-text-secondary">
+                {isEvaluation
+                  ? `Belum ada soal ${activeLabel} (global)`
+                  : `Belum ada soal ${activeLabel} untuk materi ini`}
+              </p>
+              <p className="text-xs text-text-muted mt-1">
+                {isEvaluation
+                  ? 'Download template, isi tepat 10 soal total, lalu upload'
+                  : 'Download template, isi 10 soal (untuk pre/post-test), lalu upload'}
+              </p>
             </div>
           ) : (
             <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
