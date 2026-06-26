@@ -32,7 +32,10 @@ export async function GET(request: NextRequest) {
       allStudents.map(async (student) => {
         const [sessionStats] = await db
           .select({
-            totalFloors: sql<number>`COALESCE(SUM(floor - 1), 0)`,
+            // FIX: Gunakan MAX(floor) — lantai tertinggi, bukan akumulasi SUM(floor)
+            // Sebelumnya SUM(floor - 1) menyebabkan angka membengkak karena
+            // menjumlahkan floor dari semua sesi (contoh: 3 sesi floor 15+30+12 = 57)
+            totalFloors: sql<number>`COALESCE(MAX(floor), 0)`,
             totalSessions: sql<number>`count(*)`,
           })
           .from(practiceSessions)
