@@ -28,11 +28,16 @@ interface Question {
 }
 
 type QuestionMode = 'PRACTICE' | 'PRETEST' | 'POSTTEST'
+type MainTab = 'practice' | 'evaluation'
 
-const MODE_TABS: { key: QuestionMode; label: string; emoji: string; desc: string }[] = [
-  { key: 'PRACTICE', label: 'Latihan', emoji: '🎯', desc: 'Soal mode latihan dengan hint & remedial' },
-  { key: 'PRETEST', label: 'Pre-test', emoji: '📝', desc: 'Soal pre-test — wajib tepat 10 per materi' },
-  { key: 'POSTTEST', label: 'Post-test', emoji: '✅', desc: 'Soal post-test — wajib tepat 10 per materi' },
+const MAIN_TABS: { key: MainTab; label: string; emoji: string; desc: string }[] = [
+  { key: 'practice', label: 'Latihan', emoji: '🎯', desc: 'Soal mode latihan dengan hint & remedial' },
+  { key: 'evaluation', label: 'Evaluasi', emoji: '📝', desc: 'Soal Pre-test & Post-test — wajib tepat 10 per materi' },
+]
+
+const EVAL_SUB_TABS: { key: QuestionMode; label: string; emoji: string }[] = [
+  { key: 'PRETEST', label: 'Pre-test', emoji: '📝' },
+  { key: 'POSTTEST', label: 'Post-test', emoji: '✅' },
 ]
 
 const MODE_LABELS: Record<string, string> = {
@@ -56,7 +61,8 @@ export default function AdminQuestionsPage() {
   const [materials, setMaterials] = useState<Material[]>([])
   const [questions, setQuestions] = useState<Question[]>([])
   const [selectedMaterial, setSelectedMaterial] = useState<string>('')
-  const [activeMode, setActiveMode] = useState<QuestionMode>('PRACTICE')
+  const [activeMainTab, setActiveMainTab] = useState<MainTab>('practice')
+  const [activeEvalSubMode, setActiveEvalSubMode] = useState<QuestionMode>('PRETEST')
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [exporting, setExporting] = useState(false)
@@ -64,6 +70,9 @@ export default function AdminQuestionsPage() {
   const [validationErrors, setValidationErrors] = useState<string[]>([])
   const [headerWarnings, setHeaderWarnings] = useState<string[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Derived active mode — disinkronkan dari main tab + sub tab
+  const activeMode: QuestionMode = activeMainTab === 'practice' ? 'PRACTICE' : activeEvalSubMode
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'ADMIN')) {
@@ -171,7 +180,7 @@ export default function AdminQuestionsPage() {
   }
 
   const handleDeleteAll = async () => {
-    const tabLabel = MODE_TABS.find(m => m.key === activeMode)?.label
+    const tabLabel = MODE_LABELS[activeMode] || activeMode
     if (!confirm(`Yakin ingin menghapus SEMUA soal ${tabLabel} di materi ini?`)) return
     try {
       const res = await fetch(`/api/admin/questions?materialId=${selectedMaterial}`, {
@@ -243,7 +252,13 @@ export default function AdminQuestionsPage() {
   const isPreOrPost = activeMode === 'PRETEST' || activeMode === 'POSTTEST'
   const requiredCount = isPreOrPost ? 10 : undefined
   const questionCountOk = !isPreOrPost || questions.length === 10
-  const tabInfo = MODE_TABS.find(m => m.key === activeMode)
+  const activeLabel = MODE_LABELS[activeMode] || activeMode
+  const activeEmoji = isPreOrPost
+    ? EVAL_SUB_TABS.find(s => s.key === activeMode)?.emoji || '📝'
+    : '🎯'
+  const activeDesc = isPreOrPost
+    ? `Soal ${activeMode === 'PRETEST' ? 'pre-test' : 'post-test'} — wajib tepat 10 per materi`
+    : 'Soal mode latihan dengan hint & remedial'
 
   if (isLoading || !user) {
     return (
@@ -264,14 +279,14 @@ export default function AdminQuestionsPage() {
           </div>
         </div>
 
-        {/* Mode Tabs */}
-        <div className="flex gap-1 mb-6 bg-black/30 rounded-xl p-1 border border-white/5">
-          {MODE_TABS.map((tab) => (
+        {/* ═══ Main Tabs (2 tab: Latihan / Evaluasi) ═══ */}
+        <div className="flex gap-1 mb-3 bg-black/30 rounded-xl p-1 border border-white/5">
+          {MAIN_TABS.map((tab) => (
             <button
               key={tab.key}
-              onClick={() => setActiveMode(tab.key)}
+              onClick={() => setActiveMainTab(tab.key)}
               className={`flex-1 px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                activeMode === tab.key
+                activeMainTab === tab.key
                   ? 'bg-uni-primary/20 text-uni-primary border border-uni-primary/40 shadow-[0_0_12px_rgba(0,229,255,0.3)]'
                   : 'text-text-secondary hover:text-white hover:bg-white/5'
               }`}
@@ -282,27 +297,48 @@ export default function AdminQuestionsPage() {
           ))}
         </div>
 
-        {/* Mode Info Banner */}
-        {tabInfo && (
-          <div className={`mb-4 p-3 rounded-lg text-sm ${
-            isPreOrPost
-              ? questionCountOk
-                ? 'bg-green-500/10 border border-green-500/20 text-green-300'
-                : 'bg-yellow-500/10 border border-yellow-500/30 text-yellow-300'
-              : 'bg-uni-primary/5 border border-uni-primary/10 text-text-secondary'
-          }`}>
-            <p>
-              <b>{tabInfo.emoji} Mode {tabInfo.label}:</b> {tabInfo.desc}
-              {isPreOrPost && (
-                <span className="ml-2 font-bold">
-                  — {questions.length}/{requiredCount} soal
-                  {!questionCountOk && ' ⚠️ Butuh tepat 10 soal!'}
-                  {questionCountOk && ' ✅'}
-                </span>
-              )}
-            </p>
+        {/* ═══ Sub-Navigation Pills (hanya muncul saat Tab Evaluasi aktif) ═══ */}
+        {activeMainTab === 'evaluation' && (
+          <div className="flex items-center gap-2 mb-4 pl-1">
+            <span className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mr-1">Sub-mode:</span>
+            <div className="flex gap-1 bg-slate-800/60 rounded-lg p-0.5 border border-slate-700/30">
+              {EVAL_SUB_TABS.map((sub) => (
+                <button
+                  key={sub.key}
+                  onClick={() => setActiveEvalSubMode(sub.key)}
+                  className={`px-3.5 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 ${
+                    activeEvalSubMode === sub.key
+                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 shadow-[0_0_8px_rgba(6,182,212,0.2)]'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-700/40'
+                  }`}
+                >
+                  <span className="mr-1">{sub.emoji}</span>
+                  {sub.label}
+                </button>
+              ))}
+            </div>
           </div>
         )}
+
+        {/* Mode Info Banner */}
+        <div className={`mb-4 p-3 rounded-lg text-sm ${
+          isPreOrPost
+            ? questionCountOk
+              ? 'bg-green-500/10 border border-green-500/20 text-green-300'
+              : 'bg-yellow-500/10 border border-yellow-500/30 text-yellow-300'
+            : 'bg-uni-primary/5 border border-uni-primary/10 text-text-secondary'
+        }`}>
+          <p>
+            <b>{activeEmoji} Mode {activeLabel}:</b> {activeDesc}
+            {isPreOrPost && (
+              <span className="ml-2 font-bold">
+                — {questions.length}/{requiredCount} soal
+                {!questionCountOk && ' ⚠️ Butuh tepat 10 soal!'}
+                {questionCountOk && ' ✅'}
+              </span>
+            )}
+          </p>
+        </div>
 
         {/* Upload Section */}
         <GlassCard className="p-6 mb-6">
@@ -389,7 +425,7 @@ export default function AdminQuestionsPage() {
               <ul className="text-xs text-text-muted space-y-1 list-disc list-inside">
                 <li><b className="text-text-secondary">mode</b>: PRACTICE / PRETEST / POSTTEST / ALL</li>
                 <li><b className="text-green-400">optE</b>: opsi E — WAJIB untuk soal PG</li>
-                {isPreOrPost && <li className="text-yellow-300/80">⚠️ <b>{tabInfo?.label}</b>: wajib tepat 10 soal per materi.</li>}
+                {isPreOrPost && <li className="text-yellow-300/80">⚠️ <b>{activeLabel}</b>: wajib tepat 10 soal per materi.</li>}
               </ul>
             </div>
           </details>
@@ -398,13 +434,13 @@ export default function AdminQuestionsPage() {
         {/* Questions List */}
         <GlassCard className="p-6">
           <h3 className="text-lg font-semibold text-white mb-4">
-            Daftar Soal {tabInfo?.label} ({questions.length})
+            Daftar Soal {activeLabel} ({questions.length})
             {isPreOrPost && !questionCountOk && <span className="text-yellow-300 text-sm ml-2">⚠️ Butuh tepat 10 soal</span>}
           </h3>
           {questions.length === 0 ? (
             <div className="text-center py-8">
               <div className="text-4xl mb-2">📝</div>
-              <p className="text-text-secondary">Belum ada soal {tabInfo?.label} untuk materi ini</p>
+              <p className="text-text-secondary">Belum ada soal {activeLabel} untuk materi ini</p>
               <p className="text-xs text-text-muted mt-1">Download template, isi 10 soal (untuk pre/post-test), lalu upload</p>
             </div>
           ) : (

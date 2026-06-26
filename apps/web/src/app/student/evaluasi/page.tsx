@@ -21,8 +21,9 @@ interface HistoryEntry {
 }
 
 interface EvaluasiData {
-  currentFloor: number; pretestUnlocked: boolean; posttestUnlocked: boolean
-  floorsRemaining: number; deltaRequired: number; pretestFloor: number
+  currentFloor: number; pretestUnlocked: boolean; pretestCompleted: boolean
+  posttestUnlocked: boolean; floorsRemaining: number; deltaFloor: number
+  deltaRequired: number; pretestFloor: number
   nextPairOrdinal: number; history: HistoryEntry[]
 }
 
@@ -105,35 +106,110 @@ export default function EvaluasiPage() {
                   </button>
                 </GlassCard>
 
-                {/* Post-test — delta +25 lock */}
-                <GlassCard className={`p-5 flex flex-col ${data.posttestUnlocked ? 'border border-emerald-400/30' : ''}`}>
+                {/* Post-test — delta +25 lock (3 kondisi jelas) */}
+                <GlassCard className={`p-5 flex flex-col ${data.posttestUnlocked ? 'border border-emerald-400/30 shadow-[0_0_16px_-6px_rgba(16,185,129,0.25)]' : ''}`}>
                   <div className="flex items-center gap-3 mb-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl ${data.posttestUnlocked ? 'bg-emerald-500/20 border border-emerald-400/30' : 'bg-slate-700/30 border border-slate-600/30'}`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl ${
+                      data.posttestUnlocked
+                        ? 'bg-emerald-500/20 border border-emerald-400/30'
+                        : data.pretestCompleted
+                          ? 'bg-amber-500/15 border border-amber-400/25'
+                          : 'bg-slate-700/40 border border-slate-600/30'
+                    }`}>
                       {data.posttestUnlocked ? '✅' : '🔒'}
                     </div>
-                    <div><h3 className="text-white font-bold">Post-test</h3><p className="text-xs text-text-secondary">Evaluasi akhir</p></div>
-                  </div>
-                  {data.pretestFloor > 0 ? (
-                    <div className="mb-4 flex-1">
-                      {data.posttestUnlocked ? (
-                        <p className="text-xs text-emerald-400">🎉 Syarat terpenuhi! +{data.currentFloor - data.pretestFloor} lantai sejak Pre-test.</p>
-                      ) : (
-                        <div className="space-y-1.5">
-                          <p className="text-xs text-amber-300">🔒 Latih <b className="text-white">{data.floorsRemaining}</b> lantai lagi untuk membuka.</p>
-                          <div className="h-1.5 rounded-full bg-slate-700/50 overflow-hidden">
-                            <div className="h-full rounded-full bg-gradient-to-r from-amber-500 to-cyan-400 transition-all"
-                              style={{ width: `${Math.min(100, Math.round(((data.currentFloor - data.pretestFloor) / data.deltaRequired) * 100))}%` }} />
-                          </div>
-                          <p className="text-[10px] text-slate-500">+{data.currentFloor - data.pretestFloor} / +{data.deltaRequired} lantai</p>
-                        </div>
-                      )}
+                    <div>
+                      <h3 className="text-white font-bold">Post-test</h3>
+                      <p className="text-xs text-text-secondary">Evaluasi akhir</p>
                     </div>
-                  ) : (
-                    <p className="text-xs text-slate-500 mb-4 flex-1">Selesaikan Pre-test dulu untuk melihat syarat.</p>
+                  </div>
+
+                  {/* ═══ KONDISI A: Pre-test belum selesai ═══ */}
+                  {!data.pretestCompleted && (
+                    <div className="mb-4 flex-1 space-y-2">
+                      <div className="flex items-start gap-2 p-3 rounded-lg bg-slate-500/5 border border-slate-500/10">
+                        <span className="text-base shrink-0 mt-0.5">🔒</span>
+                        <div>
+                          <p className="text-xs font-semibold text-slate-400">Wajib selesaikan Pre-test terlebih dahulu.</p>
+                          <p className="text-[10px] text-slate-600 mt-0.5">Kamu belum menyelesaikan Pre-test. Ambil Pre-test dulu untuk membuka akses Post-test.</p>
+                        </div>
+                      </div>
+                      {/* Progress bar 0% — informatif, tidak menyesatkan */}
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-[10px] text-slate-600">
+                          <span>Progres delta lantai</span>
+                          <span>0 / {data.deltaRequired} (0%)</span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-slate-700/30 overflow-hidden">
+                          <div className="h-full rounded-full bg-slate-600/40 transition-all" style={{ width: '0%' }} />
+                        </div>
+                        <p className="text-[10px] text-slate-600 italic">ⓘ Selesaikan Pre-test untuk melihat progres.</p>
+                      </div>
+                    </div>
                   )}
+
+                  {/* ═══ KONDISI B: Pre-test selesai, delta < 25 ═══ */}
+                  {data.pretestCompleted && !data.posttestUnlocked && (
+                    <div className="mb-4 flex-1 space-y-2">
+                      <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/5 border border-amber-500/15">
+                        <span className="text-base shrink-0 mt-0.5">🔒</span>
+                        <div>
+                          <p className="text-xs font-semibold text-amber-300">
+                            Latih <b className="text-white">{data.floorsRemaining}</b> lantai lagi untuk membuka.
+                          </p>
+                          <p className="text-[10px] text-amber-500/70 mt-0.5">
+                            Naikkan {data.floorsRemaining} lantai lagi di mode Latihan untuk membuka Post-test.
+                          </p>
+                        </div>
+                      </div>
+                      {/* Progress bar dinamis */}
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-[10px] text-slate-400">
+                          <span>Progres delta lantai</span>
+                          <span className="text-amber-300">+{data.deltaFloor} / +{data.deltaRequired} ({Math.min(100, Math.round((data.deltaFloor / data.deltaRequired) * 100))}%)</span>
+                        </div>
+                        <div className="h-2 rounded-full bg-slate-700/50 overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-amber-500 to-cyan-400 transition-all duration-500"
+                            style={{ width: `${Math.min(100, Math.round((data.deltaFloor / data.deltaRequired) * 100))}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ═══ KONDISI C: Siap dikerjakan (delta >= 25) ═══ */}
+                  {data.posttestUnlocked && (
+                    <div className="mb-4 flex-1 space-y-2">
+                      <div className="flex items-start gap-2 p-3 rounded-lg bg-emerald-500/8 border border-emerald-500/20">
+                        <span className="text-base shrink-0 mt-0.5">✅</span>
+                        <div>
+                          <p className="text-xs font-semibold text-emerald-300">Siap dievaluasi!</p>
+                          <p className="text-[10px] text-emerald-500/70 mt-0.5">
+                            Kamu sudah naik +{data.deltaFloor} lantai sejak Pre-test. Post-test siap dikerjakan.
+                          </p>
+                        </div>
+                      </div>
+                      {/* Progress bar 100% */}
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-[10px] text-slate-400">
+                          <span>Progres delta lantai</span>
+                          <span className="text-emerald-400">+{Math.min(data.deltaFloor, data.deltaRequired)} / +{data.deltaRequired} (100%)</span>
+                        </div>
+                        <div className="h-2 rounded-full bg-slate-700/50 overflow-hidden">
+                          <div className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400 transition-all shadow-[0_0_8px_rgba(16,185,129,0.4)]" style={{ width: '100%' }} />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <button onClick={() => handleStart('POSTTEST')} disabled={!data.posttestUnlocked || starting === 'posttest'}
-                    className={`w-full py-2.5 rounded-xl font-bold text-sm transition-all ${data.posttestUnlocked ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white shadow-[0_0_16px_-4px_rgba(6,182,212,0.6)]' : 'bg-slate-700/40 text-slate-500 cursor-not-allowed'} disabled:opacity-60`}>
-                    {starting === 'posttest' ? 'Memulai…' : data.posttestUnlocked ? 'Mulai Post-test' : 'Terkunci'}
+                    className={`w-full py-2.5 rounded-xl font-bold text-sm transition-all ${
+                      data.posttestUnlocked
+                        ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white shadow-[0_0_16px_-4px_rgba(6,182,212,0.6)] hover:shadow-[0_0_24px_-4px_rgba(6,182,212,0.9)] hover:scale-[1.02]'
+                        : 'bg-slate-700/40 text-slate-500 cursor-not-allowed'
+                    } disabled:opacity-60`}>
+                    {starting === 'posttest' ? 'Memulai…' : data.posttestUnlocked ? '🚀 Mulai Post-test' : data.pretestCompleted ? '🔒 Terkunci' : '🔒 Selesaikan Pre-test Dulu'}
                   </button>
                 </GlassCard>
               </div>

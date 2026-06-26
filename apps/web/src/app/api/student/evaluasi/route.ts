@@ -53,17 +53,17 @@ export async function GET(request: NextRequest) {
     const pretestUnlocked = true
 
     // ── Post-test unlock logic (Delta +25) ────────────────────────
+    const pretestCompleted = !!(latestPretest?.completedAt)
     let posttestUnlocked = false
     let floorsRemaining = DELTA_FLOOR_REQUIRED
     let pretestFloor = 0
+    let deltaFloor = 0
 
-    if (latestPretest?.completedAt) {
+    if (pretestCompleted) {
       pretestFloor = latestPretest.floorAtCompletion || 0
-      if (pretestFloor > 0) {
-        const floorsGained = currentFloor - pretestFloor
-        floorsRemaining = Math.max(0, DELTA_FLOOR_REQUIRED - floorsGained)
-        posttestUnlocked = floorsGained >= DELTA_FLOOR_REQUIRED
-      }
+      deltaFloor = currentFloor - pretestFloor
+      floorsRemaining = Math.max(0, DELTA_FLOOR_REQUIRED - deltaFloor)
+      posttestUnlocked = deltaFloor >= DELTA_FLOOR_REQUIRED
     }
 
     // Check if post-test for latest pair already completed
@@ -170,8 +170,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       currentFloor,
       pretestUnlocked,
+      pretestCompleted,
       posttestUnlocked,
       floorsRemaining,
+      deltaFloor,
       deltaRequired: DELTA_FLOOR_REQUIRED,
       pretestFloor,
       nextPairOrdinal,
